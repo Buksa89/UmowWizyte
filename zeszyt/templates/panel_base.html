@@ -1,0 +1,30 @@
+{% load static %}
+
+<html>
+<head>{{ request.user.username }} - {% block title %}{% endblock %}</head>
+<body>
+    <div id="header">
+          <ul class="menu">
+                <li {% if section == 'panel_screen' %}class="selected"{% endif %}>
+                    <a href="{% url 'panel_screen' %}">Panel</a>
+                </li>
+                <li {% if section == 'shedule_screen' %}class="selected"{% endif %}>
+                    <a href="{% url 'shedule_screen' %}">Terminarz</a>
+                </li>
+                <li {% if section == 'clients_screen' %}class="selected"{% endif %}>
+                    <a href="{% url 'clients_screen' %}">Klienci</a>
+                </li>
+                <li {% if section == 'settings_screen' %}class="selected"{% endif %}>
+                    <a href="{% url 'settings_screen' %}">Ustawienia</a>
+                </li>
+                <li>
+                    <a href="{% url 'logout_screen' %}">Logout</a>
+                </li>
+          </ul>
+    </div>
+  <div id="content">
+    {% block content %}
+    {% endblock %}
+  </div>
+</body>
+</html>

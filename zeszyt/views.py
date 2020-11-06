@@ -34,4 +34,13 @@ def login_screen(request):
 
 @login_required
 def panel_screen(request):
-    return render(request, 'panel.html', {})
+    return render(request, 'panel/panel.html', {})
+@login_required
+def shedule_screen(request):
+    return render(request, 'panel/shedule.html', {})
+@login_required
+def clients_screen(request):
+    return render(request, 'panel/clients.html', {})
+@login_required
+def settings_screen(request):
+    return render(request, 'panel/settings.html', {})
