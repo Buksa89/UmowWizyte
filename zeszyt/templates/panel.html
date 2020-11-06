@@ -1,0 +1,11 @@
+{% load static %}
+
+<html>
+<head></head>
+<body>
+    {% if request.user.is_authenticated %}
+        Hello {{ request.user.username }},
+        <a href="{% url 'logout_screen' %}">Wyloguj</a>
+    {% endif %}
+</body>
+</html>
