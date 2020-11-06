@@ -28,5 +28,3 @@ class RedirectsLoginTests(TestCase):
         login = self.client.login(username='testuser', password='12345')
         response = self.client.get('/login/')
         self.assertRedirects(response, f'/panel/')
-
-

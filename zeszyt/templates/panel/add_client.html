@@ -1,0 +1,17 @@
+{% extends "panel_base.html" %}
+
+{% block title %}Lista klientów{% endblock %}
+
+{% block content %}
+    {% if created_name %}<p>{{created_name}} dodany.</p> <a href="{% url 'clients_screen' %}">Kliknij tutaj</a> aby powrócić do listy klientów</p>{%endif%}
+    <form method="POST" action="{% url 'add_client_screen' %}">
+        {{ form.as_p }}
+        {% csrf_token %}
+        <p><input type="submit" value="Dodaj"></p>
+        {% if form.errors %}
+            <div class="form-group has-error">
+                <span class="help-block">{{ form.text.errors }}</span>
+            </div>
+        {% endif %}
+    </form>
+{% endblock %}

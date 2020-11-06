@@ -3,5 +3,31 @@
 {% block title %}Lista klientów{% endblock %}
 
 {% block content %}
-Tutaj będzie lista klientów
+    <a href="{% url 'add_client_screen' %}">Dodaj klienta</a>
+    {% if clients %}
+    <table>
+        <tr>
+                <td>Imię</td>
+                <td>Nazwisko</td>
+                <td>Numer telefonu</td>
+                <td>Opis</td>
+                <td>email</td>
+                <td>Status</td>
+                <td>pin</td>
+                <td>Usuń | Edytuj | Zablokuj
+            </tr>
+        {% for client in clients %}
+            <tr>
+                <td>{{ client.name }}</td>
+                <td>{{ client.surname }}</td>
+                <td>{{ client.phone_number }}</td>
+                <td>{{ client.description }}</td>
+                <td>{{ client.email }}</td>
+                <td>{{ client.is_active }}</td>
+                <td>{{ client.pin }}</td>
+                <td>Usuń | Edytuj | Zablokuj
+            </tr>
+        {% endfor %}
+    </table>
+    {% endif %}
 {% endblock %}
