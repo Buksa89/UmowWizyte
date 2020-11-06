@@ -1,7 +1,8 @@
 from django.http import HttpResponse
 from django.contrib.auth import authenticate, login
+from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import redirect, render
+from django.shortcuts import get_object_or_404, redirect, render
 from unittest import skip
 from .forms import LoginForm
 
@@ -32,6 +33,8 @@ def login_screen(request):
 
         return render(request, 'login.html', {'form':form})
 
+
+
 @login_required
 def panel_screen(request):
     return render(request, 'panel/panel.html', {})
@@ -44,3 +47,11 @@ def clients_screen(request):
 @login_required
 def settings_screen(request):
     return render(request, 'panel/settings.html', {})
+
+
+
+def client_panel(request, username):
+    user = User.objects.get(username__iexact=username)
+    if user:
+        return render(request, 'client_panel/client_panel.html', {'username':user.username})
+    # TODO: Obsługa błędu 404

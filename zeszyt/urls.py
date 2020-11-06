@@ -13,4 +13,6 @@ urlpatterns = [
     path('klienci/', views.clients_screen, name='clients_screen'),
     path('ustawienia/', views.settings_screen, name='settings_screen'),
 
+    path('<str:username>/', views.client_panel, name='client_panel'),
+
 ]
