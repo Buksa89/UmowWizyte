@@ -22,3 +22,7 @@ class FunctionalTest(StaticLiveServerTestCase):
                 if time.time() - start_time > MAX_WAIT:
                     raise e
                 time.sleep(0.5)
+    def find_input_boxes_for_login(self):
+        self.inputbox_name = self.browser.find_element_by_id('id_username')
+        self.inputbox_password = self.browser.find_element_by_name('password')
+        self.login_button = self.browser.find_element_by_name('login')

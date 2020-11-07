@@ -3,7 +3,7 @@
 {% block title %}Lista klientów{% endblock %}
 
 {% block content %}
-    <a href="{% url 'add_client_screen' %}">Dodaj klienta</a>
+    <p><a href="{% url 'add_client_screen' %}" class="button">Dodaj klienta</a></p>
     {% if clients %}
     <table>
         <tr>
@@ -28,5 +28,7 @@
             </tr>
         {% endfor %}
     </table>
+    {% else %}
+        <h3>"Nie masz jeszcze żadnych klientów"</h3>
     {% endif %}
 {% endblock %}

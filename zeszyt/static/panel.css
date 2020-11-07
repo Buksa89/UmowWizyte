@@ -1,3 +1,6 @@
+body{
+font-family: Helvetica;
+}
 ul {
   list-style-type: none;
   margin: 0;
@@ -20,5 +23,29 @@ li a {
 }
 
 li a:hover {
+  background-color: #111111;
+}
+
+a.button {
+  background-color: #333333;
+  border: none;
+  border-radius: 5px;
+  color: white;
+  transition: 1s;
+  -webkit-tap-highlight-color: transparent;
+  padding:10px;
+  text-decoration: none;
+}
+
+.noselect {
+  -webkit-touch-callout: none;
+    -webkit-user-select: none;
+     -khtml-user-select: none;
+       -moz-user-select: none;
+        -ms-user-select: none;
+            user-select: none;
+}
+
+a.button:hover {
   background-color: #111111;
 }

@@ -36,12 +36,12 @@ def login_screen(request):
 
         return render(request, 'login.html', {'form':form})
 
-
 @login_required
 def clients_screen(request):
     user = User.objects.get(username=request.user)
     clients = Client.objects.filter(user=user)
     return render(request, 'panel/clients.html', {"clients":clients})
+
 
 @login_required
 def add_client_screen(request):

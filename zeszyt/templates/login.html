@@ -1,17 +1,21 @@
 {% load static %}
 
 <html>
-<head></head>
-<body>
-Strona logowania
-{% if form.errors %}
-    <div class="form-group has-error">
-        <span class="help-block">{{ form.text.errors }}</span>
-    </div>
-{% endif %}
-    <form action="." method="post">
-        {{ form.as_p }}
-        {% csrf_token %}
-    <p><input type="submit" name="login" value="Logowanie"></p>
-</body>
+    <head>
+        <title>Logowanie</title>
+        <link href="{% static 'login.css' %}" rel="stylesheet">
+    </head>
+    <body>
+        <div id="container">
+        {% if form.errors %}
+            <div class="form-group has-error">
+                <span class="help-block">{{ form.text.errors }}</span>
+            </div>
+        {% endif %}
+            <form action="." method="post">
+                {{ form.as_p }}
+                {% csrf_token %}
+            <p><input type="submit" name="login" value="Logowanie"></p>
+        </div>
+    </body>
 </html>
