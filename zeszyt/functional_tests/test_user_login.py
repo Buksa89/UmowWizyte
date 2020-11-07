@@ -26,18 +26,33 @@ class UserLoginTest(FunctionalTest):
         self.wait_for(lambda: self.assertIn("Błędny login lub hasło",
             self.browser.find_element_by_tag_name('body').text
         ))
-        """        # Loguje się błędnym hasłem
-        inputbox_name.send_keys('user1')
-        inputbox_password.send_keys('pass2')
-        inputbox_password.send_keys(Keys.ENTER)
+    def test_wrong_pass(self):
+        # Loguje się błędnym hasłem
+        self.find_input_boxes()
+        self.inputbox_name.send_keys('user1')
+        self.inputbox_password.send_keys('pass2')
+        self.login_button.click()
         self.wait_for(lambda: self.assertIn("Błędny login lub hasło",
             self.browser.find_element_by_tag_name('body').text
         ))
-        # Loguje się właściwym hasłem
-        inputbox_name.send_keys('user1')
-        inputbox_password.send_keys('pass1')
-        inputbox_password.send_keys(Keys.ENTER)
+    @skip
+    def test_not_active_user_login(self):
+
+        # Loguje się błędnym hasłem
+        self.find_input_boxes()
+        self.inputbox_name.send_keys('user1')
+        self.inputbox_password.send_keys('pass2')
+        self.login_button.click()
         self.wait_for(lambda: self.assertIn("Błędny login lub hasło",
-                                            self.browser.find_element_by_tag_name('body').text
-                                            ))
-"""
+            self.browser.find_element_by_tag_name('body').text
+        ))
+
+    def correct_login(self):
+        # Loguje się błędnym hasłem
+        self.find_input_boxes()
+        self.inputbox_name.send_keys('user1')
+        self.inputbox_password.send_keys('pass1')
+        self.login_button.click()
+        self.wait_for(lambda: self.assertIn("Panel",
+            self.browser.find_element_by_tag_name('title').text
+        ))
