@@ -8,8 +8,8 @@ MAX_WAIT = 3
 class FunctionalTest(StaticLiveServerTestCase):
     def setUp(self):
         self.browser = webdriver.Firefox()
-        self.user1 = User.objects.create_user(username='user1', password='pass1')
-        self.user3 = User.objects.create_user(username='user3', password='pass3')
+        User.objects.create_user(username='user_not_active', password='pass_not_active', is_active=False)
+        User.objects.create_user(username='user', password='pass')
         self.browser.get(self.live_server_url+'/panel')
     def tearDown(self):
         self.browser.quit()

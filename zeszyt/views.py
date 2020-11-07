@@ -17,17 +17,17 @@ def login_screen(request):
     else:
         if request.method == 'POST':
             form = LoginForm(request.POST)
+
             if form.is_valid():
                 cd = form.cleaned_data
                 user = authenticate(username=cd['username'],
                                     password=cd['password'])
-                if user is not None:
-                    if user.is_active:
-                        login(request, user)
-                        return redirect(panel_screen)
-                    else:
-                        form.clean()
-                        form.add_error(None, 'Konto zablokowane')
+                if user:
+                    login(request, user)
+                    return redirect(panel_screen)
+                elif User.objects.filter(username=cd['username'], is_active=False):
+                    form.clean()
+                    form.add_error(None, 'Konto zablokowane')
                 else:
                     form.clean()
                     form.add_error(None, 'Błędny login lub hasło')
