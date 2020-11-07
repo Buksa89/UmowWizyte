@@ -7,6 +7,6 @@ Strona logowania
     <form action="." method="post">
         {{ form.as_p }}
         {% csrf_token %}
-    <p><input type="submit" value="Logowanie"></p>
+    <p><input type="submit" name="login" value="Logowanie"></p>
 </body>
 </html>

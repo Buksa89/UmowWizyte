@@ -79,9 +79,12 @@ def settings_screen(request):
 
 
 def client_panel(request, username):
-    user = User.objects.get(username__iexact=username)
-    if user:
-        return render(request, 'client_panel/client_panel.html', {'username':user.username})
+    try:
+        user = User.objects.get(username__iexact=username)
+        if user:
+            return render(request, 'client_panel/client_panel.html', {'username':user.username})
+    except:
+        return render(request, 'client_panel/client_panel.html', {'username':''})
     # TODO: Obsługa błędu 404
 
 

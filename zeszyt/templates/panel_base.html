@@ -1,7 +1,10 @@
 {% load static %}
 
 <html>
-<head>{{ request.user.username }} - {% block title %}{% endblock %}</head>
+<head>
+    <title>{{ request.user.username }} - {% block title %}{% endblock %}</title>
+    <link href="{% static 'panel.css' %}" rel="stylesheet">
+</head>
 <body>
     <div id="header">
           <ul class="menu">

@@ -14,6 +14,7 @@ class Client(models.Model):
     is_active = models.BooleanField(default=True)
 
     class Meta:
+        # Klient o podanym numerze telefonu powinien móc logować się na harmonogramy różnych użytkowników
         unique_together = ('user', 'phone_number')
 
 
