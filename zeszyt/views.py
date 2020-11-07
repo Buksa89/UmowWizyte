@@ -26,9 +26,11 @@ def login_screen(request):
                         login(request, user)
                         return redirect(panel_screen)
                     else:
-                        return HttpResponse('Konto zablokowane')
+                        form.clean()
+                        form.add_error(None, 'Konto zablokowane')
                 else:
-                    return HttpResponse('Błędny login lub hasło')
+                    form.clean()
+                    form.add_error(None, 'Błędny login lub hasło')
         else:
             form = LoginForm()
 
