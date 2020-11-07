@@ -1,5 +1,6 @@
 from django.contrib.auth.models import User
 from django.db import models
+from django.urls import reverse
 
 class Client(models.Model):
     user = models.ForeignKey(User, default ='', on_delete=models.CASCADE)
@@ -11,3 +12,10 @@ class Client(models.Model):
     pin = models.CharField(max_length=4, blank=False, default='')
     next_pin = models.CharField(max_length=4, blank=False, default='')
     is_active = models.BooleanField(default=True)
+
+    class Meta:
+        unique_together = ('user', 'phone_number')
+
+
+    def get_remove_url(self):
+        return reverse('remove_client_screen', args=[self.id])

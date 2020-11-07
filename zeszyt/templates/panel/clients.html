@@ -14,7 +14,6 @@
                 <td>email</td>
                 <td>Status</td>
                 <td>pin</td>
-                <td>Usuń | Edytuj | Zablokuj
             </tr>
         {% for client in clients %}
             <tr>
@@ -25,7 +24,7 @@
                 <td>{{ client.email }}</td>
                 <td>{{ client.is_active }}</td>
                 <td>{{ client.pin }}</td>
-                <td>Usuń | Edytuj | Zablokuj
+                <td><a href="{{ client.get_remove_url }}">Usuń</a> | Edytuj | Zablokuj
             </tr>
         {% endfor %}
     </table>

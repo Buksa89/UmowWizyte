@@ -54,6 +54,17 @@ def add_client_screen(request):
     # TODO: Dodaj walidacje duplikatów klientów
 
 @login_required
+def remove_client_screen(request, client_id):
+
+    Client.objects.filter(id=client_id).delete()
+    #return render(request, 'panel/remove_client.html', {})
+    return redirect(clients_screen)
+
+    # TODO: Obsługa błędu jeśli klient o takim id nie istnieje
+    # TODO: Dodaj walidację - czy usuwany klient na pewno nalezy do tego uzytkownika
+    # TODO: Wymuś potwierdzenie usunięcia
+
+@login_required
 def panel_screen(request):
     return render(request, 'panel/panel.html', {})
 @login_required
