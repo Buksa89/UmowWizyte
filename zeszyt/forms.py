@@ -32,10 +32,10 @@ class AddClientForm(forms.ModelForm):
             'pin': forms.fields.HiddenInput(),
             }
         error_messages = {
-            'phone_number': {'required': "Pole nie może być puste"}
+            'phone_number': {'required': "Pole nie może być puste"},
+            'name': {'required': "Pole nie może być puste"}
         }
 
-    def save(self, user, pin):
+    def save(self, user):
         self.instance.user = user
-        self.pin = pin
         return super().save()

@@ -3,13 +3,13 @@
 {% block title %}Lista klientów{% endblock %}
 
 {% block content %}
-    <h2>Dodawanie klienta</h2>
+    <h3>Dodawanie klienta</h3>
     {% if created_name %}<p>{{created_name}} dodany.</p> <a href="{% url 'clients_screen' %}">Kliknij tutaj</a> aby powrócić do listy klientów</p>{%endif%}
 
     <form method="POST" action="{% url 'add_client_screen' %}">
         {{ form.as_p }}
         {% csrf_token %}
-        <p><input type="submit" value="Dodaj"></p>
+        <p><input type="submit" value="Dodaj" name="submit"></p>
         {% if form.errors %}
             <div class="form-group has-error">
                 <span class="help-block">{{ form.text.errors }}</span>

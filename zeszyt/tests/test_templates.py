@@ -10,11 +10,6 @@ class Screen(BaseTest):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'welcome.html')
 
-    def test_user_login_template(self):
-        response = self.client.get('/login/')
-        self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'login.html')
-
     def test_user_panel_template(self):
         self.authorize_user()
         response = self.client.get('/panel/')
@@ -27,8 +22,9 @@ class Screen(BaseTest):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'panel/clients.html')
 
-    def test_user_add_client_template(self):
+    def test_user_add_client_template_post(self):
         self.authorize_user()
         response = self.client.get('/klienci/nowy')
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'panel/add_client.html')
+        response = self.client.post('/login/', data={})

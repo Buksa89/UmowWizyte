@@ -6,7 +6,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from unittest import skip
 from .forms import LoginForm, AddClientForm
 from .models import Client
-from random import randrange
+from random import choice
 
 def welcome_screen(request):
     return render(request, 'welcome.html', {})
@@ -45,15 +45,22 @@ def clients_screen(request):
 
 @login_required
 def add_client_screen(request):
-    form = AddClientForm(data=request.POST)
-    if form.is_valid():
-        user = User.objects.get(username=request.user)
-        form.save(user=user, pin=pin_generate(), next_pin=pin_generate())
+
+    if request.method == 'POST':
+        request.POST._mutable = True
+        request.POST['pin'] = pin_generate()
+        form = AddClientForm(data=request.POST)
+        if form.is_valid():
+            user = User.objects.get(username=request.user)
+            form.save(user=user)
+            form = AddClientForm()
+            return render(request, 'panel/add_client.html', {'form': form, 'created_name':request.POST.get('name','')})
+    else:
         form = AddClientForm()
-        return render(request, 'panel/add_client.html', {'form': form, 'created_name':request.POST.get('name','')})
     return render(request, 'panel/add_client.html', {'form': form})
-    # TODO: Dodaj walidację formularza dodawania klienta
-    # TODO: Dodaj walidacje duplikatów klientów
+
+        # TODO: Dodaj walidację formularza dodawania klienta
+        # TODO: Dodaj walidacje duplikatów klientów
 
 @login_required
 def remove_client_screen(request, client_id):
@@ -94,5 +101,6 @@ def client_panel(request, username):
 # Funkcje pomocnicze
 def pin_generate():
     """ Funkcja generuje losowy, 4-cyfrowy pin """
-    pin = f'{randrange(1, 10**4):4}'
+    pin = ''
+    for i in range(0,4): pin+=choice('0123456789')
     return(pin)
