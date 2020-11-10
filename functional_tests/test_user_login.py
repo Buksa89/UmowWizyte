@@ -1,6 +1,3 @@
-from django.contrib.auth.models import User
-from selenium import webdriver
-from selenium.webdriver.common.keys import Keys
 from unittest import skip
 import time
 from .base import FunctionalTest

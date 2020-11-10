@@ -7,12 +7,6 @@ from .base import FunctionalTest
 
 class PanelClientTest(FunctionalTest):
 
-    def send_form(self, field):
-        for field_name, field_value in field.items():
-            self.browser.find_element_by_name(field_name).clear()
-            self.browser.find_element_by_name(field_name).send_keys(field_value)
-        self.browser.find_element_by_name('submit').click()
-
     def get_client_data(self, client):
         data = {'email': client+'_mail@ma.com',
                 'name': client+'_name',
@@ -27,7 +21,6 @@ class PanelClientTest(FunctionalTest):
         elif client == 'wrong_phone':  data['phone_number'] = 'aaa'
         elif client == 'second':  data['phone_number'] = '222222222'
         return data
-
 
     def test_clients_panel(self):
         # Loguje się
@@ -83,6 +76,7 @@ class PanelClientTest(FunctionalTest):
 
         # Widzi listę z dwoma pozycjami
         # TODO: Dodaj sortowanie listy klientów
+        # TODO: Test czy pin się dodał
         for field in self.get_client_data('first').values():
             self.wait_for(lambda: self.assertIn(field,
                                                 self.browser.find_elements_by_tag_name("tr")[1].text
