@@ -4,6 +4,8 @@ from django.test import Client
 
 class BaseTest(TestCase):
     def authorize_user(self, username='user', password='pass'):
+        """ Autoryzacja użytkownika do testów
+        Jeśli użytkownik o padanej nazwie nie istnieje, zostaje utworzony"""
         if not User.objects.filter(username=username):
             self.user = User.objects.create_user(username=username)
         self.user.set_password(password)

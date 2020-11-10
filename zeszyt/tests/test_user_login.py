@@ -13,17 +13,14 @@ class ViewTests(TestCase):
         self.user = User.objects.create_user(username='user', password='pass')
         self.user = User.objects.create_user(username='user2', password='pass2', is_active=False)
 
-        response1 = self.client.post('/login/', data={'username':'user', 'password':'wrong_pass'})
-        response2 = self.client.post('/login/', data={'username':'wrong_username', 'password':'pass'})
-        response3 = self.client.post('/login/', data={'username':'user2', 'password':'pass2'})
-        response4 = self.client.post('/login/', data={'username':'', 'password':'pass2'})
-        response5 = self.client.post('/login/', data={'username':'user2', 'password':''})
-
-        self.assertContains(response1, 'Błędny login lub hasło')
-        self.assertContains(response2, 'Błędny login lub hasło')
-        self.assertContains(response3, 'Konto zablokowane')
-        self.assertContains(response4, 'Podaj login')
-        self.assertContains(response5, 'Podaj hasło')
+        data_results = [{'data': {'username':'user', 'password':'wrong_pass'}, 'message':'Błędny login lub hasło'},
+                {'data': {'username':'wrong_username', 'password':'pass'}, 'message':'Błędny login lub hasło'},
+                {'data': {'username':'user2', 'password':'pass2'}, 'message':'Konto zablokowane'},
+                {'data': {'username':'', 'password':'pass2'}, 'message':'Podaj login'},
+                {'data': {'username':'user2', 'password':''}, 'message':'Podaj hasło'}]
+        for data_result in data_results:
+            response = self.client.post('/login/', data=data_result['data'])
+            self.assertContains(response, data_result['message'])
 
     def test_incorrect_login_auhorize(self):
         self.user = User.objects.create_user(username='user', password='pass')
