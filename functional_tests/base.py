@@ -28,6 +28,11 @@ class FunctionalTest(StaticLiveServerTestCase):
         self.inputbox_password = self.browser.find_element_by_name('password')
         self.login_button = self.browser.find_element_by_name('login')
 
+    def find_input_boxes_for_client_login(self):
+        self.input_phone = self.browser.find_element_by_name('phone_number')
+        self.input_pin = self.browser.find_element_by_name('pin')
+        self.submit_btn = self.browser.find_element_by_name('submit')
+
     def send_form(self, field):
         for field_name, field_value in field.items():
             self.browser.find_element_by_name(field_name).clear()

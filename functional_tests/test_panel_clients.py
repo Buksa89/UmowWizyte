@@ -86,8 +86,12 @@ class PanelClientTest(FunctionalTest):
                                                 self.browser.find_elements_by_tag_name("tr")[2].text
                                                 ))
 
+
+
+
         #TODO: Czy inny user nie widzi tego klienta
         #TODO czy inny user może go usunąć
+        #TODO czy inny user może dodać klienta o tym samym numerze
 
 
 

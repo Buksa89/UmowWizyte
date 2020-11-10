@@ -7,6 +7,12 @@ class LoginForm(forms.Form):
     password = forms.CharField(widget=forms.PasswordInput, label='Hasło',
                                error_messages={'required': 'Podaj hasło'})
 
+
+class ClientLoginForm(forms.Form):
+    username = forms.CharField(label='Telefon', error_messages={'required': 'Podaj numer telefonu'})
+    password = forms.CharField(label='pin', error_messages={'required': 'Podaj pin'})
+
+
 class AddClientForm(forms.ModelForm):
     class Meta:
         model = Client

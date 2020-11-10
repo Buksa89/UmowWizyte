@@ -5,7 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.db.utils import IntegrityError
 from django.shortcuts import get_object_or_404, redirect, render
 from unittest import skip
-from .forms import LoginForm, AddClientForm
+from .forms import LoginForm, AddClientForm, ClientLoginForm
 from .models import Client
 from random import choice
 
@@ -95,8 +95,10 @@ def client_panel(request, username):
     try:
         user = User.objects.get(username__iexact=username)
         if user:
-            return render(request, 'client_panel/client_panel.html', {'username':user.username})
+            form = ClientLoginForm()
+            return render(request, 'client_panel/client_panel.html', {'form':form, 'user':user.username})
     except:
+        # TODO: return 404
         return redirect(clients_screen)
 
 

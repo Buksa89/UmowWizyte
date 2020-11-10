@@ -43,3 +43,5 @@ class UserLoginTest(FunctionalTest):
         self.wait_for(lambda: self.assertIn("Panel",
             self.browser.find_element_by_tag_name('body').text
         ))
+
+        #TODO: Testy wylogowania
