@@ -10,6 +10,7 @@ class FunctionalTest(StaticLiveServerTestCase):
         self.browser = webdriver.Firefox()
         User.objects.create_user(username='user_not_active', password='pass_not_active', is_active=False)
         User.objects.create_user(username='user', password='pass')
+        User.objects.create_user(username='user2', password='pass2')
         self.browser.get(self.live_server_url+'/panel')
     def tearDown(self):
         self.browser.quit()

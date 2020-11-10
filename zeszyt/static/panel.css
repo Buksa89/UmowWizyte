@@ -1,7 +1,7 @@
 body{
 font-family: Helvetica;
 }
-ul {
+ul.menu {
   list-style-type: none;
   margin: 0;
   padding: 0;
@@ -10,7 +10,7 @@ ul {
 
 }
 
-li {
+ul.menu li {
   float: left;
 }
 

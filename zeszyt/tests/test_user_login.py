@@ -77,6 +77,7 @@ class RedirectsLoginTests(TestCase):
 
     def test_404(self):
         """Po dodaniu kazdej podstrony nalezy uzupelnic tą funkcję"""
+        # TODO: Po dodaniu kazdej podstrony nalezy uzupelnic tą funkcję
         # TODO: Dowiedzieć się, dlaczego wyrzuca 404, zamiast robić redirect na login_screen. Uzupełnic o podstrony
         response = self.client.get('/klienci/nowy/')
         self.assertEqual(response.status_code, 404)

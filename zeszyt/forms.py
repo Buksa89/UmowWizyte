@@ -1,4 +1,5 @@
 from django import forms
+from django.core.exceptions import NON_FIELD_ERRORS
 from .models import Client
 
 class LoginForm(forms.Form):
@@ -32,8 +33,13 @@ class AddClientForm(forms.ModelForm):
             'pin': forms.fields.HiddenInput(),
             }
         error_messages = {
-            'phone_number': {'required': "Pole nie może być puste"},
-            'name': {'required': "Pole nie może być puste"}
+            'phone_number': {'required': "Pole nie może być puste",
+                             'invalid': "Podaj prawidłowy numer telefonu"},
+
+            'name': {'required': "Pole nie może być puste"},
+            NON_FIELD_ERRORS: {
+                'unique_together': "Posiadasz już klienta z tym numerem telefonu",
+            }
         }
 
     def save(self, user):

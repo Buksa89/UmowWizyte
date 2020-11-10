@@ -2,6 +2,7 @@ from django.http import HttpResponse
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
+from django.db.utils import IntegrityError
 from django.shortcuts import get_object_or_404, redirect, render
 from unittest import skip
 from .forms import LoginForm, AddClientForm
@@ -52,24 +53,26 @@ def add_client_screen(request):
         form = AddClientForm(data=request.POST)
         if form.is_valid():
             user = User.objects.get(username=request.user)
-            form.save(user=user)
-            form = AddClientForm()
-            return render(request, 'panel/add_client.html', {'form': form, 'created_name':request.POST.get('name','')})
+            try:
+                form.save(user=user)
+                form = AddClientForm()
+                return render(request, 'panel/add_client.html', {'form': form, 'created_name':request.POST.get('name','')})
+            except IntegrityError:
+                # TODO: Tą walidację przenieś do formularza
+                form.add_error(None, 'Klient o podanym numerze telefonu już istnieje')
+                return render(request, 'panel/add_client.html', {'form': form})
     else:
         form = AddClientForm()
     return render(request, 'panel/add_client.html', {'form': form})
 
-        # TODO: Dodaj walidację formularza dodawania klienta
-        # TODO: Dodaj walidacje duplikatów klientów
-
 @login_required
 def remove_client_screen(request, client_id):
-
-    Client.objects.filter(id=client_id).delete()
-    #return render(request, 'panel/remove_client.html', {})
+    #TODO: Dodaj potwierdzenie usunięcia
+    user = User.objects.get(username=request.user)
+    Client.objects.filter(id=client_id,user=user).delete()
     return redirect(clients_screen)
 
-    # TODO: Obsługa błędu jeśli klient o takim id nie istnieje
+
     # TODO: Dodaj walidację - czy usuwany klient na pewno nalezy do tego uzytkownika
     # TODO: Wymuś potwierdzenie usunięcia
 
@@ -88,13 +91,14 @@ def settings_screen(request):
 
 
 def client_panel(request, username):
+    # TODO: Obsługa błędu 404
     try:
         user = User.objects.get(username__iexact=username)
         if user:
             return render(request, 'client_panel/client_panel.html', {'username':user.username})
     except:
-        return render(request, 'client_panel/client_panel.html', {'username':''})
-    # TODO: Obsługa błędu 404
+        return redirect(clients_screen)
+
 
 
 

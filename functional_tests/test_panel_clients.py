@@ -13,6 +13,22 @@ class PanelClientTest(FunctionalTest):
             self.browser.find_element_by_name(field_name).send_keys(field_value)
         self.browser.find_element_by_name('submit').click()
 
+    def get_client_data(self, client):
+        data = {'email': client+'_mail@ma.com',
+                'name': client+'_name',
+                'surname': client+'_surname',
+                'description': client+'_desc'}
+        if client == 'no_phone': data['phone_number'] = ''
+        elif client == 'no_name':
+            data['phone_number'] = '123123123'
+            data['name'] = ''
+        elif client == 'first': data['phone_number'] = '111111111'
+        elif client == 'duplicate': data['phone_number'] = '111111111'
+        elif client == 'wrong_phone':  data['phone_number'] = 'aaa'
+        elif client == 'second':  data['phone_number'] = '222222222'
+        return data
+
+
     def test_clients_panel(self):
         # Loguje się
         self.find_input_boxes_for_login()
@@ -31,67 +47,73 @@ class PanelClientTest(FunctionalTest):
             self.browser.find_element_by_tag_name('h3').text
         ))
         # Próbuje dodać klienta bez numeru telefonu
-        self.send_form({'phone_number':'',
-                        'email':'mail@ma.com',
-                        'name':'no-phone',
-                        'surname':'no-phone',
-                        'description':'no-phone'})
+        self.send_form(self.get_client_data('no_phone'))
         self.wait_for(lambda: self.assertNotIn("dodany",
             self.browser.find_element_by_tag_name('body').text
         ))
         # Próbuje dodać klienta bez imienia
-        self.send_form({'phone_number':'',
-                        'email':'mail@ma.com',
-                        'name':'no-name',
-                        'surname':'no-name',
-                        'description':'no-name'})
+        self.send_form(self.get_client_data('no_name'))
         self.wait_for(lambda: self.assertNotIn("dodany",
             self.browser.find_element_by_tag_name('body').text
         ))
         # Dodaje pierwszego klienta
-        self.send_form({'phone_number':'11111111',
-                        'email':'mail@ma.com',
-                        'name':'Pierwszy',
-                        'surname':'klient',
-                        'description':'opis pierwszego'})
-        self.wait_for(lambda: self.assertIn("Pierwszy dodany",
+
+        self.send_form(self.get_client_data('first'))
+        self.wait_for(lambda: self.assertIn("first_name dodany",
             self.browser.find_element_by_tag_name('body').text
         ))
-        # TODO: Próbuje dodać klienta z tym samym numerem telefonu
-        self.send_form({'phone_number':'11111111',
-                        'email':'mail@ma.com',
-                        'name':'Duplikat',
-                        'surname':'nDuplikat',
-                        'description':'drugiego'})
-        self.wait_for(lambda: self.assertNotIn("dodany",
-            self.browser.find_element_by_tag_name('body').text
+        # Próbuje dodać klienta z tym samym numerem telefonu
+        self.send_form(self.get_client_data('duplicate'))
+        self.wait_for(lambda: self.assertIn("Klient o podanym numerze telefonu już istnieje",
+            self.browser.find_element_by_class_name('errorlist').text
         ))
-        time.sleep(3)
+        # Próbuje dodać klienta z błędnym numerem telefonu
+        self.send_form(self.get_client_data('wrong_phone'))
+        self.wait_for(lambda: self.assertIn("Podaj prawidłowy numer telefonu",
+            self.browser.find_element_by_class_name('errorlist').text
+        ))
 
         # Dodaje drugiego klienta
-        self.send_form({'phone_number':'222222222',
-                        'email':'mail@ma.com',
-                        'name':'Drugi',
-                        'surname':'klient2',
-                        'description':'opis drugiego'})
-        self.wait_for(lambda: self.assertIn("Drugi dodany",
+        self.send_form(self.get_client_data('second'))
+        self.wait_for(lambda: self.assertIn("second_name dodany",
             self.browser.find_element_by_tag_name('body').text
         ))
+        # Przechodzi na listę klientów
+        self.wait_for(lambda: self.browser.find_element_by_link_text('Kliknij tutaj').click())
 
+        # Widzi listę z dwoma pozycjami
+        # TODO: Dodaj sortowanie listy klientów
+        for field in self.get_client_data('first').values():
+            self.wait_for(lambda: self.assertIn(field,
+                                                self.browser.find_elements_by_tag_name("tr")[1].text
+                                                ))
+        for field in self.get_client_data('second').values():
+            self.wait_for(lambda: self.assertIn(field,
+                                                self.browser.find_elements_by_tag_name("tr")[2].text
+                                                ))
 
-
-
-        # TODO: dodanie drugiego klienta
-        # TODO: dodanie klienta
-        # TODO: dodanie klienta o tym samym numerze telefonu
-
+        #TODO: Czy inny user nie widzi tego klienta
+        #TODO czy inny user może go usunąć
 
 
 
         # TODO: edycja klienta
+        # TODO: inny user edytuje klienta
         # TODO: zapisanie zmian
         # TODO: próba usuniecia, ale bez potwierdzenia
         # TODO: Próba logowania klienta
         # TODO: zablokowanie klienta
         # TODO: Próba logowania na zablokowane konto
-        # TODO: usuniecie klienta
+
+        # Usuwa klienta
+        self.wait_for(lambda: self.browser.find_element_by_link_text('Usuń').click())
+        for field in self.get_client_data('first').values():
+            self.wait_for(lambda: self.assertNotIn(field,
+                                                self.browser.find_elements_by_tag_name("tr")[1].text
+                                                ))
+        for field in self.get_client_data('second').values():
+            self.wait_for(lambda: self.assertIn(field,
+                                                self.browser.find_elements_by_tag_name("tr")[1].text
+                                                ))
+
+
