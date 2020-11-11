@@ -1,92 +1,122 @@
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from django.test import TestCase
-from ..forms import LoginForm
+from unittest import skip
+from ..forms import ClientLoginForm
 from ..models import Client
+from.base import BaseTest
+
+class ClientLoginTemplateTests(BaseTest):
+    def test_client_login_template(self):
+        user = User.objects.create_user(username='user')
+        response = self.client.get(f'/{user}/')
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'client_panel/client_login.html')
+
+    def test_client_login_template_post(self):
+        user = User.objects.create_user(username='user')
+        response = self.client.post(f'/{user}/', data={})
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'client_panel/client_login.html')
+
+    @skip
+    def test_client_login_not_active_user(self):
+        #TODO: Zablokuj formularz
+        user = User.objects.create_user(username='user', is_active=False)
+        response = self.client.get(f'/{user}/')
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'client_panel/login_not_active.html')
+
+    def test_client_logged_to_panel(self):
+        self.authorize_client()
+        response = self.client.get(f'/user/panel/')
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'client_panel/client_panel.html')
 
 
-class FormTests(TestCase):
-    pass
-    # TODO: Test czy formularz się wyświetla
+class ClientLoginFormTests(TestCase):
+   def test_display_form(self):
+        user = User.objects.create_user(username='user')
+        response = self.client.get(f'/{user}/')
+        self.assertEqual(response.status_code, 200)
+        self.assertIsInstance(response.context['form'], ClientLoginForm)
 
-class ViewTests(TestCase):
-    def test_is_login_correct(self):
-        #response = self.client.get('/login/')
-        #self.assertEqual(response.status_code, 200)
-        #self.assertIsInstance(response.context['form'], LoginForm)
-        pass
 
-    def test_incorrect_login_display_errors(self):
-        pass
-        #self.user = User.objects.create_user(username='user', password='pass')
-        #self.user = User.objects.create_user(username='user2', password='pass2', is_active=False)
+class ClientLoginViewTests(TestCase):
 
-        #data_results = [{'data': {'username': 'user', 'password': 'wrong_pass'}, 'message': 'Błędny login lub hasło'},
-        #                {'data': {'username': 'wrong_username', 'password': 'pass'},
-        #                 'message': 'Błędny login lub hasło'},
-        #                {'data': {'username': 'user2', 'password': 'pass2'}, 'message': 'Konto zablokowane'},
-        #                {'data': {'username': '', 'password': 'pass2'}, 'message': 'Podaj login'},
-        #                {'data': {'username': 'user2', 'password': ''}, 'message': 'Podaj hasło'}]
-        #for data_result in data_results:
-        #    response = self.client.post('/login/', data=data_result['data'])
-        #    self.assertContains(response, data_result['message'])
+
+    def test_client_login_display_errors(self):
+        user = User.objects.create_user(username='user', password='pass')
+        user2 = User.objects.create_user(username='user2', password='pass')
+        client_ok = Client.objects.create(user=user, phone_number='111111111', pin='1234')
+        client_not_active = Client.objects.create(user=user, phone_number='222222222', pin='1234', is_active=False)
+        client_other_user = Client.objects.create(user=user2, phone_number='111111112', pin='1234')
+
+        data_results = [{'data': {'phone_number': '111111111', 'pin': '1111'}, 'message': 'Dane nieprawidłowe'},
+                        {'data': {'phone_number': '123123123', 'pin': '1234'}, 'message': 'Nie ma takiego numeru'},
+                        {'data': {'phone_number': '111111112', 'pin': '1234'}, 'message': 'Nie ma takiego numeru'},
+                        {'data': {'phone_number': '222222222', 'pin': '1234'}, 'message': 'Konto zablokowane'},
+                        {'data': {'phone_number': '', 'pin': '222222222'}, 'message': 'Podaj numer telefonu'},
+                        {'data': {'phone_number': '111111111', 'pin': ''}, 'message': 'Podaj pin'}]
+        for data_result in data_results:
+            response = self.client.post(f'/{user}/', data=data_result['data'])
+            self.assertContains(response, data_result['message'])
+
 
     def test_incorrect_login_auhorize(self):
-        pass
-        #self.user = User.objects.create_user(username='user', password='pass')
+        user = User.objects.create_user(username='user', password='pass')
+        client = Client.objects.create(user=user, phone_number='111111111', pin='1234')
 
-        #response = self.client.post('/login/', data={'username': 'user', 'password': 'wrong_pass'})
-        #response2 = self.client.post('/login/', data={'username': 'wrong_username', 'password': 'pass'})
-        #self.assertNotIn('_auth_user_id', self.client.session)
+        response = self.client.post(f'/{user}/', data={'phone_number': '111111111', 'pin': '1111'})
+        response2 = self.client.post(f'/{user}/', data={'phone_number': '222222222', 'pin': '1234'})
+        self.assertNotIn('client_authorized', self.client.session)
 
     def test_not_active_login_auhorize(self):
-        pass
-        #self.user = User.objects.create_user(username='user', password='pass', is_active=False)
-
-        #response = self.client.post('/login/', data={'username': 'user', 'password': 'pass'})
-        #self.assertNotIn('_auth_user_id', self.client.session)
+        user = User.objects.create_user(username='user', password='pass')
+        Client.objects.create(user=user, phone_number='111111111', pin='1234', is_active=False)
+        response = self.client.post(f'/{user}/', data={'phone_number': '111111111', 'pin': '1234'})
+        self.assertNotIn('client_authorized', self.client.session)
 
     def test_correct_login_auhorize(self):
-        #self.user = User.objects.create_user(username='user', password='pass')
-        #self.client.post('/login/', data={'username': 'user', 'password': 'pass'})
-        #self.assertIn('_auth_user_id', self.client.session)
-        #self.assertEqual(int(self.client.session['_auth_user_id']), self.user.pk)
-        pass
+        user = User.objects.create_user(username='user', password='pass')
+        Client.objects.create(user=user, phone_number='111111111', pin='1234')
+        self.client.post(f'/{user}/', data={'phone_number': '111111111', 'pin': '1234'})
+        self.assertIn('client_authorized', self.client.session)
+        correct_session = {'phone':'111111111','user':'user'}
+        self.assertEqual(self.client.session['client_authorized'], correct_session)
 
-class TemplateTests(TestCase):
-    def test_user_login_template(self):
-        #response = self.client.get('/login/')
-        #self.assertEqual(response.status_code, 200)
-        #self.assertTemplateUsed(response, 'login.html')
-        pass
-
-    def test_user_login_template_post(self):
-        pass
-        #response = self.client.post('/login/', data={})
-        #self.assertEqual(response.status_code, 200)
-        #self.assertTemplateUsed(response, 'login.html')
-
-
-class RedirectsLoginTests(TestCase):
+class ClientLoginRedirectsTests(BaseTest):
 
     def test_panel_redirect_to_login_when_user_not_authorized(self):
-        pass
-        #response = self.client.get('/panel/')
-        #self.assertRedirects(response, f'/login/?next=/panel/')
-        #response = self.client.get('/klienci/')
-        #self.assertRedirects(response, f'/login/?next=/klienci/')
+        # TODO: Tutaj dodaj podstrowny panelu klienta
+        user = User.objects.create_user(username='user', password='pass')
+        client = Client.objects.create(user=user, phone_number='111111111', pin='1234')
+        response = self.client.get(f'/{user}/panel/')
+        self.assertRedirects(response, f'/{user}/')
 
     def test_redirect_after_logout(self):
-        pass
-        #self.user = User.objects.create_user(username='testuser', password='12345')
-        #login = self.client.login(username='testuser', password='12345')
-        #response = self.client.get('/logout/')
-        #self.assertRedirects(response, f'/login/')
+        user = User.objects.create_user(username='user', password='pass')
+        client = Client.objects.create(user=user, phone_number='111111111', pin='1234')
+        self.authorize_client(client.phone_number,user.username)
+        response = self.client.get(f'/{user}/logout/')
+        self.assertRedirects(response, f'/{user}/')
 
     def test_redirect_login_to_panel_when_logged(self):
-        #self.user = User.objects.create_user(username='testuser', password='12345')
-        #login = self.client.login(username='testuser', password='12345')
-        #response = self.client.get('/login/')
-        #self.assertRedirects(response, f'/panel/')
-        pass
+        user = User.objects.create_user(username='user', password='pass')
+        client = Client.objects.create(user=user, phone_number='111111111', pin='1234')
+        self.authorize_client(client.phone_number,user.username)
+        response = self.client.get(f'/{user}/')
+        self.assertRedirects(response, f'/{user}/panel/')
+
+    def test_client_logged_to_user_but_not_logged_to_others(self):
+        self.authorize_client()
+        user2 = User.objects.create_user(username='user2', password='pass')
+        response = self.client.get(f'/user2/panel/')
+        self.assertRedirects(response, f'/user2/')
+
+    # TODO: Znajdz lepsze miejsce dla ponizszej metody
+    def test_client_login_wrong_user(self):
+        user = User.objects.create_user(username='user')
+        response = self.client.post(f'/user2/', data={})
+        self.assertNotEqual(response.status_code, 200)
 

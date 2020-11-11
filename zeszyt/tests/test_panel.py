@@ -1,6 +1,6 @@
 from .base import BaseTest
 
-class TestTemplate(BaseTest):
+class UserLoginTemplateTests(BaseTest):
 
     def test_user_panel_template(self):
         self.authorize_user()

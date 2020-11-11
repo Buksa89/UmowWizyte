@@ -9,8 +9,8 @@ class LoginForm(forms.Form):
 
 
 class ClientLoginForm(forms.Form):
-    username = forms.CharField(label='Telefon', error_messages={'required': 'Podaj numer telefonu'})
-    password = forms.CharField(label='pin', error_messages={'required': 'Podaj pin'})
+    phone_number = forms.CharField(label='Telefon', error_messages={'required': 'Podaj numer telefonu'})
+    pin = forms.CharField(label='pin', error_messages={'required': 'Podaj pin'})
 
 
 class AddClientForm(forms.ModelForm):

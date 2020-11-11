@@ -90,18 +90,41 @@ def settings_screen(request):
 
 
 
-def client_panel(request, username):
-    # TODO: Obsługa błędu 404
-    try:
-        user = User.objects.get(username__iexact=username)
-        if user:
+def client_login(request, username):
+    user = get_object_or_404(User, username__iexact=username)
+    if is_client_authenticated(request, username):
+        return redirect(client_panel, username)
+    else:
+        if request.method == 'POST':
+            form = ClientLoginForm(data=request.POST)
+            if form.is_valid():
+                cd = form.cleaned_data
+                client = Client.objects.filter(phone_number=cd['phone_number'],user=user)
+                #TODO: Zrób walidacje numeru telefonu po cyfrach bo wyrzuca błąd
+                if not client: form.add_error(None, f'Nie ma takiego numeru w bazie {user.username}')
+                elif client[0].pin != cd['pin']: form.add_error(None, 'Dane nieprawidłowe')
+                elif not client[0].is_active:
+                    #TODO: Przetestuj czy ta funkcja działa, kiedy już będzie możliwość blokowania klienta
+                    form.clean()
+                    form.add_error(None, 'Konto zablokowane')
+                else:
+                    request.session['client_authorized'] = {'phone': cd['phone_number'], 'user':username}
+                    return redirect(client_panel, username)
+
+        else:
             form = ClientLoginForm()
-            return render(request, 'client_panel/client_panel.html', {'form':form, 'user':user.username})
-    except:
-        # TODO: return 404
-        return redirect(clients_screen)
+        return render(request, 'client_panel/client_login.html', {'form':form, 'user':user.username})
 
+def client_panel(request, username):
+    get_object_or_404(User, username__iexact=username)
+    if is_client_authenticated(request, username):
+        return render(request, 'client_panel/client_panel.html', {'user':username})
+    else:
+        return redirect(client_login, username)
 
+def client_logout(request, username):
+    request.session.pop('client_authorized', None)
+    return redirect(client_login, username)
 
 
 # Funkcje pomocnicze
@@ -110,3 +133,8 @@ def pin_generate():
     pin = ''
     for i in range(0,4): pin+=choice('0123456789')
     return(pin)
+
+def is_client_authenticated(request, username):
+    if request.session.get('client_authorized') and request.session.get('client_authorized')['user'] == username:
+        return True
+    else: return False

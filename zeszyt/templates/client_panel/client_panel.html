@@ -2,21 +2,10 @@
 
 <html>
     <head>
-        <title>{{ user }} - Logowanie</title>
-        <link href="{% static 'login.css' %}" rel="stylesheet">
+        <title>Zalogowano</title>
     </head>
     <body>
-        <div id="container">
-        <h1>{{ user }}</h1>
-        {% if form.errors %}
-            <div class="form-group has-error">
-                <span class="help-block">{{ form.text.errors }}</span>
-            </div>
-        {% endif %}
-            <form action="." method="post">
-                {{ form.as_p }}
-                {% csrf_token %}
-            <p><input type="submit" name="login" value="Logowanie"></p>
-        </div>
+zalogowano     <a href="{% url 'client_logout' username=user  %}">Wyloguj</a>
+
     </body>
 </html>

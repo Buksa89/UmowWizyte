@@ -6,22 +6,22 @@ from ..forms import AddClientForm
 from ..models import Client
 from .base import BaseTest
 
-class TemplateTests(BaseTest):
+class PanelClientsAddTemplateTests(BaseTest):
 
     def test_user_add_client_template(self):
         self.authorize_user()
-        response = self.client.get('/klienci/nowy')
+        response = self.client.get('/klienci/nowy/')
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'panel/add_client.html')
 
     def test_user_add_client_template_POST(self):
         self.authorize_user()
-        response = self.client.post('/klienci/nowy', data={})
+        response = self.client.post('/klienci/nowy/', data={})
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'panel/add_client.html')
 
 
-class ModelTests(TestCase):
+class PanelClientsAddModelTests(TestCase):
     def test_client_saving(self):
         user = User.objects.create()
         client = Client.objects.create(phone_number='111', user=user)
@@ -66,7 +66,7 @@ class ModelTests(TestCase):
         client.full_clean()  # Nie powinien być zgłoszony
 
 
-class FormTests(TestCase):
+class PanelClientsAddFormTests(TestCase):
     def test_add_client_form_validation_for_blank_fields(self):
         form = AddClientForm(data={'pin':'1111'})
         self.assertFalse(form.is_valid())

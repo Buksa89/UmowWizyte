@@ -33,33 +33,37 @@ class ClientLoginTest(FunctionalTest):
 
     def test_client_login(self):
          # Utworzenie klienta
-         self.add_clients_for_user1()
+         self.add_clients_for_user()
+         correct_phone = '123123123'
+         correct_pin = self.get_pin(correct_phone, 'user')
          # Klient wchodzi na stronę obcego użytkownika
-         #self.browser.get(self.get_new_url('login', 'user2'))
+         self.browser.get(self.get_new_url('login', 'user2'))
+         time.sleep(0.5)
          # Widzi panel logowania
-         #self.find_input_boxes_for_client_login()
+         self.wait_for(lambda: self.find_input_boxes_for_client_login())
          # Próbuje się zalogować
-         #self.input_phone.send_keys('123123123')
-         #self.input_pin.send_keys('pass')
-         #self.submit_btn.click()
-         #print(self.get_pin('123123123', 'user'))
-         # Dostaje komunikat, że nie może
-         #self.wait_for(lambda: self.assertIn("Nie ma takiego numeru",
-         #    self.browser.find_element_by_tag_name('body').text
-         #))
+         self.wait_for(lambda: self.send_form({'phone_number':correct_phone, 'pin':correct_pin}))
+         #Dostaje komunikat, że nie może
+         self.wait_for(lambda: self.assertIn("Nie ma takiego numeru",
+             self.browser.find_element_by_tag_name('body').text
+         ))
          # Wchodzi na stronę właściwego użytkownika
-         #self.browser.get(self.live_server_url+'/user2')
+         self.browser.get(self.get_new_url('user2', 'user'))
+         time.sleep(0.5)
+         # Próbuje się zalogować bez podania telefonu
+         #TODO: Próba wpisania liter do telefonu
+         self.wait_for(lambda: self.send_form({'phone_number': '', 'pin': correct_pin}))
+         # dostaje komunikat, że musi wypełnić wszystkie pola
+         self.wait_for(lambda: self.assertNotIn("Wyloguj",self.browser.find_element_by_tag_name('body').text))
 
-         # Próbuje się zalogować
+         # Wpisuje numer telefonu, ale próbuje się zalogować bez pinu
+         self.wait_for(lambda: self.send_form({'phone_number': correct_phone, 'pin': ''}))
+         # dostaje komunikat, że musi wypełnić wszystkie pola
+         self.wait_for(lambda: self.assertNotIn("Wyloguj", self.browser.find_element_by_tag_name('body').text))
 
-        # dostaje komunikat, że musi wypełnić wszystkie pola
-
-        # Wpisuje numer telefonu, ale próbuje się zalogować bez pinu
-
-        # dostaje komunikat, że musi wypełnić wszystkie pola
-
-        # wpisuje właściwy numer i pin
-
-        # Widzi panel klienta
+         # wpisuje właściwy numer i pin
+         self.wait_for(lambda: self.send_form({'phone_number': correct_phone, 'pin': correct_pin}))
+         # Widzi panel klienta
+         self.wait_for(lambda: self.assertIn("Wyloguj", self.browser.find_element_by_tag_name('body').text))
 
         # TODO: zablokowany użytkownik

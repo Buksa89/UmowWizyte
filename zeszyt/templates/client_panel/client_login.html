@@ -1,0 +1,22 @@
+{% load static %}
+
+<html>
+    <head>
+        <title>{{ user }} - Logowanie</title>
+        <link href="{% static 'login.css' %}" rel="stylesheet">
+    </head>
+    <body>
+        <div id="container">
+        <h1>{{ user }}</h1>
+        {% if form.errors %}
+            <div class="form-group has-error">
+                <span class="help-block">{{ form.text.errors }}</span>
+            </div>
+        {% endif %}
+            <form action="." method="post">
+                {{ form.as_p }}
+                {% csrf_token %}
+            <p><input type="submit" name="submit" value="Zaloguj"></p>
+        </div>
+    </body>
+</html>

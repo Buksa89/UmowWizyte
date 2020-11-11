@@ -5,7 +5,7 @@ from .base import BaseTest
 from ..models import Client
 
 
-class ModelTests(BaseTest):
+class PanelClientsRemoveModelTests(BaseTest):
     def test_client_remove(self):
         user = User.objects.create()
         client = Client.objects.create(phone_number='111', user=user)
@@ -15,9 +15,9 @@ class ModelTests(BaseTest):
     def test_get_remove_url(self):
         user = User.objects.create()
         client = Client.objects.create(phone_number='111', user=user)
-        self.assertEqual(client.get_remove_url(), f'/klienci/usun/{client.id}')
+        self.assertEqual(client.get_remove_url(), f'/klienci/usun/{client.id}/')
 
-class ViewTests(BaseTest):
+class PanelClientsRemoveViewTests(BaseTest):
 
     def test_user_remove_client(self):
         self.authorize_user('user', 'pass')

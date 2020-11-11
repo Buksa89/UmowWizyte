@@ -3,12 +3,7 @@ from django.contrib.auth.models import User
 from django.test import TestCase
 from ..forms import LoginForm
 
-class ViewTests(TestCase):
-    def test_is_login_correct(self):
-        response = self.client.get('/login/')
-        self.assertEqual(response.status_code, 200)
-        self.assertIsInstance(response.context['form'], LoginForm)
-
+class UserLoginViewTests(TestCase):
     def test_incorrect_login_display_errors(self):
         self.user = User.objects.create_user(username='user', password='pass')
         self.user = User.objects.create_user(username='user2', password='pass2', is_active=False)
@@ -41,7 +36,7 @@ class ViewTests(TestCase):
         self.assertIn('_auth_user_id', self.client.session)
         self.assertEqual(int(self.client.session['_auth_user_id']), self.user.pk)
 
-class TemplateTests(TestCase):
+class UserLoginTemplateTests(TestCase):
     def test_user_login_template(self):
         response = self.client.get('/login/')
         self.assertEqual(response.status_code, 200)
@@ -52,13 +47,16 @@ class TemplateTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'login.html')
 
-class RedirectsLoginTests(TestCase):
+class UserLoginRedirectsTests(TestCase):
 
     def test_panel_redirect_to_login_when_user_not_authorized(self):
+        # TODO: Po dodaniu kazdej podstrony nalezy uzupelnic tą funkcję
         response = self.client.get('/panel/')
         self.assertRedirects(response, f'/login/?next=/panel/')
         response = self.client.get('/klienci/')
         self.assertRedirects(response, f'/login/?next=/klienci/')
+        response = self.client.get('/klienci/nowy/')
+        self.assertRedirects(response, f'/login/?next=/klienci/nowy/')
 
     def test_redirect_after_logout(self):
         self.user = User.objects.create_user(username='testuser', password='12345')
@@ -72,12 +70,8 @@ class RedirectsLoginTests(TestCase):
         response = self.client.get('/login/')
         self.assertRedirects(response, f'/panel/')
 
-    def test_404(self):
-        # TODO: Po dodaniu kazdej podstrony nalezy uzupelnic tą funkcję
-        # TODO: Dowiedzieć się, dlaczego wyrzuca 404, zamiast robić redirect na login_screen. Uzupełnic o podstrony
-        response = self.client.get('/klienci/nowy/')
-        self.assertEqual(response.status_code, 404)
-
-class FormTests(TestCase):
-    pass
-    #TODO: Test czy formularz się wyświetla
+class UserLoginFormTests(TestCase):
+    def test_is_login_correct(self):
+        response = self.client.get('/login/')
+        self.assertEqual(response.status_code, 200)
+        self.assertIsInstance(response.context['form'], LoginForm)

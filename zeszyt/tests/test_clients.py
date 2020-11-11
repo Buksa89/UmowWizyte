@@ -2,7 +2,7 @@ from unittest import skip
 from .base import BaseTest
 
 
-class TemplateTests(BaseTest):
+class PanelClientsTemplateTests(BaseTest):
 
     def test_user_clients_template(self):
         self.authorize_user()

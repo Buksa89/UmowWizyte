@@ -11,10 +11,6 @@ class UserModelTest(TestCase):
         self.assertEqual(user, User.objects.first())
         # TODO: Test zmiany hasła użytkownika
 
-
-
-
-
     def test_client_edit(self):
         pass
         #TODO: Test edycji klienta
