@@ -13,7 +13,7 @@
                 <span class="help-block">{{ form.text.errors }}</span>
             </div>
         {% endif %}
-            <form action="." method="post">
+            <form name="client-login-form" action="." method="post">
                 {{ form.as_p }}
                 {% csrf_token %}
             <p><input type="submit" name="submit" value="Zaloguj"></p>

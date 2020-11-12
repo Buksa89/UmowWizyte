@@ -88,6 +88,12 @@ def shedule_screen(request):
 def settings_screen(request):
     return render(request, 'panel/settings.html', {})
 
+@login_required
+def services_screen(request):
+    return render(request, 'panel/settings_services.html', {})
+
+
+
 
 
 def client_login(request, username):

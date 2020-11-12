@@ -3,5 +3,10 @@
 {% block title %}Ustawienia{% endblock %}
 
 {% block content %}
-Tutaj będzie panel ustawień
+<ul>
+    <li>Ustaw standardowy czas pracy (Klienci będą mogli wybierać tylko te dni/godziny. Ty będziesz mógł wybrać dowolne)</li>
+    <li><a href="{% url 'services_screen' %}">Usługi</a> - Dodaj, zmień lub usuń usługi dostępne dla klientów</li>
+    <li>Zmiana hasła</li>
+    <li>Sugestie dotyczące działania tego portalu. Coś nie działa? Fajnie byłoby gdyby coś sie zmieniło? Poinformuj mnie o tym. Zobaczę co da się zrobić.</li>
+</ul>
 {% endblock %}

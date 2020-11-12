@@ -23,22 +23,27 @@ class PanelClientTest(FunctionalTest):
         return data
 
     def test_clients_panel(self):
+
         # Loguje się
-        self.find_input_boxes_for_login()
-        self.inputbox_name.send_keys('user')
-        self.inputbox_password.send_keys('pass')
-        self.login_button.click()
+        self.login_user('ok1')
+
+        """ Test okna "klienci" """
         # Wybiera z menu "Klienci"
         self.wait_for(lambda: self.browser.find_element_by_link_text('Klienci').click())
         # Dostaje wiadomość, że nie ma jeszcze żadnych klientów
         self.wait_for(lambda: self.assertIn("Nie masz jeszcze żadnych klientów",
             self.browser.find_element_by_tag_name('h3').text
         ))
+
+        """ Test okna "Dodaj klienta" """
         # Klika w przycisk dodający klienta
         self.wait_for(lambda: self.browser.find_element_by_link_text('Dodaj klienta').click())
         self.wait_for(lambda: self.assertIn("Dodawanie klienta",
             self.browser.find_element_by_tag_name('h3').text
         ))
+
+
+        """ Testy dodawania klienta """
         # Próbuje dodać klienta bez numeru telefonu
         self.send_form(self.get_client_data('no_phone'))
         self.wait_for(lambda: self.assertNotIn("dodany",
@@ -50,7 +55,6 @@ class PanelClientTest(FunctionalTest):
             self.browser.find_element_by_tag_name('body').text
         ))
         # Dodaje pierwszego klienta
-
         self.send_form(self.get_client_data('first'))
         self.wait_for(lambda: self.assertIn("first_name dodany",
             self.browser.find_element_by_tag_name('body').text
@@ -65,7 +69,6 @@ class PanelClientTest(FunctionalTest):
         self.wait_for(lambda: self.assertIn("Podaj prawidłowy numer telefonu",
             self.browser.find_element_by_class_name('errorlist').text
         ))
-
         # Dodaje drugiego klienta
         self.send_form(self.get_client_data('second'))
         self.wait_for(lambda: self.assertIn("second_name dodany",
@@ -103,6 +106,7 @@ class PanelClientTest(FunctionalTest):
         # TODO: zablokowanie klienta
         # TODO: Próba logowania na zablokowane konto
 
+        """ Testy usuwania klienta """
         # Usuwa klienta
         self.wait_for(lambda: self.browser.find_element_by_link_text('Usuń').click())
         for field in self.get_client_data('first').values():
