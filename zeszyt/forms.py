@@ -1,6 +1,6 @@
 from django import forms
 from django.core.exceptions import NON_FIELD_ERRORS
-from .models import Client
+from .models import Client, Service
 
 class LoginForm(forms.Form):
     username = forms.CharField(label='Imię', error_messages={'required': 'Podaj login'})
@@ -51,3 +51,58 @@ class AddClientForm(forms.ModelForm):
     def save(self, user):
         self.instance.user = user
         return super().save()
+
+
+
+
+def duration_choices(hours=8):
+    """ Funkcja tworzy krotkę zawierającą listę wszystkich godzin - od 0 do hours co 15 min"""
+    choices = []
+    for hour in range(0, hours):
+        hour = str(hour).rjust(2, '0')
+        hour += ':'
+        for minute in range(00,59,15):
+            minute = str(minute).rjust(2, '0')
+            choices.append([hour+minute,hour+minute])
+
+    last = str(hours).rjust(2, '0') + ":00"
+    choices.append([last,last])
+    choices[0][1] = "Czas"
+    choices=tuple(choices)
+
+    return choices
+
+class AddServiceForm(forms.ModelForm):
+
+    class Meta:
+        model = Service
+        fields = ['name', 'duration', 'is_active']
+        labels = {
+            'name': '',
+            'duration': '',
+            'is_active': ''
+        }
+        widgets = {
+            'name': forms.fields.TextInput(attrs={'placeholder': 'Nazwa',}),
+            'duration': forms.Select(choices=duration_choices()),
+            'is_active': forms.CheckboxInput()
+            }
+
+
+        error_messages = {
+            'duration': {'required': "Pole nie może być puste",
+                             'invalid': "Nie kombinuj!"},
+
+            'name': {'required': "Pole nie może być puste",
+                     'max_length': "Nazwa jest za długa"},
+
+            NON_FIELD_ERRORS: {
+                'unique_together': "Usługa o tej nazwie już istnieje",
+            }
+        }
+
+
+    def save(self, user):
+        self.instance.user = user
+        return super().save()
+

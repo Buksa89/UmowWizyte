@@ -5,27 +5,15 @@ from unittest import skip
 import time
 from .base import FunctionalTest
 
+
 class PanelClientTest(FunctionalTest):
 
-    def get_client_data(self, client):
-        data = {'email': client+'_mail@ma.com',
-                'name': client+'_name',
-                'surname': client+'_surname',
-                'description': client+'_desc'}
-        if client == 'no_phone': data['phone_number'] = ''
-        elif client == 'no_name':
-            data['phone_number'] = '123123123'
-            data['name'] = ''
-        elif client == 'first': data['phone_number'] = '111111111'
-        elif client == 'duplicate': data['phone_number'] = '111111111'
-        elif client == 'wrong_phone':  data['phone_number'] = 'aaa'
-        elif client == 'second':  data['phone_number'] = '222222222'
-        return data
-
-    def test_clients_panel(self):
-
-        # Loguje się
-        self.login_user('ok1')
+    def test_clients_add_remove(self):
+        """ Inicjalizacja danych """
+        client1 = self.clients['ok1']['cl_ok1']
+        client2 = self.clients['ok1']['cl_ok2']
+        user = 'ok1'
+        self.login_user(user)
 
         """ Test okna "klienci" """
         # Wybiera z menu "Klienci"
@@ -45,51 +33,65 @@ class PanelClientTest(FunctionalTest):
 
         """ Testy dodawania klienta """
         # Próbuje dodać klienta bez numeru telefonu
-        self.send_form(self.get_client_data('no_phone'))
-        self.wait_for(lambda: self.assertNotIn("dodany",
-            self.browser.find_element_by_tag_name('body').text
-        ))
+        fields = client1.copy()
+        fields['phone_number'] = ''
+        self.send_form(fields)
+        self.wait_for(lambda:self.assertTrue(self.browser.find_element_by_name('add-client-form')))
+        
         # Próbuje dodać klienta bez imienia
-        self.send_form(self.get_client_data('no_name'))
-        self.wait_for(lambda: self.assertNotIn("dodany",
-            self.browser.find_element_by_tag_name('body').text
-        ))
+        fields = client1.copy()
+        fields['name']=''
+        self.send_form(fields)
+        self.wait_for(lambda:self.assertTrue(self.browser.find_element_by_name('add-client-form')))
+
         # Dodaje pierwszego klienta
-        self.send_form(self.get_client_data('first'))
-        self.wait_for(lambda: self.assertIn("first_name dodany",
+        self.send_form(client1)
+        self.wait_for(lambda: self.assertIn(client1['name']+" dodany",
             self.browser.find_element_by_tag_name('body').text
         ))
         # Próbuje dodać klienta z tym samym numerem telefonu
-        self.send_form(self.get_client_data('duplicate'))
+        self.send_form(client1)
         self.wait_for(lambda: self.assertIn("Klient o podanym numerze telefonu już istnieje",
             self.browser.find_element_by_class_name('errorlist').text
         ))
         # Próbuje dodać klienta z błędnym numerem telefonu
-        self.send_form(self.get_client_data('wrong_phone'))
+        fields = client1.copy()
+        fields['phone_number']='no_digit_phone'
+        self.send_form(fields)
         self.wait_for(lambda: self.assertIn("Podaj prawidłowy numer telefonu",
             self.browser.find_element_by_class_name('errorlist').text
         ))
         # Dodaje drugiego klienta
-        self.send_form(self.get_client_data('second'))
-        self.wait_for(lambda: self.assertIn("second_name dodany",
+        self.send_form(client2)
+        self.wait_for(lambda: self.assertIn(client2['name']+" dodany",
             self.browser.find_element_by_tag_name('body').text
         ))
         # Przechodzi na listę klientów
         self.wait_for(lambda: self.browser.find_element_by_link_text('Kliknij tutaj').click())
 
-        # Widzi listę z dwoma pozycjami
         # TODO: Dodaj sortowanie listy klientów
-        # TODO: Test czy pin się dodał
-        for field in self.get_client_data('first').values():
+
+        # Wyciągnięcie pinu z bazy
+        client1['pin'] = self.get_pin(client1['phone_number'], self.users[user]['username'])
+        client2['pin'] = self.get_pin(client2['phone_number'], self.users[user]['username'])
+
+        # Widzi listę z dwoma pozycjami
+        for field in client1.values():
+            self.wait_for(lambda: self.assertIn(field, self.browser.find_elements_by_tag_name("tr")[1].text))
+        for field in client2.values():
+            self.wait_for(lambda: self.assertIn(field, self.browser.find_elements_by_tag_name("tr")[2].text))
+
+        """ Testy usuwania klienta """
+        # Usuwa klienta
+        self.wait_for(lambda: self.browser.find_element_by_link_text('Usuń').click())
+        for field in client1.values():
+            self.wait_for(lambda: self.assertNotIn(field,
+                                                self.browser.find_elements_by_tag_name("tr")[1].text
+                                                ))
+        for field in client2.values():
             self.wait_for(lambda: self.assertIn(field,
                                                 self.browser.find_elements_by_tag_name("tr")[1].text
                                                 ))
-        for field in self.get_client_data('second').values():
-            self.wait_for(lambda: self.assertIn(field,
-                                                self.browser.find_elements_by_tag_name("tr")[2].text
-                                                ))
-
-
 
 
         #TODO: Czy inny user nie widzi tego klienta
@@ -105,17 +107,5 @@ class PanelClientTest(FunctionalTest):
         # TODO: Próba logowania klienta
         # TODO: zablokowanie klienta
         # TODO: Próba logowania na zablokowane konto
-
-        """ Testy usuwania klienta """
-        # Usuwa klienta
-        self.wait_for(lambda: self.browser.find_element_by_link_text('Usuń').click())
-        for field in self.get_client_data('first').values():
-            self.wait_for(lambda: self.assertNotIn(field,
-                                                self.browser.find_elements_by_tag_name("tr")[1].text
-                                                ))
-        for field in self.get_client_data('second').values():
-            self.wait_for(lambda: self.assertIn(field,
-                                                self.browser.find_elements_by_tag_name("tr")[1].text
-                                                ))
 
 

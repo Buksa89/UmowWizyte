@@ -1,12 +1,63 @@
 {% extends "panel_base.html" %}
 
-{% block title %}Ustawienia{% endblock %}
+{% block title %}Panel | Ustawienia{% endblock %}
 
 {% block content %}
-<ul>
-    <li>Ustaw standardowy czas pracy (Klienci będą mogli wybierać tylko te dni/godziny. Ty będziesz mógł wybrać dowolne)</li>
-    <li><a href="{% url 'services_screen' %}">Usługi</a> - Dodaj, zmień lub usuń usługi dostępne dla klientów</li>
-    <li>Zmiana hasła</li>
-    <li>Sugestie dotyczące działania tego portalu. Coś nie działa? Fajnie byłoby gdyby coś sie zmieniło? Poinformuj mnie o tym. Zobaczę co da się zrobić.</li>
-</ul>
+<div>
+    <h1>Ustawienia</h1>
+    <h2>Usługi</h2>
+    <div>
+        {% if created_name %}<p>Usługa {{created_name}} dodana.</p>{% endif %}
+        {% if service_form.errors %}
+            <div class="form-group has-error">
+                <span class="help-block">{{ service_form.text.errors }}</span>
+            </div>
+        {% endif %}
+        <div>
+            <form class="in_line_form" name="add-service-form" method="POST" action="{% url 'settings_screen' %}">
+                {{ service_form.as_table }}
+                {% csrf_token %}
+                <input type="submit" value="Dodaj" name="submit">
+            </form>
+        </div>
+        {% if services %}
+        <table>
+            <tr>
+                <td>Nazwa</td>
+                <td>Czas trwania</td>
+                <td>Status</td>
+                <td></td>
+            </tr>
+            {% for service in services %}
+                <tr>
+                    <td>{{ service.name }}</td>
+                    <td>{{ service.duration }}</td>
+                    <td>{{ service.is_active }}</td>
+                    <td><a href="#">Usuń</a> | Edytuj | Zablokuj
+                </tr>
+            {% endfor %}
+        </table>
+        {% else %}
+            <h3>"Nie masz jeszcze żadnych usług"</h3>
+        {% endif %}
+    </div>
+</div>
+<div>
+    <h2>Czas pracy</h2>
+    <p>Ustaw standardowy czas pracy (Klienci będą mogli wybierać tylko te dni/godziny. Ty będziesz mógł wybrać dowolne</p>
+    <p>Godziny: od-do - listy rozwijane</p>
+    <p>dni - checkboxy</p>
+    <p>święta - checkbox</p>
+</div>
+<div>
+    <h2>Zmiana hasła</h2>
+    <p>Stare hasło</p>
+    <p>Nowe hasło</p>
+    <p>Powtórz</p>
+</div>
+<div>
+    <h2>Sugestie</h2>
+    <p>Coś nie działa? Fajnie byłoby gdyby coś sie zmieniło? Poinformuj mnie o tym. Zobaczę co da się zrobić.</p>
+    <p>textarea</p>
+</div>
 {% endblock %}

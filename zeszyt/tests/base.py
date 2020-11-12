@@ -5,13 +5,12 @@ from ..models import Client as ClientModel
 
 class BaseTest(TestCase):
     def authorize_user(self, username='user', password='pass'):
+        # TODO Zamien tą funkcję na force login
         """ Autoryzacja użytkownika do testów
         Jeśli użytkownik o padanej nazwie nie istnieje, zostaje utworzony"""
         if not User.objects.filter(username=username):
             self.user = User.objects.create_user(username=username)
-        self.user.set_password(password)
-        self.user.save()
-        self.client.login(username=username, password=password)
+        self.client.force_login(self.user)
 
     def authorize_client(self, phone=None, user=None):
         if not phone and not user:

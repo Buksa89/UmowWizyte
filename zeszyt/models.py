@@ -13,9 +13,24 @@ class Client(models.Model):
     is_active = models.BooleanField(default=True)
 
     class Meta:
-        # Klient o podanym numerze telefonu powinien móc logować się na harmonogramy różnych użytkowników
+        # Jeden użytkownik nie powiniene móc dodać dwóch klientów o tym samym numerze telefonu, al
+        # klient o podanym numerze telefonu powinien móc logować się na harmonogramy różnych użytkowników
         unique_together = ('user', 'phone_number')
 
 
     def get_remove_url(self):
         return reverse('remove_client_screen', args=[self.id])
+
+
+class Service(models.Model):
+    user = models.ForeignKey(User, default ='', on_delete=models.CASCADE)
+    name = models.CharField(max_length=60, blank=False, default='')
+    duration = models.DurationField(blank=False, default='')
+    is_active = models.BooleanField(default=True)
+    class Meta:
+        # Jeden użytkownik nie powinien mieć możliwości dodania dwóch usług o tej samej nazwie
+        unique_together = ('user', 'name')
+
+    def get_remove_url(self):
+        pass
+        #return reverse('remove_client_screen', args=[self.id])

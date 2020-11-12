@@ -7,7 +7,6 @@ ul.menu {
   padding: 0;
   overflow: hidden;
   background-color: #333333;
-
 }
 
 ul.menu li {
@@ -48,4 +47,3 @@ a.button {
 
 a.button:hover {
   background-color: #111111;
-}

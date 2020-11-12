@@ -1,6 +1,6 @@
 {% extends "panel_base.html" %}
 
-{% block title %}Lista klientów{% endblock %}
+{% block title %}Panel | Klienci | Nowy{% endblock %}
 
 {% block content %}
     <h3>Dodawanie klienta</h3>
@@ -11,7 +11,7 @@
         </div>
     {% endif %}
     <div>
-        <form method="POST" action="{% url 'add_client_screen' %}">
+        <form name="add-client-form" method="POST" action="{% url 'add_client_screen' %}">
             {{ form.as_p }}
             {% csrf_token %}
             <p><input type="submit" value="Dodaj" name="submit"></p>

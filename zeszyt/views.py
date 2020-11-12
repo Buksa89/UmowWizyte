@@ -2,11 +2,12 @@ from django.http import HttpResponse
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
+from django.db import transaction
 from django.db.utils import IntegrityError
 from django.shortcuts import get_object_or_404, redirect, render
 from unittest import skip
-from .forms import LoginForm, AddClientForm, ClientLoginForm
-from .models import Client
+from .forms import LoginForm, AddClientForm, ClientLoginForm, AddServiceForm
+from .models import Client, Service
 from random import choice
 
 def welcome_screen(request):
@@ -86,14 +87,25 @@ def shedule_screen(request):
 
 @login_required
 def settings_screen(request):
-    return render(request, 'panel/settings.html', {})
-
-@login_required
-def services_screen(request):
-    return render(request, 'panel/settings_services.html', {})
-
-
-
+    service_form = AddServiceForm()
+    user = User.objects.get(username=request.user)
+    services = Service.objects.filter(user=user)
+    created_name = ''
+    if request.method == 'POST':
+        service_form = AddServiceForm(data=request.POST)
+        if service_form.is_valid():
+            if request.POST['duration']=='00:00':
+                service_form.add_error(None, 'Ustaw czas')
+            else:
+                try:
+                    created_name = request.POST.get('name', '')
+                    with transaction.atomic():
+                        service_form.save(user=user)
+                    service_form = AddServiceForm()
+                except IntegrityError:
+                    # TODO: Tą walidację przenieś do formularza
+                    service_form.add_error(None, 'Usługa o tej nazwie już istnieje')
+    return render(request, 'panel/settings.html', {'service_form': service_form, 'services': services, 'created_name': created_name})
 
 
 def client_login(request, username):
@@ -144,3 +156,4 @@ def is_client_authenticated(request, username):
     if request.session.get('client_authorized') and request.session.get('client_authorized')['user'] == username:
         return True
     else: return False
+

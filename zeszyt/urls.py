@@ -14,7 +14,6 @@ urlpatterns = [
     path('klienci/nowy/', views.add_client_screen, name='add_client_screen'),
     path('klienci/usun/<int:client_id>/', views.remove_client_screen, name='remove_client_screen'),
     path('ustawienia/', views.settings_screen, name='settings_screen'),
-    path('ustawienia/uslugi', views.services_screen, name='services_screen'),
 
     path('<str:username>/', views.client_login, name='client_login'),
     path('<str:username>/panel/', views.client_panel, name='client_panel'),

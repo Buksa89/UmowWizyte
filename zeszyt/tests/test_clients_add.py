@@ -39,8 +39,9 @@ class PanelClientsAddModelTests(TestCase):
             client.full_clean()
 
     def test_cannot_save_wrong_number(self):
+        user = User.objects.create()
         with self.assertRaises(ValidationError):
-            client = Client(phone_number='aaa')
+            client = Client(phone_number='aaa', user=user)
             client.full_clean()
 
     def test_client_is_related_to_user(self):
@@ -78,10 +79,9 @@ class PanelClientsAddFormTests(TestCase):
         self.assertFalse(form.is_valid())
         self.assertEqual(form.errors['phone_number'], ['Podaj prawidłowy numer telefonu'])
 
-    @skip
-    def test_add_client_form_validation_for_duplicate(self):
-        pass
-        # TODO Formularz powinien walidować duplikaty. Teraz robi to widok
+
+    # TODO Formularz powinien walidować duplikaty. Teraz robi to widok
+    #  def test_add_service_form_validation_for_duplicate(self):
         #AddClientForm(data={'pin': '1111', 'name': 'aaa', 'phone_number': '111'})
         #form = AddClientForm(data={'pin': '1111', 'name': 'aaa', 'phone_number': '111'})
         #self.assertFalse(form.is_valid())
@@ -89,6 +89,6 @@ class PanelClientsAddFormTests(TestCase):
         #self.assertEqual(form.errors['phone_number'], ['Podaj prawidłowy numer telefonu'])
 
 
-
-
-    # TODO zbyt długie wpisy - overflow erro
+class PanelClientsAddFormTests(TestCase):
+    pass
+    # TODO Brakuje testow widoku
