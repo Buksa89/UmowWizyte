@@ -136,9 +136,19 @@ class PanelSettingsViewTests(BaseTest):
 
     def test_service_list_display(self):
         self.authorize_user()
-        #TODO usługa dodana
         response = self.client.post('/ustawienia/', data={'duration': '00:15', 'name': 'usługa'})
         self.assertContains(response, "Usługa usługa dodana.")
         self.assertContains(response, "<td>usługa</td>")
-        self.assertContains(response, "<td>0:00:15</td>")
+        self.assertContains(response, "<td>00:15</td>")
         self.assertContains(response, "<td>False</td>")
+
+    def test_other_user_see_my_service(self):
+        self.authorize_user()
+        self.client.post('/ustawienia/', data={'duration': '00:15', 'name': 'usługa'})
+        self.authorize_user('user2', 'pass2')
+        response = self.client.get('/ustawienia/')
+        self.assertContains(response, "Nie masz jeszcze żadnych usług")
+
+    #TODO: Czy klient widzi aktywną usługę?
+    #TODO: Czy klient widzi nieaktywną usługę?
+    #TODO: czy obcy klient widzi aktywną usługę

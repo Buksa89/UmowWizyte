@@ -31,9 +31,9 @@
             {% for service in services %}
                 <tr>
                     <td>{{ service.name }}</td>
-                    <td>{{ service.duration }}</td>
+                    <td>{{ service.display_duration }}</td>
                     <td>{{ service.is_active }}</td>
-                    <td><a href="#">Usuń</a> | Edytuj | Zablokuj
+                    <td><a href="{{ service.get_remove_url }}">Usuń</a> | Edytuj | Zablokuj
                 </tr>
             {% endfor %}
         </table>

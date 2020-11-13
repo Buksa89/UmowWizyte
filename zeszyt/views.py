@@ -42,12 +42,13 @@ def login_screen(request):
 def clients_screen(request):
     user = User.objects.get(username=request.user)
     clients = Client.objects.filter(user=user)
-    return render(request, 'panel/clients.html', {"clients":clients})
+    return render(request, 'panel/clients.html', {"clients":clients,
+                                                  'section':'clients'})
 
 
 @login_required
 def add_client_screen(request):
-
+    # TODO: Refaktoryzacja, przeniesienie do clients
     if request.method == 'POST':
         request.POST._mutable = True
         request.POST['pin'] = pin_generate()
@@ -73,16 +74,12 @@ def remove_client_screen(request, client_id):
     Client.objects.filter(id=client_id,user=user).delete()
     return redirect(clients_screen)
 
-
-    # TODO: Dodaj walidację - czy usuwany klient na pewno nalezy do tego uzytkownika
-    # TODO: Wymuś potwierdzenie usunięcia
-
 @login_required
 def panel_screen(request):
-    return render(request, 'panel/panel.html', {})
+    return render(request, 'panel/panel.html', {'section':'panel'})
 @login_required
 def shedule_screen(request):
-    return render(request, 'panel/shedule.html', {})
+    return render(request, 'panel/shedule.html', {'section':'shedule'})
 
 
 @login_required
@@ -90,23 +87,32 @@ def settings_screen(request):
     service_form = AddServiceForm()
     user = User.objects.get(username=request.user)
     services = Service.objects.filter(user=user)
-    created_name = ''
+    created_name = ''   # jeśli zostanie utworzona nowa usługa, wyświetli się powiadomienie z jej nazwą
     if request.method == 'POST':
         service_form = AddServiceForm(data=request.POST)
         if service_form.is_valid():
-            if request.POST['duration']=='00:00':
+            if request.POST['duration']=='00:00':   # Usługa nie może trwać 0
                 service_form.add_error(None, 'Ustaw czas')
             else:
                 try:
-                    created_name = request.POST.get('name', '')
-                    with transaction.atomic():
+                    with transaction.atomic():          # Bez tego wyrzuca błąd
                         service_form.save(user=user)
+                    created_name = request.POST.get('name', '')
                     service_form = AddServiceForm()
                 except IntegrityError:
                     # TODO: Tą walidację przenieś do formularza
                     service_form.add_error(None, 'Usługa o tej nazwie już istnieje')
-    return render(request, 'panel/settings.html', {'service_form': service_form, 'services': services, 'created_name': created_name})
+    return render(request, 'panel/settings.html', {'service_form': service_form,
+                                                   'services': services,
+                                                   'created_name': created_name,
+                                                   'section':'settings'})
 
+@login_required
+def remove_service(request,service_id):
+    #TODO: Dodaj potwierdzenie usunięcia
+    user = User.objects.get(username=request.user)
+    Service.objects.filter(id=service_id,user=user).delete()
+    return redirect(settings_screen)
 
 def client_login(request, username):
     user = get_object_or_404(User, username__iexact=username)
@@ -118,7 +124,6 @@ def client_login(request, username):
             if form.is_valid():
                 cd = form.cleaned_data
                 client = Client.objects.filter(phone_number=cd['phone_number'],user=user)
-                #TODO: Zrób walidacje numeru telefonu po cyfrach bo wyrzuca błąd
                 if not client: form.add_error(None, f'Nie ma takiego numeru w bazie {user.username}')
                 elif client[0].pin != cd['pin']: form.add_error(None, 'Dane nieprawidłowe')
                 elif not client[0].is_active:
@@ -149,7 +154,7 @@ def client_logout(request, username):
 def pin_generate():
     """ Funkcja generuje losowy, 4-cyfrowy pin """
     pin = ''
-    for i in range(0,4): pin+=choice('0123456789')
+    for i in range(0,4): pin += choice('0123456789')
     return(pin)
 
 def is_client_authenticated(request, username):

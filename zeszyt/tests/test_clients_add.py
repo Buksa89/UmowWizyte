@@ -67,12 +67,33 @@ class PanelClientsAddModelTests(TestCase):
         client.full_clean()  # Nie powinien być zgłoszony
 
 
-class PanelClientsAddFormTests(TestCase):
+class PanelClientsAddFormTests(BaseTest):
+
+    def test_clients_uses_item_form(self):
+        self.authorize_user()
+        response = self.client.get('/klienci/nowy/')
+        self.assertEqual(response.status_code, 200)
+        self.assertIsInstance(response.context['form'], AddClientForm)
+
     def test_add_client_form_validation_for_blank_fields(self):
         form = AddClientForm(data={'pin':'1111'})
         self.assertFalse(form.is_valid())
         self.assertEqual(form.errors['phone_number'], ['Pole nie może być puste'])
         self.assertEqual(form.errors['name'], ['Pole nie może być puste'])
+
+    def test_add_client_form_validation_for_long_fields(self):
+        form = AddClientForm(data={'pin':'1111',
+                                   'name':'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+                                   'phone_number':'1111111111111111111111111111111111111111111111111111',
+                                   'email':'a'*100,
+                                   'surname':'a'*100,
+                                   'description':'a'*201})
+        self.assertFalse(form.is_valid())
+        self.assertEqual(form.errors['phone_number'], ['Numer jest za długi'])
+        self.assertEqual(form.errors['name'], ['Nazwa jest za długa'])
+        self.assertEqual(form.errors['email'], ['Email nieprawidłowy', 'Email jest za długi'])
+        self.assertEqual(form.errors['surname'], ['Nazwisko jest za długie'])
+        self.assertEqual(form.errors['description'], ['Opis jest za długi'])
 
     def test_add_client_form_validation_for_wrong_phone_number(self):
         form = AddClientForm(data={'pin':'1111', 'name':'aaa', 'phone_number':'letters'})
@@ -89,6 +110,20 @@ class PanelClientsAddFormTests(TestCase):
         #self.assertEqual(form.errors['phone_number'], ['Podaj prawidłowy numer telefonu'])
 
 
-class PanelClientsAddFormTests(TestCase):
-    pass
-    # TODO Brakuje testow widoku
+class PanelClientsAddViewTests(BaseTest):
+    def test_clients_form_display(self):
+        self.authorize_user()
+        response = self.client.get('/klienci/nowy/')
+        self.assertContains(response, 'add-client-form')
+
+    def test_other_user_see_my_clients(self):
+        self.authorize_user()
+        self.client.post('/klienci/nowy/', data={'pin':'1111', 'name':'aaa', 'phone_number':'12212121'})
+        self.authorize_user('user2', 'pass2')
+        response = self.client.get('/klienci/')
+        self.assertContains(response, "Nie masz jeszcze żadnych klientów")
+
+
+    # TODO Test widoku: Czy kiedy lista klientów jest pusta, to wyświetla sie powiadomienie
+    # TODO Test widoku: Czy lista się prawidłowo wyświetla
+    # TODO Czy obcy user widzi klientów

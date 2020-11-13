@@ -13,6 +13,10 @@ ul.menu li {
   float: left;
 }
 
+ul.menu li.selected{
+  background-color: #111111;
+}
+
 ul.menu li a {
   display: block;
   color: white;
@@ -22,7 +26,7 @@ ul.menu li a {
 }
 
 li a:hover {
-  background-color: #111111;
+  background-color: #121212;
 }
 
 a.button {

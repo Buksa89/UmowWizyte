@@ -1,5 +1,5 @@
 from django import forms
-from django.core.exceptions import NON_FIELD_ERRORS
+from django.core.exceptions import NON_FIELD_ERRORS, ValidationError
 from .models import Client, Service
 
 class LoginForm(forms.Form):
@@ -14,20 +14,29 @@ class ClientLoginForm(forms.Form):
 
 
 class AddClientForm(forms.ModelForm):
+
+    def only_int(value):
+        if value.isdigit() == False:
+            raise ValidationError('Podaj prawidłowy numer telefonu')
+
+    phone_number = forms.CharField(validators=[only_int],
+                                   error_messages={'required': 'Pole nie może być puste',
+                                                   'max_length': 'Numer jest za długi'},
+                                   widget=forms.TextInput(attrs={'placeholder': 'Telefon'}),
+                                   label='Telefon*',)
+
     class Meta:
         model = Client
         fields = ['phone_number', 'email', 'name', 'surname', 'description','pin']
         labels = {
             'phone_number': 'Telefon*',
             'email': 'email',
-            'name': 'Imię',
+            'name': 'Imię*',
             'surname': 'Nazwisko',
             'description': 'Dodatkowe info',
             'pin': ''
         }
         widgets = {
-            'phone_number': forms.fields.TextInput(attrs={
-                'placeholder': 'Telefon',}),
             'email': forms.fields.TextInput(attrs={
                 'placeholder': 'Mail',}),
             'name': forms.fields.TextInput(attrs={
@@ -38,11 +47,14 @@ class AddClientForm(forms.ModelForm):
                 'placeholder': 'Opis (Tego pola klient nie widzi',}),
             'pin': forms.fields.HiddenInput(),
             }
-        error_messages = {
-            'phone_number': {'required': "Pole nie może być puste",
-                             'invalid': "Podaj prawidłowy numer telefonu"},
 
-            'name': {'required': "Pole nie może być puste"},
+        error_messages = {
+            'name': {'required': "Pole nie może być puste",
+                     'max_length': 'Nazwa jest za długa'},
+            'email': {'invalid': 'Email nieprawidłowy','max_length': 'Email jest za długi'},
+            'surname': {'max_length': 'Nazwisko jest za długie'},
+            'description': {'max_length': 'Opis jest za długi'},
+
             NON_FIELD_ERRORS: {
                 'unique_together': "Posiadasz już klienta z tym numerem telefonu",
             }

@@ -4,7 +4,7 @@ from django.urls import reverse
 
 class Client(models.Model):
     user = models.ForeignKey(User, default ='', on_delete=models.CASCADE)
-    phone_number = models.PositiveIntegerField(blank=False)
+    phone_number = models.CharField(blank=False, max_length=20)
     email = models.EmailField(max_length=40, blank=True, default='')
     name = models.CharField(max_length=20, blank=False, default='')
     surname = models.CharField(max_length=40, blank=True, default='')
@@ -32,5 +32,7 @@ class Service(models.Model):
         unique_together = ('user', 'name')
 
     def get_remove_url(self):
-        pass
-        #return reverse('remove_client_screen', args=[self.id])
+        return reverse('remove_service', args=[self.id])
+
+    def display_duration(self):
+        return str(self.duration)[-5:]

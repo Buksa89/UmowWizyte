@@ -55,9 +55,20 @@ class PanelServicesTest(FunctionalTest):
         for field in service1.values():
             self.wait_for(lambda: self.assertIn(str(field), self.browser.find_elements_by_tag_name("tr")[2].text))
 
+        """ Testy usuwania usługi """
+        # Usuwa klienta
+        self.wait_for(lambda: self.browser.find_element_by_link_text('Usuń').click())
+        for field in service1.values():
+            self.wait_for(lambda: self.assertIn(str(field),
+                                                self.browser.find_elements_by_tag_name("tr")[1].text
+                                                ))
+        for field, value in service_not_active.items():
+            if field == 'duration':continue    #Jeśli duration jest takie samo s_n_a i s1, trzeba je wykluczyć
+            self.wait_for(lambda: self.assertNotIn(str(value),
+                                                self.browser.find_elements_by_tag_name("tr")[1].text
+                                                ))
+
         # TODO: Testy usuwania usługi
-        # TODO: Czy inny user nie widzi tej usługi
-        # TODO czy inny user może ją usunąć
         # TODO: edycja usługi
         # TODO: inny user edytuje usługę
         # TODO: zapisanie zmian

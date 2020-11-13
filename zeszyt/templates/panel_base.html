@@ -2,22 +2,23 @@
 
 <html>
 <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ request.user.username }} - {% block title %}{% endblock %}</title>
     <link href="{% static 'panel.css' %}" rel="stylesheet">
 </head>
 <body>
     <div id="header">
           <ul class="menu">
-                <li {% if section == 'panel_screen' %}class="selected"{% endif %}>
+                <li {% if section == 'panel' %}class="selected"{% endif %}>
                     <a href="{% url 'panel_screen' %}">Panel</a>
                 </li>
-                <li {% if section == 'shedule_screen' %}class="selected"{% endif %}>
+                <li {% if section == 'shedule' %}class="selected"{% endif %}>
                     <a href="{% url 'shedule_screen' %}">Terminarz</a>
                 </li>
-                <li {% if section == 'clients_screen' %}class="selected"{% endif %}>
+                <li {% if section == 'clients' %}class="selected"{% endif %}>
                     <a href="{% url 'clients_screen' %}">Klienci</a>
                 </li>
-                <li {% if section == 'settings_screen' %}class="selected"{% endif %}>
+                <li {% if section == 'settings' %}class="selected"{% endif %}>
                     <a href="{% url 'settings_screen' %}">Ustawienia</a>
                 </li>
                 <li>
