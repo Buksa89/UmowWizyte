@@ -1,0 +1,22 @@
+{% extends "client_base.html" %}
+{% block content %}
+<h1>Miło cię widzieć, {{ client_name }}</h1>
+<h2>Umów się na wizytę</h2>
+<p>
+    <form name="choose-visit-form" action="{% url 'client_app_new_visit_step_1' username %}" method="post">
+        {{ form.as_table }}
+        {% csrf_token %}
+        <input type="submit" name="submit" value="Umów się">
+    </form>
+</p>
+<h2>Zbliżające się wizyty:</h2>
+<table>
+    <tr>
+        <td>Rodzaj usługi</td>
+        <td>Termin</td>
+        <td>czas trwania</td>
+        <td>Potwierdzona</td>
+        <td><a href="#">Odwołaj</a></td>
+    </tr>
+</table>
+{% endblock %}

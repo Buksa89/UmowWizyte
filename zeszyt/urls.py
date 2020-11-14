@@ -17,8 +17,8 @@ urlpatterns = [
     path('ustawienia/', views.settings_screen, name='settings_screen'),
     path('panel/usun_usluge/<int:service_id>/', views.remove_service, name='remove_service'),
 
-    path('<str:username>/', views.client_login, name='client_login'),
-    path('<str:username>/panel/', views.client_panel, name='client_panel'),
+    path('<str:username>/', views.client_app, name='client_app'),
     path('<str:username>/logout/', views.client_logout, name='client_logout'),
+    path('<str:username>/nowa_wizyta/', views.client_app_new_visit_step_1, name='client_app_new_visit_step_1'),
 
 ]

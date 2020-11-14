@@ -2,11 +2,12 @@ from django.http import HttpResponse
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.http import require_http_methods
 from django.db import transaction
 from django.db.utils import IntegrityError
 from django.shortcuts import get_object_or_404, redirect, render
 from unittest import skip
-from .forms import LoginForm, AddClientForm, ClientLoginForm, AddServiceForm
+from .forms import LoginForm, AddClientForm, ClientLoginForm, AddServiceForm, ClientChooseVisitForm
 from .models import Client, Service
 from random import choice
 
@@ -111,43 +112,55 @@ def settings_screen(request):
 def remove_service(request,service_id):
     #TODO: Dodaj potwierdzenie usunięcia
     user = User.objects.get(username=request.user)
+    #TODO get?
     Service.objects.filter(id=service_id,user=user).delete()
     return redirect(settings_screen)
 
-def client_login(request, username):
+def client_app(request, username):
     user = get_object_or_404(User, username__iexact=username)
-    if is_client_authenticated(request, username):
-        return redirect(client_panel, username)
+    if is_client_authenticated(request, user.username):
+        client = Client.objects.get(phone_number=request.session['client_authorized']['phone'], user=user)
+        return client_dashboard(request, user, client)
     else:
-        if request.method == 'POST':
-            form = ClientLoginForm(data=request.POST)
-            if form.is_valid():
-                cd = form.cleaned_data
-                client = Client.objects.filter(phone_number=cd['phone_number'],user=user)
-                if not client: form.add_error(None, f'Nie ma takiego numeru w bazie {user.username}')
-                elif client[0].pin != cd['pin']: form.add_error(None, 'Dane nieprawidłowe')
-                elif not client[0].is_active:
-                    #TODO: Przetestuj czy ta funkcja działa, kiedy już będzie możliwość blokowania klienta
-                    form.clean()
-                    form.add_error(None, 'Konto zablokowane')
-                else:
-                    request.session['client_authorized'] = {'phone': cd['phone_number'], 'user':username}
-                    return redirect(client_panel, username)
+        return client_login(request, user)
 
-        else:
-            form = ClientLoginForm()
-        return render(request, 'client_panel/client_login.html', {'form':form, 'user':user.username})
+@require_http_methods(["POST"])
+def client_app_new_visit_step_1(request, username):
+    service = request.POST.get('service', '')
+    return render(request, 'client_app/client_app_new_visit_step_1.html', {'username':username, 'service':service})
 
-def client_panel(request, username):
-    get_object_or_404(User, username__iexact=username)
-    if is_client_authenticated(request, username):
-        return render(request, 'client_panel/client_panel.html', {'user':username})
+def client_dashboard(request, user, client):
+    form = ClientChooseVisitForm(user)
+    return render(request, 'client_app/client_dashboard.html', {'form':form,
+                                                                'username':user.username,
+                                                                'client_name':client.name,
+                                                                'section':'dashboard'})
+
+
+def client_login(request, user):
+    if request.method == 'POST':
+        form = ClientLoginForm(data=request.POST)
+        if form.is_valid():
+            cd = form.cleaned_data
+            client = Client.objects.filter(phone_number=cd['phone_number'],user=user)
+            if not client: form.add_error(None, f'Nie ma takiego numeru w bazie {user.username}')
+            elif client[0].pin != cd['pin']: form.add_error(None, 'Dane nieprawidłowe')
+            elif not client[0].is_active:
+                #TODO: Przetestuj czy ta funkcja działa, kiedy już będzie możliwość blokowania klienta
+                form.clean()
+                form.add_error(None, 'Konto zablokowane')
+            else:
+                request.session['client_authorized'] = {'phone': cd['phone_number'], 'user':user.username}
+                return client_app(request, user)
     else:
-        return redirect(client_login, username)
+        form = ClientLoginForm()
+
+    return render(request, 'client_app/client_login.html', {'form':form, 'user':user.username})
 
 def client_logout(request, username):
+    # TODO: testy tej funkcji
     request.session.pop('client_authorized', None)
-    return redirect(client_login, username)
+    return redirect(client_app, username)
 
 
 # Funkcje pomocnicze

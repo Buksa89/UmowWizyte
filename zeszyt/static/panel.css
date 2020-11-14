@@ -51,3 +51,8 @@ a.button {
 
 a.button:hover {
   background-color: #111111;
+}
+
+tr {
+  background-color: #dddddd;
+}

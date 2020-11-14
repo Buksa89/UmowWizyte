@@ -94,12 +94,6 @@ class PanelClientTest(FunctionalTest):
                                                 ))
 
 
-        #TODO: Czy inny user nie widzi tego klienta
-        #TODO czy inny user może go usunąć
-        #TODO czy inny user może dodać klienta o tym samym numerze
-
-
-
         # TODO: edycja klienta
         # TODO: inny user edytuje klienta
         # TODO: zapisanie zmian

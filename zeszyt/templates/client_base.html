@@ -1,0 +1,28 @@
+{% load static %}
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ username }}</title>
+    <link href="{% static 'panel.css' %}" rel="stylesheet">
+</head>
+<body>
+    <div id="header">
+          <ul class="menu">
+                <li {% if section == 'dashboard' %}class="selected"{% endif %}>
+                    <a href="{% url 'client_app' username  %}">Wizyty</a>
+                </li>
+                <li {% if section == 'settings' %}class="selected"{% endif %}>
+                    <a href="#">Ustawienia</a>
+                </li>
+                <li>
+                    <a href="{% url 'client_logout' username  %}">Wyloguj</a>
+                </li>
+          </ul>
+    </div>
+  <div id="content">
+    {% block content %}
+    {% endblock %}
+  </div>
+</body>
+</html>

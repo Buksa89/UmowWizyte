@@ -11,13 +11,13 @@ class ClientLoginTemplateTests(BaseTest):
         user = User.objects.create_user(username='user')
         response = self.client.get(f'/{user}/')
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'client_panel/client_login.html')
+        self.assertTemplateUsed(response, 'client_app/client_login.html')
 
     def test_client_login_template_post(self):
         user = User.objects.create_user(username='user')
         response = self.client.post(f'/{user}/', data={})
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'client_panel/client_login.html')
+        self.assertTemplateUsed(response, 'client_app/client_login.html')
 
     @skip
     def test_client_login_not_active_user(self):
@@ -25,14 +25,13 @@ class ClientLoginTemplateTests(BaseTest):
         user = User.objects.create_user(username='user', is_active=False)
         response = self.client.get(f'/{user}/')
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'client_panel/login_not_active.html')
+        self.assertTemplateUsed(response, 'client_app/login_not_active.html')
 
-    def test_client_logged_to_panel(self):
-        self.authorize_client()
-        response = self.client.get(f'/user/panel/')
-        self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'client_panel/client_panel.html')
-
+    def test_client_redirect_to_dahboard_after_login(self):
+        user = User.objects.create_user(username='user', password='pass')
+        Client.objects.create(user=user, phone_number='111111111', pin='1234')
+        response = self.client.post(f'/{user}/', data={'phone_number': '111111111', 'pin': '1234'})
+        self.assertTemplateUsed(response, 'client_app/client_dashboard.html')
 
 class ClientLoginFormTests(TestCase):
    def test_display_form(self):
@@ -43,7 +42,6 @@ class ClientLoginFormTests(TestCase):
 
 
 class ClientLoginViewTests(TestCase):
-
 
     def test_client_login_display_errors(self):
         user = User.objects.create_user(username='user', password='pass')
@@ -86,12 +84,12 @@ class ClientLoginViewTests(TestCase):
         self.assertEqual(self.client.session['client_authorized'], correct_session)
 
 class ClientLoginRedirectsTests(BaseTest):
-
+    @skip
     def test_panel_redirect_to_login_when_user_not_authorized(self):
         # TODO: Tutaj dodaj podstrowny panelu klienta
         user = User.objects.create_user(username='user', password='pass')
         client = Client.objects.create(user=user, phone_number='111111111', pin='1234')
-        response = self.client.get(f'/{user}/panel/')
+        response = self.client.get(f'/{user}/ustawienia/')
         self.assertRedirects(response, f'/{user}/')
 
     def test_redirect_after_logout(self):
@@ -101,18 +99,12 @@ class ClientLoginRedirectsTests(BaseTest):
         response = self.client.get(f'/{user}/logout/')
         self.assertRedirects(response, f'/{user}/')
 
-    def test_redirect_login_to_panel_when_logged(self):
-        user = User.objects.create_user(username='user', password='pass')
-        client = Client.objects.create(user=user, phone_number='111111111', pin='1234')
-        self.authorize_client(client.phone_number,user.username)
-        response = self.client.get(f'/{user}/')
-        self.assertRedirects(response, f'/{user}/panel/')
 
     def test_client_logged_to_user_but_not_logged_to_others(self):
         self.authorize_client()
         user2 = User.objects.create_user(username='user2', password='pass')
-        response = self.client.get(f'/user2/panel/')
-        self.assertRedirects(response, f'/user2/')
+        response = self.client.get(f'/user2/')
+        self.assertTemplateUsed(response, 'client_app/client_login.html')
 
     # TODO: Znajdz lepsze miejsce dla ponizszej metody
     def test_client_login_wrong_user(self):

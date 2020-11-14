@@ -118,3 +118,19 @@ class AddServiceForm(forms.ModelForm):
         self.instance.user = user
         return super().save()
 
+
+class ClientChooseVisitForm(forms.Form):
+    def __init__(self, user):
+        super(ClientChooseVisitForm, self).__init__()
+        self.user = user
+        self.fields['service'] = forms.ChoiceField(label='', choices=self.get_avaible_visits())
+
+    def get_avaible_visits(self):
+        services = Service.objects.filter(user=self.user)
+        service_list = ()
+        for service in services:
+            service_list += ((service.id,service.name),)
+        return service_list
+
+
+
