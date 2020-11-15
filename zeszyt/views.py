@@ -10,6 +10,10 @@ from unittest import skip
 from .forms import LoginForm, AddClientForm, ClientLoginForm, AddServiceForm, ClientChooseVisitForm
 from .models import Client, Service
 from random import choice
+from datetime import datetime
+from django.urls import reverse
+from calendar import HTMLCalendar
+from django.utils.safestring import mark_safe
 
 def welcome_screen(request):
     return render(request, 'welcome.html', {})
@@ -78,10 +82,6 @@ def remove_client_screen(request, client_id):
 @login_required
 def panel_screen(request):
     return render(request, 'panel/panel.html', {'section':'panel'})
-@login_required
-def shedule_screen(request):
-    return render(request, 'panel/shedule.html', {'section':'shedule'})
-
 
 @login_required
 def settings_screen(request):
@@ -175,3 +175,74 @@ def is_client_authenticated(request, username):
         return True
     else: return False
 
+@login_required
+def shedule_screen(request, year=datetime.now().year, month=datetime.now().month):
+    visits={}
+    calendar = Calendar(year, month, visits).formatmonth()
+    return render(request, 'panel/shedule.html', {'section':'shedule', 'calendar':mark_safe(calendar)})
+
+
+def get_month_name(month):
+    months = ['Styczeń', 'Luty', 'Marzec', 'Kwiecień', 'Maj', 'Czerwiec', 'Lipiec', 'Sierpień', 'Wrzesień', 'Październik',
+          'Listopad', 'Grudzień']
+    return(months[month-1])
+
+def get_day_name(day):
+    days = ['Poniedziałek', 'Wtorek', 'Środa', 'Czwartek', 'Piątek', 'Sobota', 'Niedziela']
+    return(days[day-1])
+
+class Calendar(HTMLCalendar):
+    def __init__(self, year=None, month=None, visits=None):
+      self.year = year
+      self.month = month
+      self.visits = visits
+      super(Calendar, self).__init__()
+
+    def formatmonthname(self, theyear, themonth):
+
+        s = f'<li>{get_month_name(themonth)}</li><li class="year">{theyear}</li>'
+        return s
+
+    def formatday(self, day):
+        #Iteracja wizyt
+        if day != 0:
+            if datetime.today().date() == datetime(self.year, self.month, day).date():
+                day = f'<span class="active">{day}</span>'
+            return f"<li>{day}</li>"
+        return '<li></li>'
+
+    def formatweekheader(self):
+        s = ''.join(self.formatweekday(i) for i in self.iterweekdays())
+        s = ''.join(f'<li>{get_day_name(i+1)}</li>' for i in self.iterweekdays())
+        return s
+
+    def formatweek(self, theweek):
+        week = ''
+        for d, weekday in theweek:
+            week += self.formatday(d)
+        return f'<ul class="days"> {week} </ul>'
+
+    def formatmonth(self):
+        events={}
+        cal = f'<div class="month"><ul><li class="prev"><a href="{self.get_month_url("prev")}">&#10094;</a></li>' \
+              f'<li class="next"><a href="{self.get_month_url("next")}">&#10095;</a></li>' \
+              f'{self.formatmonthname(self.year, self.month)}\n</ul></div>'
+        cal += f'<ul class="weekdays">{self.formatweekheader()}\n</ul>'
+        for week in self.monthdays2calendar(self.year, self.month):
+            cal += f'{self.formatweek(week)}\n</ul>'
+        return cal
+
+    def get_month_url(self, direction):
+        month = self.month
+        year = self.year
+        if direction == "next":
+            if month != 12: month += 1
+            else:
+                year += 1
+                month = 1
+        if direction == 'prev':
+            if month != 1: month -= 1
+            else:
+                year -= 1
+                month = 12
+        return reverse('shedule_screen', args=[year, month])
