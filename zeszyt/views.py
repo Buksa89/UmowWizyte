@@ -47,7 +47,7 @@ def login_screen(request):
 def clients_screen(request):
     user = User.objects.get(username=request.user)
     clients = Client.objects.filter(user=user)
-    return render(request, 'panel/clients.html', {"clients":clients,
+    return render(request, 'dashboard/clients.html', {"clients":clients,
                                                   'section':'clients'})
 
 
@@ -63,14 +63,14 @@ def add_client_screen(request):
             try:
                 form.save(user=user)
                 form = AddClientForm()
-                return render(request, 'panel/add_client.html', {'form': form, 'created_name':request.POST.get('name','')})
+                return render(request, 'dashboard/add_client.html', {'form': form, 'created_name':request.POST.get('name','')})
             except IntegrityError:
                 # TODO: Tą walidację przenieś do formularza
                 form.add_error(None, 'Klient o podanym numerze telefonu już istnieje')
-                return render(request, 'panel/add_client.html', {'form': form})
+                return render(request, 'dashboard/add_client.html', {'form': form})
     else:
         form = AddClientForm()
-    return render(request, 'panel/add_client.html', {'form': form})
+    return render(request, 'dashboard/add_client.html', {'form': form})
 
 @login_required
 def remove_client_screen(request, client_id):
@@ -81,7 +81,7 @@ def remove_client_screen(request, client_id):
 
 @login_required
 def panel_screen(request):
-    return render(request, 'panel/panel.html', {'section':'panel'})
+    return render(request, 'dashboard/panel.html', {'section':'panel'})
 
 @login_required
 def settings_screen(request):
@@ -103,7 +103,7 @@ def settings_screen(request):
                 except IntegrityError:
                     # TODO: Tą walidację przenieś do formularza
                     service_form.add_error(None, 'Usługa o tej nazwie już istnieje')
-    return render(request, 'panel/settings.html', {'service_form': service_form,
+    return render(request, 'dashboard/settings.html', {'service_form': service_form,
                                                    'services': services,
                                                    'created_name': created_name,
                                                    'section':'settings'})
@@ -176,10 +176,12 @@ def is_client_authenticated(request, username):
     else: return False
 
 @login_required
-def shedule_screen(request, year=datetime.now().year, month=datetime.now().month):
+def schedule_screen(request, year=datetime.now().year, month=datetime.now().month, day=False):
     visits={}
+    if day:
+        return render(request, 'dashboard/schedule.html', {'section': 'schedule'})
     calendar = Calendar(year, month, visits).formatmonth()
-    return render(request, 'panel/shedule.html', {'section':'shedule', 'calendar':mark_safe(calendar)})
+    return render(request, 'dashboard/calendar.html', {'section':'schedule', 'calendar':mark_safe(calendar)})
 
 
 def get_month_name(month):
@@ -188,7 +190,7 @@ def get_month_name(month):
     return(months[month-1])
 
 def get_day_name(day):
-    days = ['Poniedziałek', 'Wtorek', 'Środa', 'Czwartek', 'Piątek', 'Sobota', 'Niedziela']
+    days = ['Pn', 'Wt', 'Śr', 'Cz', 'Pt', 'So', 'Nd']
     return(days[day-1])
 
 class Calendar(HTMLCalendar):
@@ -200,15 +202,18 @@ class Calendar(HTMLCalendar):
 
     def formatmonthname(self, theyear, themonth):
 
-        s = f'<li>{get_month_name(themonth)}</li><li class="year">{theyear}</li>'
+        s = f'<li>{get_month_name(themonth)}<br /><span class="year">{theyear}</span></li>'
         return s
 
     def formatday(self, day):
         #Iteracja wizyt
         if day != 0:
+            day_li = f'<a href="{self.get_day_url(day)}"><li>'
             if datetime.today().date() == datetime(self.year, self.month, day).date():
-                day = f'<span class="active">{day}</span>'
-            return f"<li>{day}</li>"
+                day_li += f'<span class="active">{day}</span>'
+            else: day_li += str(day)
+            day_li += '</li></a>'
+            return day_li
         return '<li></li>'
 
     def formatweekheader(self):
@@ -224,8 +229,8 @@ class Calendar(HTMLCalendar):
 
     def formatmonth(self):
         events={}
-        cal = f'<div class="month"><ul><li class="prev"><a href="{self.get_month_url("prev")}">&#10094;</a></li>' \
-              f'<li class="next"><a href="{self.get_month_url("next")}">&#10095;</a></li>' \
+        cal = f'<div class="month"><ul><a href="{self.get_month_url("prev")}"><li class="prev">&#10094;</li></a>' \
+              f'<a href="{self.get_month_url("next")}"><li class="next">&#10095;</li></a>' \
               f'{self.formatmonthname(self.year, self.month)}\n</ul></div>'
         cal += f'<ul class="weekdays">{self.formatweekheader()}\n</ul>'
         for week in self.monthdays2calendar(self.year, self.month):
@@ -245,4 +250,7 @@ class Calendar(HTMLCalendar):
             else:
                 year -= 1
                 month = 12
-        return reverse('shedule_screen', args=[year, month])
+        return reverse('schedule_screen', args=[year, month])
+
+    def get_day_url(self, day):
+        return reverse('schedule_screen', args=[self.year, self.month, day])

@@ -9,8 +9,9 @@ urlpatterns = [
     path('logout/', auth_views.LogoutView.as_view(), name='logout_screen'),
 
     path('panel/', views.panel_screen, name='panel_screen'),
-    path('terminarz/', views.shedule_screen, name='shedule_screen'),
-    path('terminarz/<int:year>/<int:month>', views.shedule_screen, name='shedule_screen'),
+    path('terminarz/', views.schedule_screen, name='schedule_screen'),
+    path('terminarz/<int:year>/<int:month>', views.schedule_screen, name='schedule_screen'),
+    path('terminarz/<int:year>/<int:month>/<int:day>', views.schedule_screen, name='schedule_screen'),
     path('klienci/', views.clients_screen, name='clients_screen'),
     path('klienci/nowy/', views.add_client_screen, name='add_client_screen'),
     path('klienci/usun/<int:client_id>/', views.remove_client_screen, name='remove_client_screen'),
