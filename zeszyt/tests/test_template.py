@@ -1,6 +1,7 @@
 from django.test import TestCase
 from unittest import skip
 from .base import BaseTest
+from ..models import Client, Service
 
 
 class DashboardTests(BaseTest):
@@ -40,8 +41,22 @@ class DashboardClientsTests(BaseTest):
         self.assertTemplateUsed(response, 'dashboard/clients_add.html')
 
 
-    """ Remove client """
-    #TODO: Dodaj test remove
+class DashboardScheduleTests(BaseTest):
+
+    def test_calendar_template(self):
+        self.authorize_user()
+        response = self.client.get('/terminarz/')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'dashboard/schedule_calendar.html')
+
+    def test_calendar_date_url_template(self):
+        self.authorize_user()
+        response = self.client.get('/terminarz/2020/8')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'dashboard/schedule_calendar.html')
+
 
 
 class DashboardSettingsTests(BaseTest):

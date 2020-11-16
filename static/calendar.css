@@ -3,7 +3,7 @@ body {font-family: Verdana, sans-serif;}
 
 /* Month header */
 .month {
-  padding: 70px 25px;
+  padding: 0px;
   background: #555555;
   text-align: center;
 }
@@ -15,24 +15,29 @@ body {font-family: Verdana, sans-serif;}
 }
 
 .month ul li {
+  padding: 70px 0px;
   color: white;
   font-size: 20px;
   text-transform: uppercase;
   letter-spacing: 3px;
 }
-.month ul li.year {
+.month ul li span.year {
   font-size: 18px;
 }
 /* Previous button inside month header */
 .month .prev {
+  padding: 80px 25px 80px 25px;
   float: left;
-  padding-top: 10px;
 }
 
 /* Next button */
 .month .next {
+  padding: 80px 25px 80px 25px;
   float: right;
-  padding-top: 10px;
+}
+
+.month a li:hover {
+background:#333333;
 }
 
 /* Weekdays (Mon-Sun) */
@@ -44,14 +49,14 @@ body {font-family: Verdana, sans-serif;}
 
 .weekdays li {
   display: inline-block;
-  width: 13.6%;
+  width: 14.28%;
   color: #666;
   text-align: center;
 }
 
 /* Days (1-31) */
 .days {
-  padding: 10px 0;
+  padding:0;
   background: #eee;
   margin: 0;
 }
@@ -59,11 +64,16 @@ body {font-family: Verdana, sans-serif;}
 .days li {
   list-style-type: none;
   display: inline-block;
-  width: 13.6%;
+  width: 14.28%;
   text-align: center;
-  margin-bottom: 5px;
+  padding: 10px 0px;
   font-size:12px;
   color: #777;
+}
+
+.days a li:hover {
+  background-color: #555;
+  color:#ffffff;
 }
 
 /* Highlight the "current" day */

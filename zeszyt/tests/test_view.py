@@ -1,18 +1,41 @@
-from datetime import timedelta
+from datetime import timedelta, date
 from django.contrib.auth.models import User
 from django.test import TestCase
 from unittest import skip
 from .base import BaseTest
 from ..models import Client, Service
 
+# TODO: zrefaktoryzuj testy, zeby dane logowania userów, klientow i inne dane do formularza byly w base.py
 
 # TODO: Czy klient widzi aktywną usługę?
 # TODO: Czy klient widzi nieaktywną usługę?
 # TODO: czy obcy klient widzi aktywną usługę
 
+class DasboardScheduleTests(BaseTest):
+
+    def test_calendar_highlight_today(self):
+        self.authorize_user()
+        response = self.client.get('/terminarz/')
+
+        self.assertContains(response, f'<span class="active">{date.today().strftime("%d")}</span>')
+
+    def test_calendar_date_url(self):
+        self.authorize_user()
+        response = self.client.get('/terminarz/2011/9')
+
+        self.assertContains(response, 'Wrzesień')
+
+    def test_calendar_day_link(self):
+        self.authorize_user()
+        response = self.client.get('/terminarz/2011/9')
+
+        self.assertContains(response, '<a href="/terminarz/2011/9/9"><li>9</li></a>')
+
+
 class DashboardClientsTests(BaseTest):
 
     def test_clients_form_display(self):
+
         self.authorize_user()
         response = self.client.get('/klienci/nowy/')
 
@@ -26,11 +49,21 @@ class DashboardClientsTests(BaseTest):
 
         self.assertContains(response, "Nie masz jeszcze żadnych klientów")
 
-    # TODO Test widoku: Czy lista klientów się prawidłowo wyświetla
-    # TODO Czy klient się dodaje po wysłąniu posta
-    # TODO Czy klient się usuwa
+    def test_client_is_added_correctly(self):
+        self.authorize_user()
+        response = self.client.post('/klienci/nowy/', data={'pin':'1111', 'name':'aaa', 'phone_number':'12212121'})
+        self.assertTrue(Client.objects.first())
+        self.assertContains(response, "aaa dodany")
 
-    # TODO Czy obcy user widzi klientów
+    def test_clients_list_display(self):
+        self.authorize_user()
+        self.client.post('/klienci/nowy/', data=self.clients['ok1']['cl_ok1'])
+        self.client.post('/klienci/nowy/', data=self.clients['ok1']['cl_ok2'])
+        response = self.client.get('/klienci/')
+        for field in self.clients['ok1']['cl_ok1'].values():
+            self.assertContains(response, field)
+        for field in self.clients['ok1']['cl_ok2'].values():
+            self.assertContains(response, field)
 
 
 class DashboardTests(BaseTest):
@@ -40,9 +73,9 @@ class DashboardTests(BaseTest):
     def test_user_remove_client(self):
         self.authorize_user('user', 'pass')
         client = Client.objects.create(phone_number='111', user=self.user)
-        self.client.get(client.get_remove_url())
-
+        response = self.client.get(client.get_remove_url())
         self.assertFalse(Client.objects.first())
+        self.assertRedirects(response, '/klienci/')
 
     def test_user_cannot_remove_others_clients(self):
         """Użytkownik nie powinien mieć możliwości usunięcia klientów innego użytkownika
