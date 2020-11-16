@@ -1,6 +1,44 @@
+from django.contrib.auth.models import User
 from django.test import TestCase
-from ..forms import AddClientForm, AddServiceForm, LoginForm
+from unittest import skip
+from ..forms import AddClientForm, AddServiceForm, ClientChooseVisitForm, ClientLoginForm, LoginForm
 from .base import BaseTest
+
+client_data = {'CORRECT_PIN': '1111',
+               'CORRECT_NAME': 'Hania',
+               'CORRECT_PHONE_NUMBER': '222222222',
+               'WRONG_PHONE_NUMBER': 'wrong_phon123',
+               'WRONG_EMAIL': 'wrong_ema',
+               'LONG_PHONE_NUMBER': '1' * 21,
+               'LONG_NAME': '1' * 21,
+               'LONG_EMAIL': 'a' * 31 + '@gmail.com',
+               'LONG_SURNAME': 'a' * 41,
+               'DESCRIPTION': 'a' * 201,
+               }
+
+service_data = {'WRONG_DURATION':'wrong',
+                'LONG_NAME':'a'*61,
+                'CORRECT_DURATION':'01:00',
+                'CORRECT_NAME':'Rzęsy',
+}
+
+class ClientLoginTests(BaseTest):
+
+   def test_display_form(self):
+        user = self.create_user()
+        response = self.client.get(f'/{user}/')
+        self.assertEqual(response.status_code, 200)
+        self.assertIsInstance(response.context['form'], ClientLoginForm)
+
+
+class ClientDashboardTests(BaseTest):
+
+    def test_display_form(self):
+        self.authorize_client()
+        response = self.client.get(f'/{self.user}/')
+        self.assertEqual(response.status_code, 200)
+        self.assertIsInstance(response.context['form'], ClientChooseVisitForm)
+
 
 class DashboardClientsTests(BaseTest):
 
@@ -14,32 +52,42 @@ class DashboardClientsTests(BaseTest):
         self.assertIsInstance(response.context['form'], AddClientForm)
 
     def test_add_client_form_validation_for_blank_fields(self):
-        form = AddClientForm(data={'pin':'1111'})
+        form = AddClientForm(data={'pin':client_data['CORRECT_PIN']})
 
         self.assertFalse(form.is_valid())
         self.assertEqual(form.errors['phone_number'], ['Pole nie może być puste'])
         self.assertEqual(form.errors['name'], ['Pole nie może być puste'])
 
     def test_add_client_form_validation_for_long_fields(self):
-        form = AddClientForm(data={'pin':'1111',
-                                   'name':'a'*100,
-                                   'phone_number':'1'*100,
-                                   'email':'a'*100,
-                                   'surname':'a'*100,
-                                   'description':'a'*201})
-
+        form = AddClientForm(data={'pin':client_data['CORRECT_PIN'],
+                                   'name':client_data['LONG_NAME'],
+                                   'phone_number':client_data['LONG_PHONE_NUMBER'],
+                                   'email':client_data['LONG_EMAIL'],
+                                   'surname':client_data['LONG_SURNAME'],
+                                   'description':client_data['DESCRIPTION']})
+        result = {'phone_number': 'Numer jest za długi',
+                  'name':'Nazwa jest za długa',
+                  'email':'Email jest za długi',
+                  'surname':'Nazwisko jest za długie',
+                  'description':'Opis jest za długi',
+                  }
         self.assertFalse(form.is_valid())
-        self.assertEqual(form.errors['phone_number'], ['Numer jest za długi'])
-        self.assertEqual(form.errors['name'], ['Nazwa jest za długa'])
-        self.assertEqual(form.errors['email'], ['Email nieprawidłowy', 'Email jest za długi'])
-        self.assertEqual(form.errors['surname'], ['Nazwisko jest za długie'])
-        self.assertEqual(form.errors['description'], ['Opis jest za długi'])
+        for field, message in result.items():
+            self.assertEqual(form.errors[field], [message])
 
     def test_add_client_form_validation_for_wrong_phone_number(self):
-        form = AddClientForm(data={'pin':'1111', 'name':'aaa', 'phone_number':'letters'})
+        form = AddClientForm(data={'pin':client_data['CORRECT_PIN'], 'name':client_data['CORRECT_NAME'],
+                                   'phone_number':client_data['WRONG_PHONE_NUMBER']})
 
         self.assertFalse(form.is_valid())
         self.assertEqual(form.errors['phone_number'], ['Podaj prawidłowy numer telefonu'])
+
+    def test_add_client_form_validation_for_wrong_email(self): #POPRAW
+        form = AddClientForm(data={'phone_number':client_data['CORRECT_PHONE_NUMBER'], 'pin':client_data['CORRECT_PIN'],
+                                    'name':client_data['CORRECT_NAME'], 'email':client_data['WRONG_EMAIL']})
+
+        self.assertFalse(form.is_valid())
+        self.assertEqual(form.errors['email'], ['Email nieprawidłowy'])
 
     # TODO Formularz powinien walidować duplikaty. Teraz robi to widok
     #  def test_add_service_form_validation_for_duplicate(self):
@@ -67,14 +115,14 @@ class DashboardSettingsTests(BaseTest):
         self.assertEqual(form.errors['name'], ['Pole nie może być puste'])
 
     def test_add_service_form_validation_for_wrong_duration(self):
-        form = AddServiceForm(data={'duration':'ffff', 'name':'usługa'})
+        form = AddServiceForm(data={'duration':service_data['WRONG_DURATION'],
+                                    'name':service_data['CORRECT_NAME']})
 
         self.assertFalse(form.is_valid())
         self.assertEqual(form.errors['duration'], ['Nie kombinuj!'])
 
     def test_add_service_form_validation_for_long_names(self):
-        name = "Muvaffakiyetsizleştiricilestiriveremeyebileceklerimizdenmissinizcesine"
-        form = AddServiceForm(data={'duration':'12', 'name':name})
+        form = AddServiceForm(data={'duration':service_data['CORRECT_DURATION'], 'name':service_data['LONG_NAME']})
 
         self.assertFalse(form.is_valid())
         self.assertEqual(form.errors['name'], ['Nazwa jest za długa'])

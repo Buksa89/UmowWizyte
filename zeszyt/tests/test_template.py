@@ -1,7 +1,62 @@
 from django.test import TestCase
 from unittest import skip
 from .base import BaseTest
-from ..models import Client, Service
+from ..models import Client, Service, User
+
+
+class ClientLoginTests(BaseTest):
+    def test_client_login_template(self):
+        user = self.create_user()
+        response = self.client.get(f'/{user}/')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'client_app/login.html')
+
+    def test_client_login_template_post(self):
+        user = self.create_user()
+        response = self.client.post(f'/{user}/', data={})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'client_app/login.html')
+
+    @skip
+    def test_client_login_not_active_user(self):
+        # TODO: Strona logowania powinna być nieaktywna dla zablokowanych uzytkownikow
+        user = self.create_user('not_active')
+        response = self.client.get(f'/{user}/')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'client_app/login_not_active.html')
+
+    def test_client_redirect_to_dahboard_after_login(self):
+        user = self.create_user()
+        client = self.create_client(user)
+        response = self.client.post(f'/{user}/', data={'phone_number':client.phone_number, 'pin':client.pin})
+
+        self.assertTemplateUsed(response, 'client_app/dashboard.html')
+
+
+class ClientDashboardTests(BaseTest):
+
+    def test_client_dashboard_template(self):
+        self.authorize_client()
+        response = self.client.get(f'/{self.user}/')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'client_app/dashboard.html')
+
+    def test_new_visit_template_post(self):
+        self.authorize_client()
+        #TODO: Utworz słowinik z usługami w base.py
+        response = self.client.post(f'/{self.user}/nowa_wizyta/', data={'service':'service'})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'client_app/new_visit_calendar.html')
+
+    def test_new_visit_template_no_post(self):
+        self.authorize_client()
+        response = self.client.get(f'/{self.user}/nowa_wizyta/')
+        self.assertNotEqual(response.status_code, 200)
 
 
 class DashboardTests(BaseTest):
@@ -56,7 +111,6 @@ class DashboardScheduleTests(BaseTest):
 
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'dashboard/schedule_calendar.html')
-
 
 
 class DashboardSettingsTests(BaseTest):

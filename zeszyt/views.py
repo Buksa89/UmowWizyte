@@ -141,11 +141,11 @@ def client_app(request, username):
 @require_http_methods(["POST"])
 def client_app_new_visit_step_1(request, username):
     service = request.POST.get('service', '')
-    return render(request, 'client_app/client_app_new_visit_step_1.html', {'username':username, 'service':service})
+    return render(request, 'client_app/new_visit_calendar.html', {'username':username, 'service':service})
 
 def client_dashboard(request, user, client):
     form = ClientChooseVisitForm(user)
-    return render(request, 'client_app/client_dashboard.html', {'form':form,
+    return render(request, 'client_app/dashboard.html', {'form':form,
                                                                 'username':user.username,
                                                                 'client_name':client.name,
                                                                 'section':'dashboard'})
@@ -164,12 +164,13 @@ def client_login(request, user):
                 form.clean()
                 form.add_error(None, 'Konto zablokowane')
             else:
+                #TODO: SPRAWDZ CZY USER JEST AKTYWNY
                 request.session['client_authorized'] = {'phone': cd['phone_number'], 'user':user.username}
                 return client_app(request, user)
     else:
         form = ClientLoginForm()
 
-    return render(request, 'client_app/client_login.html', {'form':form, 'user':user.username})
+    return render(request, 'client_app/login.html', {'form':form, 'user':user.username})
 
 def client_logout(request, username):
     # TODO: testy tej funkcji

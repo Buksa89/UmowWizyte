@@ -123,7 +123,7 @@ class ClientChooseVisitForm(forms.Form):
         self.fields['service'] = forms.ChoiceField(label='', choices=self.get_avaible_visits())
 
     def get_avaible_visits(self):
-        services = Service.objects.filter(user=self.user)
+        services = Service.objects.filter(user=self.user, is_active=True)
         service_list = ()
         for service in services:
             service_list += ((service.id,service.name),)
