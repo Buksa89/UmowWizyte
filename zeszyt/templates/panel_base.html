@@ -9,17 +9,17 @@
 <body>
     <div id="header">
           <ul class="menu">
-                <li {% if section == 'panel' %}class="selected"{% endif %}>
-                    <a href="{% url 'panel_screen' %}">Panel</a>
+                <li {% if section == 'dashboard' %}class="selected"{% endif %}>
+                    <a href="{% url 'dashboard' %}">Panel</a>
                 </li>
-                <li {% if section == 'schedule' %}class="selected"{% endif %}>
-                    <a href="{% url 'schedule_screen' %}">Terminarz</a>
+                <li {% if section == 'dashboard_schedule' %}class="selected"{% endif %}>
+                    <a href="{% url 'dashboard_schedule' %}">Terminarz</a>
                 </li>
-                <li {% if section == 'clients' %}class="selected"{% endif %}>
-                    <a href="{% url 'clients_screen' %}">Klienci</a>
+                <li {% if section == 'dashboard_clients' %}class="selected"{% endif %}>
+                    <a href="{% url 'dashboard_clients' %}">Klienci</a>
                 </li>
-                <li {% if section == 'settings' %}class="selected"{% endif %}>
-                    <a href="{% url 'settings_screen' %}">Ustawienia</a>
+                <li {% if section == 'dashboard_settings' %}class="selected"{% endif %}>
+                    <a href="{% url 'dashboard_settings' %}">Ustawienia</a>
                 </li>
                 <li>
                     <a href="{% url 'logout_screen' %}">Wyloguj</a>

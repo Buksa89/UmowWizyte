@@ -4,14 +4,14 @@
 
 {% block content %}
     <h3>Dodawanie klienta</h3>
-    {% if created_name %}<p>{{created_name}} dodany.</p> <a href="{% url 'clients_screen' %}">Kliknij tutaj</a> aby powrócić do listy klientów</p>{%endif%}
+    {% if created_name %}<p>{{created_name}} dodany.</p> <a href="{% url 'dashboard_clients' %}">Kliknij tutaj</a> aby powrócić do listy klientów</p>{%endif%}
     {% if form.errors %}
         <div class="form-group has-error">
             <span class="help-block">{{ form.text.errors }}</span>
         </div>
     {% endif %}
     <div>
-        <form name="add-client-form" method="POST" action="{% url 'add_client_screen' %}">
+        <form name="add-client-form" method="POST" action="{% url 'dashboard_clients_add' %}">
             {{ form.as_p }}
             {% csrf_token %}
             <p><input type="submit" value="Dodaj" name="submit"></p>

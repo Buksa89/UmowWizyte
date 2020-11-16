@@ -14,7 +14,7 @@
             </div>
         {% endif %}
         <div>
-            <form class="in_line_form" name="add-service-form" method="POST" action="{% url 'settings_screen' %}">
+            <form class="in_line_form" name="add-service-form" method="POST" action="{% url 'dashboard_settings' %}">
                 {{ service_form.as_table }}
                 {% csrf_token %}
                 <input type="submit" value="Dodaj" name="submit">

@@ -10,7 +10,7 @@ class DashboardTests(BaseTest):
         response = self.client.get('/panel/')
 
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'dashboard/panel.html')
+        self.assertTemplateUsed(response, 'dashboard/dashboard.html')
 
 
 class DashboardClientsTests(BaseTest):
@@ -30,14 +30,14 @@ class DashboardClientsTests(BaseTest):
         response = self.client.get('/klienci/nowy/')
 
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'dashboard/add_client.html')
+        self.assertTemplateUsed(response, 'dashboard/clients_add.html')
 
     def test_user_add_client_template_POST(self):
         self.authorize_user()
         response = self.client.post('/klienci/nowy/', data={})
 
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'dashboard/add_client.html')
+        self.assertTemplateUsed(response, 'dashboard/clients_add.html')
 
 
     """ Remove client """

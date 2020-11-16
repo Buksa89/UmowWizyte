@@ -158,7 +158,7 @@ class ServiceTests(BaseTest):
         user = User.objects.create()
         service = Service.objects.create(duration=timedelta(hours=1), name='usluga', user=user)
 
-        self.assertEqual(service.get_remove_url(), f'/panel/usun_usluge/{service.id}/')
+        self.assertEqual(service.get_remove_url(), f'/ustawienia/usun_usluge/{service.id}/')
 
 
 class UserTest(TestCase):

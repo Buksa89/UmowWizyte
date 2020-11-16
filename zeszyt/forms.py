@@ -15,6 +15,10 @@ class ClientLoginForm(forms.Form):
 
 class AddClientForm(forms.ModelForm):
 
+    def save(self, user):
+        self.instance.user = user
+        return super().save()
+
     def only_int(value):
         if value.isdigit() == False:
             raise ValidationError('Podaj prawidłowy numer telefonu')
@@ -60,15 +64,9 @@ class AddClientForm(forms.ModelForm):
             }
         }
 
-    def save(self, user):
-        self.instance.user = user
-        return super().save()
-
-
-
 
 def duration_choices(hours=8):
-    """ Funkcja tworzy krotkę zawierającą listę wszystkich godzin - od 0 do hours co 15 min"""
+    """ Generating list of times from 0 to hours. Step = 15min"""
     choices = []
     for hour in range(0, hours):
         hour = str(hour).rjust(2, '0')
@@ -83,6 +81,7 @@ def duration_choices(hours=8):
     choices=tuple(choices)
 
     return choices
+
 
 class AddServiceForm(forms.ModelForm):
 
@@ -100,7 +99,6 @@ class AddServiceForm(forms.ModelForm):
             'is_active': forms.CheckboxInput()
             }
 
-
         error_messages = {
             'duration': {'required': "Pole nie może być puste",
                              'invalid': "Nie kombinuj!"},
@@ -112,7 +110,6 @@ class AddServiceForm(forms.ModelForm):
                 'unique_together': "Usługa o tej nazwie już istnieje",
             }
         }
-
 
     def save(self, user):
         self.instance.user = user
@@ -131,6 +128,3 @@ class ClientChooseVisitForm(forms.Form):
         for service in services:
             service_list += ((service.id,service.name),)
         return service_list
-
-
-

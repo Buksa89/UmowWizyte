@@ -3,7 +3,7 @@
 {% block title %}Panel | Klienci{% endblock %}
 
 {% block content %}
-    <p><a href="{% url 'add_client_screen' %}" class="button">Dodaj klienta</a></p>
+    <p><a href="{% url 'dashboard_clients_add' %}" class="button">Dodaj klienta</a></p>
     {% if clients %}
     <table>
         <tr>

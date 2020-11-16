@@ -1,59 +1,35 @@
-from django.http import HttpResponse
+from calendar import HTMLCalendar
+from datetime import datetime
 from django.contrib.auth import authenticate, login
-from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
-from django.views.decorators.http import require_http_methods
+from django.contrib.auth.models import User
 from django.db import transaction
 from django.db.utils import IntegrityError
 from django.shortcuts import get_object_or_404, redirect, render
-from unittest import skip
-from .forms import LoginForm, AddClientForm, ClientLoginForm, AddServiceForm, ClientChooseVisitForm
-from .models import Client, Service
-from random import choice
-from datetime import datetime
 from django.urls import reverse
-from calendar import HTMLCalendar
 from django.utils.safestring import mark_safe
+from django.views.decorators.http import require_http_methods
+from random import choice
+from .forms import AddClientForm, AddServiceForm, ClientChooseVisitForm, ClientLoginForm, LoginForm
+from .models import Client, Service
 
-def welcome_screen(request):
-    return render(request, 'welcome.html', {})
-
-def login_screen(request):
-    if request.user.is_authenticated:
-        return redirect(panel_screen)
-    else:
-        if request.method == 'POST':
-            form = LoginForm(request.POST)
-
-            if form.is_valid():
-                cd = form.cleaned_data
-                user = authenticate(username=cd['username'],
-                                    password=cd['password'])
-                if user:
-                    login(request, user)
-                    return redirect(panel_screen)
-                elif User.objects.filter(username=cd['username'], is_active=False):
-                    form.clean()
-                    form.add_error(None, 'Konto zablokowane')
-                else:
-                    form.clean()
-                    form.add_error(None, 'Błędny login lub hasło')
-        else:
-            form = LoginForm()
-
-        return render(request, 'login.html', {'form':form})
+""" User Views """
 
 @login_required
-def clients_screen(request):
+def dashboard(request):
+    return render(request, 'dashboard/dashboard.html', {'section':'dashboard'})
+
+
+@login_required
+def dashboard_clients(request):
     user = User.objects.get(username=request.user)
     clients = Client.objects.filter(user=user)
     return render(request, 'dashboard/clients.html', {"clients":clients,
-                                                  'section':'clients'})
+                                                  'section':'dashboard_clients'})
 
 
 @login_required
-def add_client_screen(request):
-    # TODO: Refaktoryzacja, przeniesienie do clients
+def dashboard_clients_add(request):
     if request.method == 'POST':
         request.POST._mutable = True
         request.POST['pin'] = pin_generate()
@@ -63,28 +39,37 @@ def add_client_screen(request):
             try:
                 form.save(user=user)
                 form = AddClientForm()
-                return render(request, 'dashboard/add_client.html', {'form': form, 'created_name':request.POST.get('name','')})
+                return render(request, 'dashboard/clients_add.html', {'form': form,
+                                                                      'created_name':request.POST.get('name',''),
+                                                                      'section':'dashboard_clients'})
             except IntegrityError:
                 # TODO: Tą walidację przenieś do formularza
                 form.add_error(None, 'Klient o podanym numerze telefonu już istnieje')
-                return render(request, 'dashboard/add_client.html', {'form': form})
+                return render(request, 'dashboard/clients_add.html', {'form': form, 'section':'dashboard_clients'})
     else:
         form = AddClientForm()
-    return render(request, 'dashboard/add_client.html', {'form': form})
+    return render(request, 'dashboard/clients_add.html', {'form': form, 'section':'dashboard_clients'})
+
 
 @login_required
-def remove_client_screen(request, client_id):
+def dashboard_clients_remove(request, client_id):
     #TODO: Dodaj potwierdzenie usunięcia
     user = User.objects.get(username=request.user)
     Client.objects.filter(id=client_id,user=user).delete()
-    return redirect(clients_screen)
+    return redirect(dashboard_clients)
+
 
 @login_required
-def panel_screen(request):
-    return render(request, 'dashboard/panel.html', {'section':'panel'})
+def dashboard_schedule(request, year=datetime.now().year, month=datetime.now().month, day=False):
+    visits={}
+    if day:
+        return render(request, 'dashboard/schedule.html', {'section': 'dashboard_schedule'})
+    calendar = Calendar(year, month, visits).formatmonth()
+    return render(request, 'dashboard/schedule_calendar.html', {'section':'dashboard_schedule', 'calendar':mark_safe(calendar)})
+
 
 @login_required
-def settings_screen(request):
+def dashboard_settings(request):
     service_form = AddServiceForm()
     user = User.objects.get(username=request.user)
     services = Service.objects.filter(user=user)
@@ -106,15 +91,44 @@ def settings_screen(request):
     return render(request, 'dashboard/settings.html', {'service_form': service_form,
                                                    'services': services,
                                                    'created_name': created_name,
-                                                   'section':'settings'})
+                                                   'section':'dashboard_settings'})
+
 
 @login_required
-def remove_service(request,service_id):
+def dashboard_settings_service_remove(request,service_id):
     #TODO: Dodaj potwierdzenie usunięcia
     user = User.objects.get(username=request.user)
-    #TODO get?
-    Service.objects.filter(id=service_id,user=user).delete()
-    return redirect(settings_screen)
+    Service.objects.get(id=service_id,user=user).delete()
+    return redirect(dashboard_settings)
+
+
+def login_screen(request):
+    if request.user.is_authenticated:
+        return redirect(dashboard)
+    else:
+        if request.method == 'POST':
+            form = LoginForm(request.POST)
+
+            if form.is_valid():
+                cd = form.cleaned_data
+                user = authenticate(username=cd['username'],
+                                    password=cd['password'])
+                if user:
+                    login(request, user)
+                    return redirect(dashboard)
+                elif User.objects.filter(username=cd['username'], is_active=False):
+                    form.clean()
+                    form.add_error(None, 'Konto zablokowane')
+                else:
+                    form.clean()
+                    form.add_error(None, 'Błędny login lub hasło')
+        else:
+            form = LoginForm()
+
+        return render(request, 'login.html', {'form':form})
+
+
+""" Client Views """ # TODO: Do refaktoryzacji
 
 def client_app(request, username):
     user = get_object_or_404(User, username__iexact=username)
@@ -163,25 +177,26 @@ def client_logout(request, username):
     return redirect(client_app, username)
 
 
-# Funkcje pomocnicze
+""" Other Views """
+
+def welcome_screen(request):
+    return render(request, 'welcome.html', {})
+
+
+""" Funkcje pomocnicze """
+
 def pin_generate():
-    """ Funkcja generuje losowy, 4-cyfrowy pin """
+    """ Generator 4-digits pin number for client """
     pin = ''
     for i in range(0,4): pin += choice('0123456789')
     return(pin)
 
+
 def is_client_authenticated(request, username):
+    """ Check client is logged in. Equivalent of 'user.is_authenticated' """
     if request.session.get('client_authorized') and request.session.get('client_authorized')['user'] == username:
         return True
     else: return False
-
-@login_required
-def schedule_screen(request, year=datetime.now().year, month=datetime.now().month, day=False):
-    visits={}
-    if day:
-        return render(request, 'dashboard/schedule.html', {'section': 'schedule'})
-    calendar = Calendar(year, month, visits).formatmonth()
-    return render(request, 'dashboard/calendar.html', {'section':'schedule', 'calendar':mark_safe(calendar)})
 
 
 def get_month_name(month):
@@ -250,7 +265,7 @@ class Calendar(HTMLCalendar):
             else:
                 year -= 1
                 month = 12
-        return reverse('schedule_screen', args=[year, month])
+        return reverse('dashboard_schedule', args=[year, month])
 
     def get_day_url(self, day):
-        return reverse('schedule_screen', args=[self.year, self.month, day])
+        return reverse('dashboard_schedule', args=[self.year, self.month, day])

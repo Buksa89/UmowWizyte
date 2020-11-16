@@ -116,8 +116,8 @@ class DashobardSettingsTests(BaseTest):
         self.authorize_user('user', 'pass')
         service = Service.objects.create(duration=timedelta(hours=1), name='usluga', user=self.user)
         self.authorize_user('user2', 'pass2')
-        self.client.get(service.get_remove_url())
-
+        with self.assertRaises(Service.DoesNotExist):
+            self.client.get(service.get_remove_url())
         self.assertTrue(Service.objects.first())
 
 

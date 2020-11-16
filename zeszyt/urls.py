@@ -8,19 +8,22 @@ urlpatterns = [
     path('login/', views.login_screen, name='login_screen'),
     path('logout/', auth_views.LogoutView.as_view(), name='logout_screen'),
 
-    path('panel/', views.panel_screen, name='panel_screen'),
-    path('terminarz/', views.schedule_screen, name='schedule_screen'),
-    path('terminarz/<int:year>/<int:month>', views.schedule_screen, name='schedule_screen'),
-    path('terminarz/<int:year>/<int:month>/<int:day>', views.schedule_screen, name='schedule_screen'),
-    path('klienci/', views.clients_screen, name='clients_screen'),
-    path('klienci/nowy/', views.add_client_screen, name='add_client_screen'),
-    path('klienci/usun/<int:client_id>/', views.remove_client_screen, name='remove_client_screen'),
+    path('panel/', views.dashboard, name='dashboard'),
 
-    path('ustawienia/', views.settings_screen, name='settings_screen'),
-    path('panel/usun_usluge/<int:service_id>/', views.remove_service, name='remove_service'),
+    path('terminarz/', views.dashboard_schedule, name='dashboard_schedule'),
+    path('terminarz/<int:year>/<int:month>', views.dashboard_schedule, name='dashboard_schedule'),
+    path('terminarz/<int:year>/<int:month>/<int:day>', views.dashboard_schedule, name='dashboard_schedule'),
+
+    path('klienci/', views.dashboard_clients, name='dashboard_clients'),
+    path('klienci/nowy/', views.dashboard_clients_add, name='dashboard_clients_add'),
+    path('klienci/usun/<int:client_id>/', views.dashboard_clients_remove, name='dashboard_clients_remove'),
+
+    path('ustawienia/', views.dashboard_settings, name='dashboard_settings'),
+    path('ustawienia/usun_usluge/<int:service_id>/', views.dashboard_settings_service_remove,
+         name='dashboard_settings_service_remove'),
 
     path('<str:username>/', views.client_app, name='client_app'),
-    path('<str:username>/logout/', views.client_logout, name='client_logout'),
+    path('<str:username>/logout/', views.client_logout, name='client_logout'),      #TODO: client_app_logout
     path('<str:username>/nowa_wizyta/', views.client_app_new_visit_step_1, name='client_app_new_visit_step_1'),
 
 ]
