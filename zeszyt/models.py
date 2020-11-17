@@ -1,5 +1,6 @@
 from datetime import timedelta
 from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.urls import reverse
 
@@ -57,9 +58,9 @@ class Visit(models.Model):
         return reverse('remove_visit', args=[self.id])
 
 class WorkTime(models.Model):
-    user = models.ForeignKey(User, default ='', on_delete=models.CASCADE)
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
     start_time = models.TimeField(auto_now=False, auto_now_add=False, default = timedelta(hours=8))
-    stop_time = models.TimeField(auto_now=False, auto_now_add=False, default = timedelta(hours=16))
+    end_time = models.TimeField(auto_now=False, auto_now_add=False, default = timedelta(hours=16))
     monday = models.BooleanField(default=True)
     tuesday = models.BooleanField(default=True)
     wednesday = models.BooleanField(default=True)
@@ -68,3 +69,7 @@ class WorkTime(models.Model):
     saturday = models.BooleanField(default=False)
     sunday = models.BooleanField(default=False)
     holidays = models.BooleanField(default=False)
+
+    def clean(self):
+        if self.start_time > self.end_time:
+            raise ValidationError('Koniec pracy musi być później niż początek')

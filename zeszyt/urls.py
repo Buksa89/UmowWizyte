@@ -15,10 +15,10 @@ urlpatterns = [
     path('terminarz/<int:year>/<int:month>/<int:day>', views.dashboard_schedule, name='dashboard_schedule'),
 
     path('klienci/', views.dashboard_clients, name='dashboard_clients'),
-    path('klienci/nowy/', views.dashboard_clients_add, name='dashboard_clients_add'),
+    path('klienci/nowy/', views.DashboardClientsAdd.as_view(), name='dashboard_clients_add'),
     path('klienci/usun/<int:client_id>/', views.dashboard_clients_remove, name='dashboard_clients_remove'),
 
-    path('ustawienia/', views.dashboard_settings, name='dashboard_settings'),
+    path('ustawienia/', views.DashboardSettings.as_view(), name='dashboard_settings'),
     path('ustawienia/usun_usluge/<int:service_id>/', views.dashboard_settings_service_remove,
          name='dashboard_settings_service_remove'),
 

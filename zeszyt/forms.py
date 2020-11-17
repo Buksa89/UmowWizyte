@@ -1,6 +1,14 @@
 from django import forms
 from django.core.exceptions import NON_FIELD_ERRORS, ValidationError
+from random import choice
 from .models import Client, Service, WorkTime
+
+
+def pin_generate():
+    """ Generator 4-digits pin number for client """
+    pin = ''
+    for i in range(0,4): pin += choice('0123456789')
+    return(pin)
 
 
 def time_choices(hours=8):
@@ -32,8 +40,13 @@ class ClientLoginForm(forms.Form):
 
 class AddClientForm(forms.ModelForm):
 
+    def form_valid(self, form):
+        form.instance.user = self.request.user
+        return super().form_valid(form)
+
     def save(self, user):
         self.instance.user = user
+        self.instance.pin = pin_generate()
         return super().save()
 
     def only_int(value):
@@ -46,16 +59,16 @@ class AddClientForm(forms.ModelForm):
                                    widget=forms.TextInput(attrs={'placeholder': 'Telefon'}),
                                    label='Telefon*',)
 
+
+
     class Meta:
         model = Client
-        fields = ['phone_number', 'email', 'name', 'surname', 'description','pin']
+        fields = ['phone_number', 'email', 'name', 'surname', 'description']
         labels = {
-            'phone_number': 'Telefon*',
             'email': 'email',
             'name': 'Imię*',
             'surname': 'Nazwisko',
             'description': 'Dodatkowe info',
-            'pin': ''
         }
         widgets = {
             'email': forms.fields.TextInput(attrs={
@@ -66,7 +79,6 @@ class AddClientForm(forms.ModelForm):
                 'placeholder': 'Nazwisko',}),
             'description': forms.fields.TextInput(attrs={
                 'placeholder': 'Opis (Tego pola klient nie widzi',}),
-            'pin': forms.fields.HiddenInput(),
             }
         error_messages = {
             'name': {'required': "Pole nie może być puste",
@@ -129,17 +141,18 @@ class ClientChooseVisitForm(forms.Form):
 
 
 class WorkTimeForm(forms.ModelForm):
-    # TODO: Walidacja czy czas zakonczenia nie jest wczesniej niz rozpoczecia
+
     # TODO: Wczytanie danych do formularza
     # TODO: JEśli nie ma danych, utwórz prrzykładowe
     # TODO: - zapis na TYM SAMYM miejscu
+
     class Meta:
         model = WorkTime
-        fields = ['start_time', 'stop_time', 'monday', 'tuesday', 'wednesday',
+        fields = ['start_time', 'end_time', 'monday', 'tuesday', 'wednesday',
                   'thursday', 'friday', 'saturday', 'sunday', 'holidays']
         labels = {
             'start_time': 'Od godziny',
-            'stop_time': 'Do godziny',
+            'end_time': 'Do godziny',
             'monday': 'Poniedziałki',
             'tuesday': 'Wtorki',
             'wednesday': 'Środy',
@@ -151,7 +164,7 @@ class WorkTimeForm(forms.ModelForm):
         }
         widgets = {
             'start_time': forms.Select(choices=time_choices(24)),
-            'stop_time': forms.Select(choices=time_choices(24)),
+            'end_time': forms.Select(choices=time_choices(24)),
             'monday': forms.CheckboxInput(),
             'tuesday': forms.CheckboxInput(),
             'wednesday': forms.CheckboxInput(),

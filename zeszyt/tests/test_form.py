@@ -88,14 +88,13 @@ class DashboardClientsTests(BaseTest):
 
         self.assertFalse(form.is_valid())
         self.assertEqual(form.errors['email'], ['Email nieprawidłowy'])
-
-    # TODO Formularz powinien walidować duplikaty. Teraz robi to widok
-    #  def test_add_service_form_validation_for_duplicate(self):
-        #AddClientForm(data={'pin': '1111', 'name': 'aaa', 'phone_number': '111'})
-        #form = AddClientForm(data={'pin': '1111', 'name': 'aaa', 'phone_number': '111'})
-        #self.assertFalse(form.is_valid())
-        #print(form.errors)
-        #self.assertEqual(form.errors['phone_number'], ['Podaj prawidłowy numer telefonu'])
+    #TODO Naprawić ten test jak juz ogarne formularz
+    def test_add_service_form_validation_for_duplicate(self):
+        user = self.create_user(user='ok1')
+        self.create_client(user, client='cl_ok1')
+        form = AddClientForm(data=self.clients['ok1']['cl_ok1'])
+        self.assertFalse(form.is_valid())
+        self.assertEqual(form.non_field_errors(), ['Posiadasz już klienta z tym numerem telefonu'])
 
 
 class DashboardSettingsTests(BaseTest):

@@ -2,15 +2,17 @@ from calendar import HTMLCalendar
 from datetime import datetime
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
+from django.utils.decorators import method_decorator
 from django.contrib.auth.models import User
 from django.db import transaction
 from django.db.utils import IntegrityError
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
+from django.utils.decorators import method_decorator
 from django.utils.safestring import mark_safe
+from django.views import View
 from django.views.decorators.http import require_http_methods
 import holidays
-from random import choice
 from .forms import AddClientForm, AddServiceForm, ClientChooseVisitForm, ClientLoginForm, LoginForm, WorkTimeForm
 from .models import Client, Service
 
@@ -29,27 +31,26 @@ def dashboard_clients(request):
                                                   'section':'dashboard_clients'})
 
 
-@login_required
-def dashboard_clients_add(request):
-    if request.method == 'POST':
-        request.POST._mutable = True
-        request.POST['pin'] = pin_generate()
-        form = AddClientForm(data=request.POST)
-        if form.is_valid():
-            user = User.objects.get(username=request.user)
-            try:
-                form.save(user=user)
-                form = AddClientForm()
-                return render(request, 'dashboard/clients_add.html', {'form': form,
-                                                                      'created_name':request.POST.get('name',''),
-                                                                      'section':'dashboard_clients'})
-            except IntegrityError:
-                # TODO: Tą walidację przenieś do formularza
-                form.add_error(None, 'Klient o podanym numerze telefonu już istnieje')
-                return render(request, 'dashboard/clients_add.html', {'form': form, 'section':'dashboard_clients'})
-    else:
+class DashboardClientsAdd(View):
+    template_name = 'dashboard/clients_add.html'
+
+    @method_decorator(login_required)
+    def get(self, request):
         form = AddClientForm()
-    return render(request, 'dashboard/clients_add.html', {'form': form, 'section':'dashboard_clients'})
+        return render(request, self.template_name, {'form': form, 'section':'dashboard_clients'})
+
+    @method_decorator(login_required)
+    def post(self, request):
+        user = User.objects.get(username=request.user)
+        form = AddClientForm(data=self.request.POST)
+        if form.is_valid():
+            form.save(user)
+            form = AddClientForm()
+            return render(request, 'dashboard/clients_add.html', {'form': form,
+                                                                  'created_name':request.POST.get('name',''),
+                                                                  'section':'dashboard_clients'})
+        form = AddClientForm(data=self.request.POST)
+        return render(self.request, self.template_name, {'form': form, 'section': 'dashboard_clients'})
 
 
 @login_required
@@ -69,51 +70,65 @@ def dashboard_schedule(request, year=datetime.now().year, month=datetime.now().m
     return render(request, 'dashboard/schedule_calendar.html', {'section':'dashboard_schedule', 'calendar':mark_safe(calendar)})
 
 
-@login_required
-def dashboard_settings(request):
-    #TODO: PRacuję nad tym
-    service_form = AddServiceForm()
-    user = User.objects.get(username=request.user)
-    services = Service.objects.filter(user=user)
-    created_service = None   # jeśli zostanie utworzona nowa usługa, wyświetli się powiadomienie z jej nazwą
-    service_form = AddServiceForm()
-    work_time_form = WorkTimeForm()
+class DashboardSettings(View):
+    template_name = 'dashboard/settings.html'
 
-    if request.method == 'POST' and 'submit' in request.POST.keys():
-        if request.POST['submit'] == 'add_service':
-            service_form, created_service = dashboard_settings_services(request, user)
+    @method_decorator(login_required)
+    def get(self, request):
+        #TODO: PRacuję nad tym
+        user = User.objects.get(username=request.user)
+        services = Service.objects.filter(user=user)
+        service_form = AddServiceForm()
+        work_time_form = WorkTimeForm()
+
+        return render(request, 'dashboard/settings.html', {'work_time_form': work_time_form,
+                                                        'service_form': service_form,
+                                                       'services': services,
+                                                       'section':'dashboard_settings'})
+
+
+    @method_decorator(login_required)
+    def post(self, request):
+        created_service = None
+        user = User.objects.get(username=request.user)
+        services = Service.objects.filter(user=user)
+        service_form = AddServiceForm()
+        work_time_form = WorkTimeForm()
+        if 'submit' not in request.POST.keys(): None
+        elif request.POST['submit'] == 'add_service':
+            service_form, created_service = self.dashboard_settings_services(request, user)
         elif request.POST['submit'] == 'set_work_time':
-            work_time_form = dashboard_settings_work_time(request, user)
+            work_time_form = self.dashboard_settings_work_time(request, user)
 
-    return render(request, 'dashboard/settings.html', {'work_time_form': work_time_form,
-                                                    'service_form': service_form,
-                                                   'services': services,
-                                                   'created_service': created_service,
-                                                   'section':'dashboard_settings'})
+        return render(request, 'dashboard/settings.html', {'work_time_form': work_time_form,
+                                                        'service_form': service_form,
+                                                       'services': services,
+                                                       'created_service': created_service,
+                                                       'section':'dashboard_settings'})
 
-def dashboard_settings_services(request, user):
-    service_form = AddServiceForm(data=request.POST)
-    created_service = None
-    if service_form.is_valid():
-        if request.POST['duration'] == '00:00':  # Usługa nie może trwać 0
-            service_form.add_error(None, 'Ustaw czas')
-        else:
-            try:
-                with transaction.atomic():  # Bez tego wyrzuca błąd
-                    service_form.save(user=user)
-                created_service = request.POST.get('name', '')
-                service_form = AddServiceForm()
-            except IntegrityError:
-                # TODO: Tą walidację przenieś do formularza
-                service_form.add_error(None, 'Usługa o tej nazwie już istnieje')
-    return service_form, created_service
+    def dashboard_settings_services(self, request, user):
+        service_form = AddServiceForm(data=request.POST)
+        created_service = None
+        if service_form.is_valid():
+            if request.POST['duration'] == '00:00':  # Usługa nie może trwać 0
+                service_form.add_error(None, 'Ustaw czas')
+            else:
+                try:
+                    with transaction.atomic():  # Bez tego wyrzuca błąd
+                        service_form.save(user=user)
+                    created_service = request.POST.get('name', '')
+                    service_form = AddServiceForm()
+                except IntegrityError:
+                    # TODO: Tą walidację przenieś do formularza
+                    service_form.add_error(None, 'Usługa o tej nazwie już istnieje')
+        return service_form, created_service
 
 
-def dashboard_settings_work_time(request, user):
-    form = WorkTimeForm(data=request.POST)
-    if form.is_valid():
-        pass
-    return form
+    def dashboard_settings_work_time(self, request, user):
+        form = WorkTimeForm(data=request.POST)
+        if form.is_valid():
+            pass
+        return form
 
 
 @login_required
@@ -121,7 +136,7 @@ def dashboard_settings_service_remove(request,service_id):
     #TODO: Dodaj potwierdzenie usunięcia
     user = User.objects.get(username=request.user)
     Service.objects.get(id=service_id,user=user).delete()
-    return redirect(dashboard_settings)
+    return redirect('dashboard_settings')
 
 
 def login_screen(request):
@@ -207,12 +222,6 @@ def welcome_screen(request):
 
 
 """ Funkcje pomocnicze """
-
-def pin_generate():
-    """ Generator 4-digits pin number for client """
-    pin = ''
-    for i in range(0,4): pin += choice('0123456789')
-    return(pin)
 
 
 def is_client_authenticated(request, username):
