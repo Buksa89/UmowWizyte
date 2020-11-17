@@ -1,3 +1,4 @@
+from datetime import timedelta
 from django.contrib.auth.models import User
 from django.db import models
 from django.urls import reverse
@@ -54,3 +55,16 @@ class Visit(models.Model):
 
     def get_remove_url(self):
         return reverse('remove_visit', args=[self.id])
+
+class WorkTime(models.Model):
+    user = models.ForeignKey(User, default ='', on_delete=models.CASCADE)
+    start_time = models.TimeField(auto_now=False, auto_now_add=False, default = timedelta(hours=8))
+    stop_time = models.TimeField(auto_now=False, auto_now_add=False, default = timedelta(hours=16))
+    monday = models.BooleanField(default=True)
+    tuesday = models.BooleanField(default=True)
+    wednesday = models.BooleanField(default=True)
+    thursday = models.BooleanField(default=True)
+    friday = models.BooleanField(default=True)
+    saturday = models.BooleanField(default=False)
+    sunday = models.BooleanField(default=False)
+    holidays = models.BooleanField(default=False)

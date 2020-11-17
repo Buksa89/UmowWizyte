@@ -71,6 +71,11 @@ background:#333333;
   color: #777;
 }
 
+.days li.red {
+  background-color: #777;
+  color:#7f0000;
+}
+
 .days a li:hover {
   background-color: #555;
   color:#ffffff;

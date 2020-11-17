@@ -1,6 +1,11 @@
 body{
 font-family: Helvetica;
 }
+
+form li {
+  list-style-type: none;
+}
+
 ul.menu {
   list-style-type: none;
   margin: 0;

@@ -107,6 +107,15 @@ class DasboardScheduleTests(BaseTest):
 
         self.assertContains(response, '<a href="/terminarz/2011/9/9"><li>9</li></a>')
 
+    def test_calendar_holidays_red(self):
+        self.authorize_user()
+        response = self.client.get('/terminarz/2011/11')
+
+        self.assertContains(response, '<li class="red">1</li>')
+        self.assertContains(response, '<li class="red">11</li>')
+        self.assertContains(response, '<li class="red">6</li>')
+        self.assertNotContains(response, '<li class="red">2</li>')
+
 
 class DashboardClientsTests(BaseTest):
 
@@ -179,10 +188,10 @@ class DashobardSettingsTests(BaseTest):
         name = "Muvaffakiyetsizleştiricilestiriveremeyebileceklerimizdenmissinizcesine"
         self.authorize_user()
         Service.objects.create(user=self.user, duration=timedelta(hours=1), name='duplikat')
-        data_results = [{'data': {'duration': '00:15', 'name': ''}, 'message': 'Pole nie może być puste'},
-                        {'data': {'duration': '00:00', 'name': 'usługa'}, 'message': 'Ustaw czas'},
-                        {'data': {'duration': '01:45', 'name': name}, 'message': "Nazwa jest za długa"},
-                        {'data': {'duration': '05:45', 'name': 'duplikat'}, 'message': 'Usługa o tej nazwie już istnieje'},]
+        data_results = [{'data': {'duration': '00:15', 'name': '', 'submit': 'add_service'}, 'message': 'Pole nie może być puste'},
+                        {'data': {'duration': '00:00', 'name': 'usługa', 'submit': 'add_service'}, 'message': 'Ustaw czas'},
+                        {'data': {'duration': '01:45', 'name': name, 'submit': 'add_service'}, 'message': "Nazwa jest za długa"},
+                        {'data': {'duration': '05:45', 'name': 'duplikat', 'submit': 'add_service'}, 'message': 'Usługa o tej nazwie już istnieje'}]
         for data_result in data_results:
             response = self.client.post('/ustawienia/', data=data_result['data'])
 
@@ -196,15 +205,14 @@ class DashobardSettingsTests(BaseTest):
 
     def test_service_list_display(self):
         self.authorize_user()
-        response = self.client.post('/ustawienia/', data={'duration': '00:15', 'name': 'usługa'})
+        response = self.client.post('/ustawienia/', data={'duration': '00:15', 'name': 'usługa', 'submit': 'add_service'})
         content = ['Usługa usługa dodana.', '<td>usługa</td>', '<td>00:15</td>', '<td>False</td>']
-
         for element in content:
             self.assertContains(response, element)
 
     def test_other_user_see_my_service(self):
         self.authorize_user('ok1')
-        self.client.post('/ustawienia/', data={'duration': '00:15', 'name': 'usługa'})
+        self.client.post('/ustawienia/', data={'duration': '00:15', 'name': 'usługa', 'submit': 'add_service'})
         self.authorize_user('ok2')
         response = self.client.get('/ustawienia/')
 

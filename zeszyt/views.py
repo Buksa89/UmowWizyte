@@ -9,8 +9,9 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils.safestring import mark_safe
 from django.views.decorators.http import require_http_methods
+import holidays
 from random import choice
-from .forms import AddClientForm, AddServiceForm, ClientChooseVisitForm, ClientLoginForm, LoginForm
+from .forms import AddClientForm, AddServiceForm, ClientChooseVisitForm, ClientLoginForm, LoginForm, WorkTimeForm
 from .models import Client, Service
 
 """ User Views """
@@ -70,28 +71,49 @@ def dashboard_schedule(request, year=datetime.now().year, month=datetime.now().m
 
 @login_required
 def dashboard_settings(request):
+    #TODO: PRacuję nad tym
     service_form = AddServiceForm()
     user = User.objects.get(username=request.user)
     services = Service.objects.filter(user=user)
-    created_name = ''   # jeśli zostanie utworzona nowa usługa, wyświetli się powiadomienie z jej nazwą
-    if request.method == 'POST':
-        service_form = AddServiceForm(data=request.POST)
-        if service_form.is_valid():
-            if request.POST['duration']=='00:00':   # Usługa nie może trwać 0
-                service_form.add_error(None, 'Ustaw czas')
-            else:
-                try:
-                    with transaction.atomic():          # Bez tego wyrzuca błąd
-                        service_form.save(user=user)
-                    created_name = request.POST.get('name', '')
-                    service_form = AddServiceForm()
-                except IntegrityError:
-                    # TODO: Tą walidację przenieś do formularza
-                    service_form.add_error(None, 'Usługa o tej nazwie już istnieje')
-    return render(request, 'dashboard/settings.html', {'service_form': service_form,
+    created_service = None   # jeśli zostanie utworzona nowa usługa, wyświetli się powiadomienie z jej nazwą
+    service_form = AddServiceForm()
+    work_time_form = WorkTimeForm()
+
+    if request.method == 'POST' and 'submit' in request.POST.keys():
+        if request.POST['submit'] == 'add_service':
+            service_form, created_service = dashboard_settings_services(request, user)
+        elif request.POST['submit'] == 'set_work_time':
+            work_time_form = dashboard_settings_work_time(request, user)
+
+    return render(request, 'dashboard/settings.html', {'work_time_form': work_time_form,
+                                                    'service_form': service_form,
                                                    'services': services,
-                                                   'created_name': created_name,
+                                                   'created_service': created_service,
                                                    'section':'dashboard_settings'})
+
+def dashboard_settings_services(request, user):
+    service_form = AddServiceForm(data=request.POST)
+    created_service = None
+    if service_form.is_valid():
+        if request.POST['duration'] == '00:00':  # Usługa nie może trwać 0
+            service_form.add_error(None, 'Ustaw czas')
+        else:
+            try:
+                with transaction.atomic():  # Bez tego wyrzuca błąd
+                    service_form.save(user=user)
+                created_service = request.POST.get('name', '')
+                service_form = AddServiceForm()
+            except IntegrityError:
+                # TODO: Tą walidację przenieś do formularza
+                service_form.add_error(None, 'Usługa o tej nazwie już istnieje')
+    return service_form, created_service
+
+
+def dashboard_settings_work_time(request, user):
+    form = WorkTimeForm(data=request.POST)
+    if form.is_valid():
+        pass
+    return form
 
 
 @login_required
@@ -209,6 +231,15 @@ def get_day_name(day):
     days = ['Pn', 'Wt', 'Śr', 'Cz', 'Pt', 'So', 'Nd']
     return(days[day-1])
 
+def is_holiday(year, month, day):
+    if datetime(year, month, day).date() in holidays.Poland(): return True
+
+def is_sunday(year, month, day):
+    if datetime(year, month, day).weekday() == 6: return True
+
+
+
+
 class Calendar(HTMLCalendar):
     def __init__(self, year=None, month=None, visits=None):
       self.year = year
@@ -224,7 +255,10 @@ class Calendar(HTMLCalendar):
     def formatday(self, day):
         #Iteracja wizyt
         if day != 0:
-            day_li = f'<a href="{self.get_day_url(day)}"><li>'
+            holiday_class = ''
+            if is_sunday(self.year, self.month, day) or is_holiday(self.year, self.month, day):
+                holiday_class = ' class="red"'
+            day_li = f'<a href="{self.get_day_url(day)}"><li{holiday_class}>'
             if datetime.today().date() == datetime(self.year, self.month, day).date():
                 day_li += f'<span class="active">{day}</span>'
             else: day_li += str(day)
@@ -270,3 +304,4 @@ class Calendar(HTMLCalendar):
 
     def get_day_url(self, day):
         return reverse('dashboard_schedule', args=[self.year, self.month, day])
+

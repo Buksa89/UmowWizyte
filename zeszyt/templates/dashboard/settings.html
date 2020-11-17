@@ -7,7 +7,7 @@
     <h1>Ustawienia</h1>
     <h2>Usługi</h2>
     <div>
-        {% if created_name %}<p>Usługa {{created_name}} dodana.</p>{% endif %}
+        {% if created_service %}<p>Usługa {{ created_service }} dodana.</p>{% endif %}
         {% if service_form.errors %}
             <div class="form-group has-error">
                 <span class="help-block">{{ service_form.text.errors }}</span>
@@ -17,7 +17,7 @@
             <form class="in_line_form" name="add-service-form" method="POST" action="{% url 'dashboard_settings' %}">
                 {{ service_form.as_table }}
                 {% csrf_token %}
-                <input type="submit" value="Dodaj" name="submit">
+                <button type="submit" name="submit" value="add_service">Dodaj</button>
             </form>
         </div>
         {% if services %}
@@ -45,9 +45,13 @@
 <div>
     <h2>Czas pracy</h2>
     <p>Ustaw standardowy czas pracy (Klienci będą mogli wybierać tylko te dni/godziny. Ty będziesz mógł wybrać dowolne</p>
-    <p>Godziny: od-do - listy rozwijane</p>
-    <p>dni - checkboxy</p>
-    <p>święta - checkbox</p>
+    <div>
+        <form name="work-time-form" method="POST" action="{% url 'dashboard_settings' %}">
+                {{ work_time_form.as_ul }}
+                {% csrf_token %}
+                <button type="submit" name="submit" value="set_work_time">Zapisz</button>
+        </form>
+    </div>
 </div>
 <div>
     <h2>Zmiana hasła</h2>
