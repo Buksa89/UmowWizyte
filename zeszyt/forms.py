@@ -171,6 +171,6 @@ class WorkTimeForm(forms.ModelForm):
             'saturday': forms.CheckboxInput(),
             'sunday': forms.CheckboxInput(),
             'holidays': forms.CheckboxInput(),
-            'sunday': forms.NumberInput(),
-            'holidays': forms.NumberInput(),
+            'earliest_visit': forms.NumberInput(),
+            'latest_visit': forms.NumberInput(),
             }
