@@ -12,9 +12,10 @@ from django.utils.decorators import method_decorator
 from django.utils.safestring import mark_safe
 from django.views import View
 from django.views.decorators.http import require_http_methods
+from django.views.generic.edit import CreateView
 import holidays
 from .forms import AddClientForm, AddServiceForm, ClientChooseVisitForm, ClientLoginForm, LoginForm, WorkTimeForm
-from .models import Client, Service
+from .models import Client, Service, WorkTime
 
 """ User Views """
 
@@ -31,7 +32,7 @@ def dashboard_clients(request):
                                                   'section':'dashboard_clients'})
 
 
-class DashboardClientsAdd(View):
+class DashboardClientsAdd(CreateView):
     template_name = 'dashboard/clients_add.html'
 
     @method_decorator(login_required)
@@ -66,26 +67,38 @@ def dashboard_schedule(request, year=datetime.now().year, month=datetime.now().m
     visits={}
     if day:
         return render(request, 'dashboard/schedule.html', {'section': 'dashboard_schedule'})
-    calendar = Calendar(year, month, visits).formatmonth()
+    calendar = Calendar(year, month, visits, request.user).formatmonth()
     return render(request, 'dashboard/schedule_calendar.html', {'section':'dashboard_schedule', 'calendar':mark_safe(calendar)})
 
 
-class DashboardSettings(View):
+class DashboardSettings(CreateView):
     template_name = 'dashboard/settings.html'
+
+
+    """    initial = {'size':'L'}
+    def get_form(self):
+        form = super(DashboardSettings, self).get_form()
+        initial_base = self.get_initial() 
+        initial_base['menu'] = Menu.objects.get(id=1)
+        form.initial = initial_base
+        form.fields['name'].widget = forms.widgets.Textarea()
+        return form"""
+
 
     @method_decorator(login_required)
     def get(self, request):
-        #TODO: PRacuję nad tym
         user = User.objects.get(username=request.user)
         services = Service.objects.filter(user=user)
         service_form = AddServiceForm()
-        work_time_form = WorkTimeForm()
+        work_time = WorkTime.objects.get(user=user)
+        work_time.__dict__['start_time'] = work_time.__dict__['start_time'].strftime("%H:%M")
+        work_time.__dict__['end_time'] = work_time.__dict__['end_time'].strftime("%H:%M")
+        work_time_form = WorkTimeForm(initial=work_time.__dict__,instance=work_time)
 
         return render(request, 'dashboard/settings.html', {'work_time_form': work_time_form,
                                                         'service_form': service_form,
                                                        'services': services,
                                                        'section':'dashboard_settings'})
-
 
     @method_decorator(login_required)
     def post(self, request):
@@ -93,7 +106,10 @@ class DashboardSettings(View):
         user = User.objects.get(username=request.user)
         services = Service.objects.filter(user=user)
         service_form = AddServiceForm()
-        work_time_form = WorkTimeForm()
+        work_time = WorkTime.objects.get(user=user)
+        work_time.__dict__['start_time'] = work_time.__dict__['start_time'].strftime("%H:%M")
+        work_time.__dict__['end_time'] = work_time.__dict__['end_time'].strftime("%H:%M")
+        work_time_form = WorkTimeForm(initial=work_time.__dict__,instance=work_time)
         if 'submit' not in request.POST.keys(): None
         elif request.POST['submit'] == 'add_service':
             service_form, created_service = self.dashboard_settings_services(request, user)
@@ -125,9 +141,11 @@ class DashboardSettings(View):
 
 
     def dashboard_settings_work_time(self, request, user):
-        form = WorkTimeForm(data=request.POST)
+        work_time = WorkTime.objects.get(user=user)
+        form = WorkTimeForm(data=request.POST, instance=work_time)
         if form.is_valid():
-            pass
+            form.save()
+            #TODO: Dodaj potwierdzenie zmiany
         return form
 
 
@@ -246,15 +264,18 @@ def is_holiday(year, month, day):
 def is_sunday(year, month, day):
     if datetime(year, month, day).weekday() == 6: return True
 
-
-
+def is_free_day(year, month, day, user):
+    work_time = WorkTime.objects.get(user=user)
+    days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
+    if not work_time.__dict__[days[datetime(year, month, day).weekday()]]: return True
 
 class Calendar(HTMLCalendar):
-    def __init__(self, year=None, month=None, visits=None):
-      self.year = year
-      self.month = month
-      self.visits = visits
-      super(Calendar, self).__init__()
+    def __init__(self, year=None, month=None, visits=None, user=None):
+        self.year = year
+        self.month = month
+        self.visits = visits
+        self.user = user
+        super(Calendar, self).__init__()
 
     def formatmonthname(self, theyear, themonth):
 
@@ -264,10 +285,13 @@ class Calendar(HTMLCalendar):
     def formatday(self, day):
         #Iteracja wizyt
         if day != 0:
-            holiday_class = ''
+            special_class = ''
             if is_sunday(self.year, self.month, day) or is_holiday(self.year, self.month, day):
-                holiday_class = ' class="red"'
-            day_li = f'<a href="{self.get_day_url(day)}"><li{holiday_class}>'
+                special_class = ' class="red"'
+            elif is_free_day(self.year, self.month, day, self.user):
+                special_class = ' class="dark"'
+
+            day_li = f'<a href="{self.get_day_url(day)}"><li{special_class}>'
             if datetime.today().date() == datetime(self.year, self.month, day).date():
                 day_li += f'<span class="active">{day}</span>'
             else: day_li += str(day)

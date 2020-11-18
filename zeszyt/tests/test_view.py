@@ -3,7 +3,12 @@ from django.contrib.auth.models import User
 from django.test import TestCase
 from unittest import skip
 from .base import BaseTest
-from ..models import Client, Service
+from ..models import Client, Service, WorkTime
+
+#TODO: Testy formularza ustawiania czasu
+#TODO: Testy wyświetlania nieaktywnych dni w kalendarzu
+
+
 
 ANY_PIN = 9999
 ANY_PHONE = 999999999

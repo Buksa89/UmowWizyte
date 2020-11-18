@@ -2,6 +2,8 @@ from datetime import timedelta
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 from django.urls import reverse
 
 class Client(models.Model):
@@ -59,8 +61,8 @@ class Visit(models.Model):
 
 class WorkTime(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    start_time = models.TimeField(auto_now=False, auto_now_add=False, default = timedelta(hours=8))
-    end_time = models.TimeField(auto_now=False, auto_now_add=False, default = timedelta(hours=16))
+    start_time = models.TimeField(auto_now=False, auto_now_add=False, default="8:00")
+    end_time = models.TimeField(auto_now=False, auto_now_add=False, default="16:00")
     monday = models.BooleanField(default=True)
     tuesday = models.BooleanField(default=True)
     wednesday = models.BooleanField(default=True)
@@ -71,5 +73,10 @@ class WorkTime(models.Model):
     holidays = models.BooleanField(default=False)
 
     def clean(self):
-        if self.start_time > self.end_time:
+        if self.start_time >= self.end_time:
             raise ValidationError('Koniec pracy musi być później niż początek')
+
+    @receiver(post_save, sender=User)
+    def create_profile(sender, instance, created, **kwargs):
+        if created:
+            WorkTime.objects.create(user=instance)

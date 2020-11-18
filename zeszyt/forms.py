@@ -40,9 +40,6 @@ class ClientLoginForm(forms.Form):
 
 class AddClientForm(forms.ModelForm):
 
-    def form_valid(self, form):
-        form.instance.user = self.request.user
-        return super().form_valid(form)
 
     def save(self, user):
         self.instance.user = user
@@ -143,8 +140,8 @@ class ClientChooseVisitForm(forms.Form):
 class WorkTimeForm(forms.ModelForm):
 
     # TODO: Wczytanie danych do formularza
-    # TODO: JEśli nie ma danych, utwórz prrzykładowe
     # TODO: - zapis na TYM SAMYM miejscu
+
 
     class Meta:
         model = WorkTime

@@ -6,6 +6,11 @@ form li {
   list-style-type: none;
 }
 
+.errorlist {
+  list-style-type: none;
+  padding:0px;
+}
+
 ul.menu {
   list-style-type: none;
   margin: 0;
