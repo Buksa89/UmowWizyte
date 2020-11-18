@@ -71,10 +71,15 @@ class WorkTime(models.Model):
     saturday = models.BooleanField(default=False)
     sunday = models.BooleanField(default=False)
     holidays = models.BooleanField(default=False)
+    earliest_visit = models.PositiveIntegerField(default=1, null=False)
+    latest_visit = models.PositiveIntegerField(default=14, null=False)
 
     def clean(self):
+        # TODO: Błędy powinny móc pojawić się jednocześnie
         if self.start_time >= self.end_time:
-            raise ValidationError('Koniec pracy musi być później niż początek')
+            raise ValidationError('Popraw godziny pracy')
+        if self.earliest_visit >= self.latest_visit:
+            raise ValidationError('Popraw możliwość wyboru terminów')
 
     @receiver(post_save, sender=User)
     def create_profile(sender, instance, created, **kwargs):

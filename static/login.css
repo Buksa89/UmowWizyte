@@ -5,7 +5,7 @@ font-family: Helvetica;
 }
 #container {
   margin: auto;
-  width: 400px;
+  max-width: 400px;
   padding: 10px;
    background-color:#333333;
    color:white;

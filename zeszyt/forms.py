@@ -139,14 +139,13 @@ class ClientChooseVisitForm(forms.Form):
 
 class WorkTimeForm(forms.ModelForm):
 
-    # TODO: Wczytanie danych do formularza
-    # TODO: - zapis na TYM SAMYM miejscu
+    #TODO Walidacja liczb pól numerycznych
 
 
     class Meta:
         model = WorkTime
-        fields = ['start_time', 'end_time', 'monday', 'tuesday', 'wednesday',
-                  'thursday', 'friday', 'saturday', 'sunday', 'holidays']
+        fields = ['start_time', 'end_time', 'monday', 'tuesday', 'wednesday', 'thursday',
+                  'friday', 'saturday', 'sunday', 'holidays', 'earliest_visit', 'latest_visit']
         labels = {
             'start_time': 'Od godziny',
             'end_time': 'Do godziny',
@@ -157,7 +156,9 @@ class WorkTimeForm(forms.ModelForm):
             'friday': 'Piątki',
             'saturday': 'Soboty',
             'sunday': 'Niedziele',
-            'holidays': 'Święta'
+            'holidays': 'Święta',
+            'earliest_visit': 'Terminy wizyt (za ile dni najwcześniej)',
+            'latest_visit': 'Terminy wizyt (za ile dni najpóźniej)',
         }
         widgets = {
             'start_time': forms.Select(choices=time_choices(24)),
@@ -170,4 +171,6 @@ class WorkTimeForm(forms.ModelForm):
             'saturday': forms.CheckboxInput(),
             'sunday': forms.CheckboxInput(),
             'holidays': forms.CheckboxInput(),
+            'sunday': forms.NumberInput(),
+            'holidays': forms.NumberInput(),
             }
