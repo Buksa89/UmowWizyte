@@ -74,11 +74,14 @@ class WorkTime(models.Model):
     latest_visit = models.PositiveIntegerField(default=14, null=False)
 
     def clean(self):
-        # TODO: Błędy powinny móc pojawić się jednocześnie
+        errors = []
         if self.start_time >= self.end_time:
-            raise ValidationError('Popraw godziny pracy')
+            errors.append('Popraw godziny pracy')
         if self.earliest_visit >= self.latest_visit:
-            raise ValidationError('Popraw możliwość wyboru terminów')
+            errors.append('Popraw możliwość wyboru terminów')
+        errors = ', '.join(errors)
+        if errors:
+            raise ValidationError(errors)
 
     @receiver(post_save, sender=User)
     def create_profile(sender, instance, created, **kwargs):

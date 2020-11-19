@@ -6,7 +6,6 @@ from .base import BaseTest
 from ..models import Client, Service, WorkTime
 
 #TODO: Testy formularza ustawiania czasu
-#TODO: Testy wyświetlania nieaktywnych dni w kalendarzu
 
 
 
@@ -250,6 +249,48 @@ class DashobardSettingsTests(BaseTest):
         self.assertTrue(Service.objects.first())
 
 
+    """ Work time Tests """
+
+    def test_service_form_display(self):
+        self.authorize_user()
+        response = self.client.get('/ustawienia/')
+
+        self.assertContains(response, 'work-time-form')
+
+    def test_work_time_form_working(self):
+        self.authorize_user()
+        response = self.client.post('/ustawienia/', data = {'start_time': '6:00', 'end_time': '8:00', 'monday': False,
+                                                            'tuesday': True, 'wednesday': False, 'thursday': True,
+                                                            'friday': False, 'saturday': True, 'sunday': False,
+                                                            'holidays': True, 'earliest_visit': 1, 'latest_visit': 7,
+                                                            'submit': 'set_work_time'})
+        self.assertContains(response, 'Czas pracy zmieniony')
+        self.assertContains(response, 'monday">')
+        self.assertContains(response, 'tuesday" checked>')
+        self.assertContains(response, 'wednesday">')
+        self.assertContains(response, 'thursday" checked>')
+        self.assertContains(response, 'friday">')
+        self.assertContains(response, 'saturday" checked>')
+        self.assertContains(response, 'sunday">')
+        self.assertContains(response, 'holidays" checked>')
+        self.assertContains(response, '"earliest_visit" value="1"')
+        self.assertContains(response, 'latest_visit" value="7"')
+
+
+    def test_service_form_errors(self):
+        self.authorize_user()
+        response = self.client.post('/ustawienia/', data={'start_time': '10:00', 'end_time': '8:00', 'monday': False,
+                                                          'tuesday': True, 'wednesday': False, 'thursday': True,
+                                                          'friday': False, 'saturday': True, 'sunday': False,
+                                                          'holidays': True, 'earliest_visit': 7, 'latest_visit': 2,
+                                                          'submit': 'set_work_time'})
+        self.assertContains(response, 'Popraw godziny pracy')
+        self.assertContains(response, 'Popraw możliwość wyboru terminów')
+
+        # TODO: Jak już poprawisz treść błędu (dni ujemne), to dodaj test
+
+
+
 class UserLoginTests(TestCase):
 
     def test_incorrect_login_display_errors(self):
@@ -290,7 +331,7 @@ class UserLoginTests(TestCase):
 
     def test_panel_redirect_to_login_when_user_not_authorized(self):
         # TODO: Po dodaniu kazdej podstrony nalezy uzupelnic tą funkcję
-        subpages = ['/panel/', '/klienci/', '/klienci/nowy/']
+        subpages = ['/panel/', '/klienci/', '/klienci/nowy/', '/terminarz/', '/ustawienia/']
 
         for subpage in subpages:
             response = self.client.get(subpage)

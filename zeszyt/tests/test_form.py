@@ -1,7 +1,7 @@
 from django.contrib.auth.models import User
 from django.test import TestCase
 from unittest import skip
-from ..forms import AddClientForm, AddServiceForm, ClientChooseVisitForm, ClientLoginForm, LoginForm
+from ..forms import AddClientForm, AddServiceForm, ClientChooseVisitForm, ClientLoginForm, LoginForm, WorkTimeForm
 from .base import BaseTest
 
 client_data = {'CORRECT_PIN': '1111',
@@ -101,7 +101,7 @@ class DashboardClientsTests(BaseTest):
 
 class DashboardSettingsTests(BaseTest):
 
-    def test_service_uses_item_form(self):
+    def test_service_uses_service_form(self):
         self.authorize_user()
         response = self.client.get('/ustawienia/')
 
@@ -130,6 +130,35 @@ class DashboardSettingsTests(BaseTest):
 
         # TODO Formularz powinien walidować duplikaty. Teraz robi to widok
         #  def test_add_service_form_validation_for_duplicate(self):
+
+    def test_service_uses_work_time_form(self):
+        self.authorize_user()
+        response = self.client.get('/ustawienia/')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIsInstance(response.context['work_time_form'], WorkTimeForm)
+
+    def test_work_time_form_validation_for_blank_fields(self):
+        form = WorkTimeForm(data={})
+
+        self.assertFalse(form.is_valid())
+        self.assertEqual(form.errors['earliest_visit'], ['Pole nie może być puste'])
+        self.assertEqual(form.errors['latest_visit'], ['Pole nie może być puste'])
+
+    def test_work_time_form_validation_for_wrong_fields(self):
+        form = WorkTimeForm(data={'start_time':'01:00', 'end_time':'00:15', 'earliest_visit': 14, 'latest_visit':1})
+
+        self.assertIn('Popraw godziny pracy', form.errors['__all__'][0])
+        self.assertIn('Popraw możliwość wyboru terminów', form.errors['__all__'][0])
+
+    def test_work_time_form_validation_for_wrong_fields(self):
+        form = WorkTimeForm(data={'start_time':'01:00', 'end_time':'01:15', 'earliest_visit': -14, 'latest_visit':-1})
+
+        self.assertFalse(form.is_valid())
+        #TODO: END Spolszczenie tego błędu
+        self.assertEqual(form.errors['earliest_visit'], ['Ensure this value is greater than or equal to 0.'])
+        self.assertEqual(form.errors['latest_visit'], ['Ensure this value is greater than or equal to 0.'])
+
 
 
 class UserLoginTests(TestCase):

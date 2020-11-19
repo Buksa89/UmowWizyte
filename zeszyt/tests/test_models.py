@@ -1,10 +1,10 @@
-from datetime import timedelta
+from datetime import datetime, timedelta
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.db.utils import IntegrityError
 from django.test import TestCase
 from unittest import skip
-from ..models import Client, Service
+from ..models import Client, Service, WorkTime
 from .base import BaseTest
 
 TEXT = 'aaa'
@@ -172,5 +172,35 @@ class UserTest(TestCase):
 
         self.assertEqual(user, User.objects.first())
 
+    def test_create_work_time_for_user(self):
+        user = User.objects.create_user(username=TEXT, password=TEXT)
+        work_time = WorkTime.objects.get(user=user)
+        self.assertTrue(work_time)
 
-        # TODO: Test zmiany hasła użytkownika
+
+
+
+class WorkTimeTests(BaseTest):
+
+    def test_worktime_edit(self):
+        user = User.objects.create_user(username=TEXT, password=TEXT)
+        work_time = WorkTime.objects.get(user=user)
+        work_time.end_time = "14:00"
+        #TODO: brak testu
+        work_time.full_clean()
+
+    def test_work_hours_error(self):
+        user = User.objects.create_user(username=TEXT, password=TEXT)
+        work_time = WorkTime.objects.get(user=user)
+        work_time.end_time = "01:00"
+        with self.assertRaises(ValidationError):
+            work_time.full_clean()
+
+    def test_work_avaible_days(self):
+        user = User.objects.create_user(username=TEXT, password=TEXT)
+        work_time = WorkTime.objects.get(user=user)
+        work_time.earliest_visit = 15
+        with self.assertRaises(ValidationError):
+            work_time.full_clean()
+
+

@@ -139,8 +139,6 @@ class ClientChooseVisitForm(forms.Form):
 
 class WorkTimeForm(forms.ModelForm):
 
-    #TODO Walidacja liczb pól numerycznych
-
 
     class Meta:
         model = WorkTime
@@ -174,3 +172,11 @@ class WorkTimeForm(forms.ModelForm):
             'earliest_visit': forms.NumberInput(),
             'latest_visit': forms.NumberInput(),
             }
+        error_messages = {
+            'earliest_visit': {'required': "Pole nie może być puste",
+                               'min-value':"Liczba dni nieprawidłowa"},
+
+            'latest_visit': {'required': "Pole nie może być puste",
+                             'invalid':"Liczba dni nieprawidłowa"},
+
+        }

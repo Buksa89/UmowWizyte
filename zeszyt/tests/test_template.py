@@ -144,3 +144,11 @@ class UserLoginTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'login.html')
+
+
+class OtherTests(BaseTest):
+
+    def test_welcome_template(self):
+        response = self.client.get('/')
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'welcome.html')

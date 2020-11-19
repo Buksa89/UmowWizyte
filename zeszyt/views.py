@@ -115,6 +115,7 @@ class DashboardSettings(CreateView):
     @method_decorator(login_required)
     def post(self, request):
         created_service = None
+        work_time_changed = False
         user = User.objects.get(username=request.user)
         services = Service.objects.filter(user=user)
         service_form = AddServiceForm()
@@ -126,12 +127,13 @@ class DashboardSettings(CreateView):
         elif request.POST['submit'] == 'add_service':
             service_form, created_service = self.dashboard_settings_services(request, user)
         elif request.POST['submit'] == 'set_work_time':
-            work_time_form = self.dashboard_settings_work_time(request, user)
+            work_time_form, work_time_changed = self.dashboard_settings_work_time(request, user)
 
         return render(request, 'dashboard/settings.html', {'work_time_form': work_time_form,
                                                         'service_form': service_form,
                                                        'services': services,
                                                        'created_service': created_service,
+                                                       'work_time_changed': work_time_changed,
                                                        'section':'dashboard_settings'})
 
     def dashboard_settings_services(self, request, user):
@@ -157,8 +159,8 @@ class DashboardSettings(CreateView):
         form = WorkTimeForm(data=request.POST, instance=work_time)
         if form.is_valid():
             form.save()
-            #TODO: Dodaj potwierdzenie zmiany
-        return form
+            return form, True
+        return form, False
 
 
 @login_required

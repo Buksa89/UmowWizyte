@@ -45,6 +45,7 @@
 <div>
     <h2>Czas pracy</h2>
     <p>Ustaw standardowy czas pracy (Klienci będą mogli wybierać tylko te dni/godziny. Ty będziesz mógł wybrać dowolne</p>
+    {% if work_time_changed %}<p>Czas pracy zmieniony</p>{%endif%}
     <div>
         <form name="work-time-form" method="POST" action="{% url 'dashboard_settings' %}">
                 {{ work_time_form.as_ul }}
