@@ -58,7 +58,6 @@ class ClientLoginTests(BaseTest):
 
     """ Redirects tests """
 
-
     def test_panel_redirect_to_login_when_user_not_authorized(self):
         pass
         # TODO: Tutaj dodaj podstrowny panelu klienta
@@ -66,10 +65,10 @@ class ClientLoginTests(BaseTest):
         #response = self.client.get(f'/{user}/#/')
         #self.assertRedirects(response, f'/{user}/')
 
-
     def test_redirect_after_logout(self):
         self.authorize_client()
         response = self.client.get(f'/{self.user}/logout/')
+        self.assertNotIn('client_authorized', self.client.session)
         self.assertRedirects(response, f'/{self.user}/')
 
     def test_client_logged_to_user_but_not_logged_to_others(self):
@@ -99,27 +98,34 @@ class DasboardScheduleTests(BaseTest):
         response = self.client.get('/terminarz/')
 
         self.assertContains(response, f'<span class="active">{date.today().strftime("%d")}</span>')
+        self.assertContains(response, date.today().strftime("%y"))
 
     def test_calendar_date_url(self):
         self.authorize_user()
         response = self.client.get('/terminarz/2011/9')
 
         self.assertContains(response, 'Wrzesień')
+        self.assertContains(response, '2011')
+
+    def test_calendar_next_previous_month_link(self):
+        self.authorize_user()
+        response = self.client.get('/terminarz/2011/9')
+        self.assertContains(response, '<a href="/terminarz/2011/8"><li class="prev">&#10094;</li></a>')
+        self.assertContains(response, '<a href="/terminarz/2011/10"><li class="next">&#10095;</li></a>')
 
     def test_calendar_day_link(self):
         self.authorize_user()
         response = self.client.get('/terminarz/2011/9')
 
-        self.assertContains(response, '<a href="/terminarz/2011/9/9"><li>9</li></a>')
+        self.assertContains(response, '<a href="/terminarz/2011/9/9"><li><span>9</span></li></a>')
 
     def test_calendar_holidays_red(self):
         self.authorize_user()
         response = self.client.get('/terminarz/2011/11')
 
-        self.assertContains(response, '<li class="red">1</li>')
-        self.assertContains(response, '<li class="red">11</li>')
-        self.assertContains(response, '<li class="red">6</li>')
-        self.assertNotContains(response, '<li class="red">2</li>')
+        self.assertContains(response, 'class="red">1')
+        self.assertContains(response, 'class="red">11')
+        self.assertNotContains(response, 'class="red">6')
 
 
 class DashboardClientsTests(BaseTest):

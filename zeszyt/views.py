@@ -1,5 +1,6 @@
 from calendar import HTMLCalendar
 from datetime import datetime
+from datetime import timedelta
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
@@ -26,6 +27,7 @@ def dashboard(request):
 
 @login_required
 def dashboard_clients(request):
+    #TODO: wylogowanie jesli nie jest autoryzowany
     user = User.objects.get(username=request.user)
     clients = Client.objects.filter(user=user)
     return render(request, 'dashboard/clients.html', {"clients":clients,
@@ -34,22 +36,25 @@ def dashboard_clients(request):
 
 class DashboardClientsAdd(CreateView):
     template_name = 'dashboard/clients_add.html'
+    section = 'dashboard_clients'
 
     @method_decorator(login_required)
     def get(self, request):
         form = AddClientForm()
-        return render(request, self.template_name, {'form': form, 'section':'dashboard_clients'})
+        return render(request, self.template_name, {'form': form, 'section':self.section})
 
     @method_decorator(login_required)
     def post(self, request):
-        user = User.objects.get(username=request.user)
         form = AddClientForm(data=self.request.POST)
         if form.is_valid():
+            user = User.objects.get(username=request.user)
             form.save(user)
+            created_client_name = request.POST.get('name','')
             form = AddClientForm()
-            return render(request, 'dashboard/clients_add.html', {'form': form,
-                                                                  'created_name':request.POST.get('name',''),
-                                                                  'section':'dashboard_clients'})
+            return render(request, self.template_name, {'form': form,
+                                                        'created_client_name':created_client_name,
+                                                        'section':self.section})
+
         form = AddClientForm(data=self.request.POST)
         return render(self.request, self.template_name, {'form': form, 'section': 'dashboard_clients'})
 
@@ -62,13 +67,20 @@ def dashboard_clients_remove(request, client_id):
     return redirect(dashboard_clients)
 
 
-@login_required
-def dashboard_schedule(request, year=datetime.now().year, month=datetime.now().month, day=False):
-    visits={}
-    if day:
-        return render(request, 'dashboard/schedule.html', {'section': 'dashboard_schedule'})
-    calendar = Calendar(year, month, visits, request.user).formatmonth()
-    return render(request, 'dashboard/schedule_calendar.html', {'section':'dashboard_schedule', 'calendar':mark_safe(calendar)})
+class DashboardSchedule(View):
+    template_schedule_name = 'dashboard/schedule.html'
+    template_calendar_name = 'dashboard/schedule_calendar.html'
+    section = 'dashboard_schedule'
+
+    @method_decorator(login_required)
+    def get(self, request, year=datetime.now().year, month=datetime.now().month, day=False):
+        if day:
+            return render(request,self.template_schedule_name, {'section':self.section})
+
+        work_time = get_object_or_404(WorkTime, user=request.user)
+        calendar = ScheduleCalendar(year, month, work_time=work_time).formatmonth()
+
+        return render(request, self.template_calendar_name, {'section':self.section, 'calendar':mark_safe(calendar)})
 
 
 class DashboardSettings(CreateView):
@@ -196,7 +208,32 @@ def client_app(request, username):
 @require_http_methods(["POST"])
 def client_app_new_visit_step_1(request, username):
     service = request.POST.get('service', '')
-    return render(request, 'client_app/new_visit_calendar.html', {'username':username, 'service':service})
+    service = get_object_or_404(Service, id=service)
+    available_dates = get_available_days_for_clients(username)
+    daty = '<ul>'
+    for date in available_dates:
+        daty += '<li>' + date.strftime("%y-%m-%d") + '</li>'
+    daty += '</ul>'
+
+
+
+    return render(request, 'client_app/new_visit_calendar.html', {'username':username, 'service':service.name, 'daty':daty})
+
+    #TODO: Tutaj będzie kalendarz
+
+
+
+
+
+
+
+
+
+    #print(datetime.today() - timedelta(days=days_to_subtract))
+
+    #print(work_time.latest_visit)
+
+
 
 def client_dashboard(request, user, client):
     form = ClientChooseVisitForm(user)
@@ -227,8 +264,7 @@ def client_login(request, user):
 
     return render(request, 'client_app/login.html', {'form':form, 'user':user.username})
 
-def client_logout(request, username):
-    # TODO: testy tej funkcji
+def client_app_logout(request, username):
     request.session.pop('client_authorized', None)
     return redirect(client_app, username)
 
@@ -241,7 +277,6 @@ def welcome_screen(request):
 
 """ Funkcje pomocnicze """
 
-
 def is_client_authenticated(request, username):
     """ Check client is logged in. Equivalent of 'user.is_authenticated' """
     if request.session.get('client_authorized') and request.session.get('client_authorized')['user'] == username:
@@ -249,59 +284,57 @@ def is_client_authenticated(request, username):
     else: return False
 
 
-def get_month_name(month):
-    months = ['Styczeń', 'Luty', 'Marzec', 'Kwiecień', 'Maj', 'Czerwiec', 'Lipiec', 'Sierpień', 'Wrzesień', 'Październik',
-          'Listopad', 'Grudzień']
-    return(months[month-1])
+def get_available_days_for_clients(username):
+    """ Function get work_time of user and check what days his clients can choose for visit """
+    user = get_object_or_404(User, username__iexact=username)
+    work_time = get_object_or_404(WorkTime, user=user)
+    available_date = []
+    for days in range (work_time.earliest_visit, work_time.latest_visit+1):
+        date = datetime.today() + timedelta(days=days)
+        if not work_time.holidays and is_holiday(date): continue
+        day_name = date.strftime("%A").lower()
+        if not work_time.__dict__[day_name]: continue
+        available_date.append(date)
+    return available_date
 
-def get_day_name(day):
-    days = ['Pn', 'Wt', 'Śr', 'Cz', 'Pt', 'So', 'Nd']
-    return(days[day-1])
+def is_holiday(date):
+    """ Function get date and return True if it is holiday """
+    if date in holidays.Poland(): return True
 
-def is_holiday(year, month, day):
-    if datetime(year, month, day).date() in holidays.Poland(): return True
 
-def is_sunday(year, month, day):
-    if datetime(year, month, day).weekday() == 6: return True
+def is_free_day(date, work_time):
+    """ Function get date and return True if it is not working day """
+    if not work_time.__dict__[date.strftime("%A").lower()]: return True
 
-def is_free_day(year, month, day, user):
-    work_time = WorkTime.objects.get(user=user)
-    days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
-    if not work_time.__dict__[days[datetime(year, month, day).weekday()]]: return True
 
 class Calendar(HTMLCalendar):
-    def __init__(self, year=None, month=None, visits=None, user=None):
+    """ Class generate html calendar """
+    def __init__(self, year=None, month=None, work_time=None):
         self.year = year
         self.month = month
-        self.visits = visits
-        self.user = user
+        self.work_time = work_time
         super(Calendar, self).__init__()
 
     def formatmonthname(self, theyear, themonth):
-
-        s = f'<li>{get_month_name(themonth)}<br /><span class="year">{theyear}</span></li>'
+        s = f'<li>{self.get_month_name(themonth)}<br /><span class="year">{theyear}</span></li>'
         return s
 
     def formatday(self, day):
-        #Iteracja wizyt
         if day != 0:
-            special_class = ''
-            if is_sunday(self.year, self.month, day) or is_holiday(self.year, self.month, day):
-                special_class = ' class="red"'
-            elif is_free_day(self.year, self.month, day, self.user):
-                special_class = ' class="dark"'
-
-            day_li = f'<a href="{self.get_day_url(day)}"><li{special_class}>'
-            if datetime.today().date() == datetime(self.year, self.month, day).date():
-                day_li += f'<span class="active">{day}</span>'
-            else: day_li += str(day)
-            day_li += '</li></a>'
+            span_class = ''
+            li_class = ''
+            if is_holiday(datetime(self.year, self.month, day).date()): span_class = ' class="red"'
+            elif datetime.today().date() == datetime(self.year, self.month, day).date(): span_class = ' class="active"'
+            if is_free_day(datetime(self.year, self.month, day), self.work_time): li_class = ' class="dark"'
+            day_li = f'<li{li_class}>'
+            day_li += f'<span{span_class}>{day}</span>'
+            day_li += '</li>'
             return day_li
         return '<li></li>'
 
     def formatweekheader(self):
         s = ''.join(self.formatweekday(i) for i in self.iterweekdays())
-        s = ''.join(f'<li>{get_day_name(i+1)}</li>' for i in self.iterweekdays())
+        s = ''.join(f'<li>{self.get_day_name(i+1)}</li>' for i in self.iterweekdays())
         return s
 
     def formatweek(self, theweek):
@@ -309,6 +342,44 @@ class Calendar(HTMLCalendar):
         for d, weekday in theweek:
             week += self.formatday(d)
         return f'<ul class="days"> {week} </ul>'
+
+    def formatmonth(self):
+        events={}
+        cal = f'<div class="month"><ul>{self.formatmonthname(self.year, self.month)}\n</ul></div>'
+        cal += f'<ul class="weekdays">{self.formatweekheader()}\n</ul>'
+        for week in self.monthdays2calendar(self.year, self.month):
+            cal += f'{self.formatweek(week)}\n</ul>'
+        return cal
+
+    # Funkcje pomocnicze:
+
+    def get_month_name(self, month):
+        """ Method  return polish name of month """
+        months = ['Styczeń', 'Luty', 'Marzec', 'Kwiecień', 'Maj', 'Czerwiec', 'Lipiec', 'Sierpień', 'Wrzesień',
+                  'Październik', 'Listopad', 'Grudzień']
+        return (months[month - 1])
+
+    def get_day_name(self, day):
+        """ Method return name day of week from day number"""
+        days = ('Pn', 'Wt', 'Śr', 'Cz', 'Pt', 'So', 'Nd')
+        return(days[day-1])
+
+
+class ScheduleCalendar(Calendar):
+    """ Class generate calendar for Schedule section """
+
+    def formatday(self, day):
+        if day != 0:
+            span_class = ''
+            li_class = ''
+            if is_holiday(datetime(self.year, self.month, day).date()): span_class = ' class="red"'
+            elif datetime.today().date() == datetime(self.year, self.month, day).date(): span_class = ' class="active"'
+            if is_free_day(datetime(self.year, self.month, day), self.work_time): li_class = ' class="dark"'
+            day_li = f'<a href="{self.get_day_url(day)}"><li{li_class}>'
+            day_li += f'<span{span_class}>{day}</span>'
+            day_li += '</li></a>'
+            return day_li
+        return '<li></li>'
 
     def formatmonth(self):
         events={}
@@ -320,7 +391,10 @@ class Calendar(HTMLCalendar):
             cal += f'{self.formatweek(week)}\n</ul>'
         return cal
 
+    # Funkcje pomocnicze:
+
     def get_month_url(self, direction):
+        """ Method return link for next/previous month calendar """
         month = self.month
         year = self.year
         if direction == "next":
@@ -336,5 +410,6 @@ class Calendar(HTMLCalendar):
         return reverse('dashboard_schedule', args=[year, month])
 
     def get_day_url(self, day):
+        """ Method return link for date schedule """
         return reverse('dashboard_schedule', args=[self.year, self.month, day])
 

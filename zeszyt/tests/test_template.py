@@ -45,6 +45,7 @@ class ClientDashboardTests(BaseTest):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'client_app/dashboard.html')
 
+    @skip #TODO: Ma być id uslugi
     def test_new_visit_template_post(self):
         self.authorize_client()
         #TODO: Utworz słowinik z usługami w base.py

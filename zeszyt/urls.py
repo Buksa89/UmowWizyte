@@ -10,9 +10,9 @@ urlpatterns = [
 
     path('panel/', views.dashboard, name='dashboard'),
 
-    path('terminarz/', views.dashboard_schedule, name='dashboard_schedule'),
-    path('terminarz/<int:year>/<int:month>', views.dashboard_schedule, name='dashboard_schedule'),
-    path('terminarz/<int:year>/<int:month>/<int:day>', views.dashboard_schedule, name='dashboard_schedule'),
+    path('terminarz/', views.DashboardSchedule.as_view(), name='dashboard_schedule'),
+    path('terminarz/<int:year>/<int:month>', views.DashboardSchedule.as_view(), name='dashboard_schedule'),
+    path('terminarz/<int:year>/<int:month>/<int:day>', views.DashboardSchedule.as_view(), name='dashboard_schedule'),
 
     path('klienci/', views.dashboard_clients, name='dashboard_clients'),
     path('klienci/nowy/', views.DashboardClientsAdd.as_view(), name='dashboard_clients_add'),
@@ -23,7 +23,7 @@ urlpatterns = [
          name='dashboard_settings_service_remove'),
 
     path('<str:username>/', views.client_app, name='client_app'),
-    path('<str:username>/logout/', views.client_logout, name='client_logout'),      #TODO: client_app_logout
+    path('<str:username>/logout/', views.client_app_logout, name='client_app_logout'),
     path('<str:username>/nowa_wizyta/', views.client_app_new_visit_step_1, name='client_app_new_visit_step_1'),
 
 ]
