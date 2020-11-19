@@ -79,7 +79,16 @@ background:#333333;
 .days li.dark {
   color:#ccc;
 }
-
+.days li.available {
+  background-color:#82B861;
+  color:#000;
+  font-weight:bold;
+}
+.days li.available:hover {
+  background-color:#82EB61;
+  color:#000;
+  font-weight:bold;
+}
 .days a li:hover {
   background-color: #555;
   color:#ffffff;

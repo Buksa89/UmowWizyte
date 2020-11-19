@@ -19,12 +19,13 @@ urlpatterns = [
     path('klienci/usun/<int:client_id>/', views.dashboard_clients_remove, name='dashboard_clients_remove'),
 
     path('ustawienia/', views.DashboardSettings.as_view(), name='dashboard_settings'),
-    path('ustawienia/usun_usluge/<int:service_id>/', views.dashboard_settings_service_remove,
-         name='dashboard_settings_service_remove'),
+    path('ustawienia/usun_usluge/<int:service_id>/', views.dashboard_settings_service_remove, name='dashboard_settings_service_remove'),
 
     path('<str:username>/', views.ClientAppLogin.as_view(), name='client_app_login'),
     path('<str:username>/panel/', views.ClientAppDashboard.as_view(), name='client_app_dashboard'),
     path('<str:username>/logout/', views.ClientAppLogout.as_view(), name='client_app_logout'),
     path('<str:username>/nowa_wizyta/<int:service_id>/', views.ClientAppNewVisit1.as_view(), name='client_app_new_visit_1'),
+    path('<str:username>/nowa_wizyta/<int:service_id>/<int:year>/<int:month>/', views.ClientAppNewVisit1.as_view(), name='client_app_new_visit_1'),
+    path('<str:username>/nowa_wizyta/<int:service_id>/<int:year>/<int:month>/<int:day>/', views.ClientAppNewVisit1.as_view(), name='client_app_new_visit_1')
 
 ]
