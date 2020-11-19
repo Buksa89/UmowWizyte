@@ -15,7 +15,7 @@ body {font-family: Verdana, sans-serif;}
 }
 
 .month ul li {
-  padding: 70px 0px;
+  padding: 20px 0px;
   color: white;
   font-size: 20px;
   text-transform: uppercase;
@@ -26,13 +26,13 @@ body {font-family: Verdana, sans-serif;}
 }
 /* Previous button inside month header */
 .month .prev {
-  padding: 80px 25px 80px 25px;
+  padding: 30px 25px 30px 25px;
   float: left;
 }
 
 /* Next button */
 .month .next {
-  padding: 80px 25px 80px 25px;
+  padding: 30px 25px 30px 25px;
   float: right;
 }
 

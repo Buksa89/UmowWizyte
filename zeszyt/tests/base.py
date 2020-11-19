@@ -187,7 +187,6 @@ class BaseTest(TestCase):
                                           pin=self.clients_full[user_short][client]['pin'],
                                           is_active=self.clients_full[user_short][client]['is_active'])
 
-
     def create_service(self, user, service='serv_ok1'):
         user_short = self.user_reverse(user.username)
         return Service.objects.create(user=user,

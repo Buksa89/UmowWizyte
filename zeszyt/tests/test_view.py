@@ -5,15 +5,9 @@ from unittest import skip
 from .base import BaseTest
 from ..models import Client, Service, WorkTime
 
-#TODO: Testy formularza ustawiania czasu
-
-
-
 ANY_PIN = 9999
 ANY_PHONE = 999999999
 ANY_NAME = 'Gumiś'
-# TODO: Czy klient widzi aktywną usługę?
-# TODO: Czy klient widzi nieaktywną usługę?
 # TODO: czy obcy klient widzi aktywną usługę
 
 class ClientLoginTests(BaseTest):
@@ -58,11 +52,17 @@ class ClientLoginTests(BaseTest):
     """ Redirects tests """
 
     def test_panel_redirect_to_login_when_user_not_authorized(self):
-        pass
-        # TODO: Tutaj dodaj podstrowny panelu klienta
-        #user = self.create_user()
-        #response = self.client.get(f'/{user}/#/')
-        #self.assertRedirects(response, f'/{user}/')
+        #TODO: Tutaj dodaj podstrowny panelu klienta
+        user = self.create_user()
+        response = self.client.get(f'/{user}/panel/')
+        self.assertRedirects(response, f'/{user}/')
+
+    def test_client_redirect_to_dashboard_after_login(self):
+        user = self.create_user()
+        client = self.create_client(user)
+        response = self.client.post(f'/{user}/', data={'phone_number':client.phone_number, 'pin':client.pin})
+
+        self.assertRedirects(response, f'/{user}/panel/')
 
     def test_redirect_after_logout(self):
         self.authorize_client()
@@ -78,16 +78,28 @@ class ClientLoginTests(BaseTest):
 
 
 class ClientDashboardTests(BaseTest):
-
     def test_correct_services_in_form(self):
         self.authorize_client()
         service1 = self.create_service(self.user, 'serv_ok1')
         service2 = self.create_service(self.user, 'serv_ok2')
         service3 = self.create_service(self.user, 'serv_not_active')
-        response = self.client.get(f'/{self.user}/')
+        response = self.client.get(f'/{self.user}/panel/')
         self.assertContains(response, service1.name+'</option>')
         self.assertContains(response, service2.name+'</option>')
         self.assertNotContains(response, service3.name+'</option>')
+
+    def test_client_dashboard_POST(self):
+        self.authorize_client()
+        response = self.client.post(f'/{self.user}/panel/', data={})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'client_app/dashboard.html')
+
+    def test_new_visit_template_post(self):
+        self.authorize_client()
+        self.create_service(self.user)
+        response = self.client.post(f'/{self.user}/panel/', data={'service':'1'})
+        self.assertRedirects(response, f'/{self.user}/nowa_wizyta/1/')
 
 
 class DasboardScheduleTests(BaseTest):

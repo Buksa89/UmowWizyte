@@ -14,6 +14,7 @@ from django.utils.safestring import mark_safe
 from django.views import View
 from django.views.decorators.http import require_http_methods
 from django.views.generic.edit import CreateView
+from functools import wraps
 import holidays
 from .forms import AddClientForm, AddServiceForm, ClientChooseVisitForm, ClientLoginForm, LoginForm, WorkTimeForm
 from .models import Client, Service, WorkTime
@@ -177,7 +178,6 @@ def login_screen(request):
     else:
         if request.method == 'POST':
             form = LoginForm(request.POST)
-
             if form.is_valid():
                 cd = form.cleaned_data
                 user = authenticate(username=cd['username'],
@@ -199,76 +199,111 @@ def login_screen(request):
 
 """ Client Views """ # TODO: Do refaktoryzacji
 
-def client_app(request, username):
-    user = get_object_or_404(User, username__iexact=username)
-    if is_client_authenticated(request, user.username):
-        client = Client.objects.get(phone_number=request.session['client_authorized']['phone'], user=user)
-        return client_dashboard(request, user, client)
-    else:
-        return client_login(request, user)
-
-@require_http_methods(["POST"])
-def client_app_new_visit_step_1(request, username):
-    service = request.POST.get('service', '')
-    service = get_object_or_404(Service, id=service)
-    available_dates = get_available_days_for_clients(username)
-    daty = '<ul>'
-    for date in available_dates:
-        daty += '<li>' + date.strftime("%y-%m-%d") + '</li>'
-    daty += '</ul>'
+#TODO: Dowiedzieć się jak wczytać sesję w dekoratorze
+def client_login_required(function):
+    @wraps(function)
+    def wrap(request, *args, username, **kwargs):
+        if is_client_authenticated(request, username):
+            return function(request, *args, username, **kwargs)
+        else:
+            return redirect('client_app_login', username)
+    return wrap
 
 
+class ClientAppLogin(CreateView):
+    template = 'client_app/login.html'
 
-    return render(request, 'client_app/new_visit_calendar.html', {'username':username, 'service':service.name, 'daty':daty})
+    def get(self, request, username):
+        if is_client_authenticated(request, username): return redirect('client_app_dashboard', username)
+        user = get_object_or_404(User, username__iexact=username)
+        form = ClientLoginForm()
+        return render(request, self.template, {'form':form, 'user':user.username})
 
-    #TODO: Tutaj będzie kalendarz
-
-
-
-
-
-
-
-
-
-    #print(datetime.today() - timedelta(days=days_to_subtract))
-
-    #print(work_time.latest_visit)
-
-
-
-def client_dashboard(request, user, client):
-    form = ClientChooseVisitForm(user)
-    return render(request, 'client_app/dashboard.html', {'form':form,
-                                                                'username':user.username,
-                                                                'client_name':client.name,
-                                                                'section':'dashboard'})
-
-
-def client_login(request, user):
-    if request.method == 'POST':
+    def post(self, request, username):
+        if is_client_authenticated(request, username): return redirect('client_app_dashboard', username)
+        user = get_object_or_404(User, username__iexact=username)
         form = ClientLoginForm(data=request.POST)
         if form.is_valid():
             cd = form.cleaned_data
-            client = Client.objects.filter(phone_number=cd['phone_number'],user=user)
-            if not client: form.add_error(None, f'Nie ma takiego numeru w bazie {user.username}')
-            elif client[0].pin != cd['pin']: form.add_error(None, 'Dane nieprawidłowe')
+            client = Client.objects.filter(phone_number=cd['phone_number'], user=user)
+            if not client:
+                form.add_error(None, f'Nie ma takiego numeru w bazie {user.username}')
+            elif client[0].pin != cd['pin']:
+                form.add_error(None, 'Dane nieprawidłowe')
             elif not client[0].is_active:
-                #TODO: Przetestuj czy ta funkcja działa, kiedy już będzie możliwość blokowania klienta
+                # TODO: Przetestuj czy ta funkcja działa, kiedy już będzie możliwość blokowania klienta
                 form.clean()
                 form.add_error(None, 'Konto zablokowane')
             else:
-                #TODO: SPRAWDZ CZY USER JEST AKTYWNY
-                request.session['client_authorized'] = {'phone': cd['phone_number'], 'user':user.username}
-                return client_app(request, user)
-    else:
-        form = ClientLoginForm()
+                # TODO: SPRAWDZ CZY USER JEST AKTYWNY
+                request.session['client_authorized'] = {'phone': cd['phone_number'], 'user': user.username}
+                return redirect('client_app_dashboard', username)
+        return render(request, self.template, {'form':form, 'user':user.username})
 
-    return render(request, 'client_app/login.html', {'form':form, 'user':user.username})
 
-def client_app_logout(request, username):
-    request.session.pop('client_authorized', None)
-    return redirect(client_app, username)
+
+class ClientAppDashboard(View):
+    template = 'client_app/dashboard.html'
+
+    @method_decorator(client_login_required)
+    def get(self, request, username):
+        user = get_object_or_404(User, username__iexact=username)
+        client = get_object_or_404(Client, phone_number=request.session.get('client_authorized')['phone'],user=user)
+        form = ClientChooseVisitForm(user)
+        return render(request, self.template, {'form':form,
+                                               'username':user.username,
+                                                'client_name':client.name,
+                                                'section':'dashboard'})
+
+    @method_decorator(client_login_required)
+    def post(self, request, username):
+        if 'service' in request.POST.keys(): return redirect('client_app_new_visit_1', username, request.POST['service'])
+        user = get_object_or_404(User, username__iexact=username)
+        client = get_object_or_404(Client, phone_number=request.session.get('client_authorized')['phone'],user=user)
+        form = ClientChooseVisitForm(user)
+        return render(request, self.template, {'form':form,
+                                               'username':user.username,
+                                               'client_name':client.name,
+                                               'section':'dashboard'})
+
+
+
+
+class ClientAppNewVisit1(View):
+    template_name = ''
+    section = ''
+    def get(self, request, username, service_id):
+        user = get_object_or_404(User, username__iexact=username)
+        service = get_object_or_404(Service, id=service_id, user=user)
+
+
+        available_dates = get_available_days_for_clients(username)
+        daty = '<ul>'
+        for date in available_dates:
+            daty += '<li>' + date.strftime("%y-%m-%d") + '</li>'
+        daty += '</ul>'
+        return render(request, 'client_app/new_visit_1.html', {'username':username, 'service':service.name, 'daty':daty})
+
+        #TODO: Tutaj będzie kalendarz
+
+
+
+
+
+
+
+
+
+        #print(datetime.today() - timedelta(days=days_to_subtract))
+
+        #print(work_time.latest_visit)
+
+
+
+class ClientAppLogout(View):
+    def get(self, request, username):
+        request.session.pop('client_authorized', None)
+        return redirect('client_app_login', username)
 
 
 """ Other Views """
@@ -281,9 +316,9 @@ def welcome_screen(request):
 
 def is_client_authenticated(request, username):
     """ Check client is logged in. Equivalent of 'user.is_authenticated' """
-    if request.session.get('client_authorized') and request.session.get('client_authorized')['user'] == username:
-        return True
-    else: return False
+    if not request.session.get('client_authorized'): return False
+    if request.session.get('client_authorized')['user'].lower() != username.lower(): return False
+    return True
 
 
 def get_available_days_for_clients(username):
@@ -298,6 +333,7 @@ def get_available_days_for_clients(username):
         if not work_time.__dict__[day_name]: continue
         available_date.append(date)
     return available_date
+
 
 def is_holiday(date):
     """ Function get date and return True if it is holiday """

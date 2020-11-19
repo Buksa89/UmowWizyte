@@ -35,7 +35,7 @@ class ClientDashboardTests(BaseTest):
 
     def test_display_form(self):
         self.authorize_client()
-        response = self.client.get(f'/{self.user}/')
+        response = self.client.get(f'/{self.user}/panel/')
         self.assertEqual(response.status_code, 200)
         self.assertIsInstance(response.context['form'], ClientChooseVisitForm)
 

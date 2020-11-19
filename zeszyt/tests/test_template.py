@@ -28,31 +28,16 @@ class ClientLoginTests(BaseTest):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'client_app/login_not_active.html')
 
-    def test_client_redirect_to_dahboard_after_login(self):
-        user = self.create_user()
-        client = self.create_client(user)
-        response = self.client.post(f'/{user}/', data={'phone_number':client.phone_number, 'pin':client.pin})
-
-        self.assertTemplateUsed(response, 'client_app/dashboard.html')
 
 
 class ClientDashboardTests(BaseTest):
 
     def test_client_dashboard_template(self):
         self.authorize_client()
-        response = self.client.get(f'/{self.user}/')
+        response = self.client.get(f'/{self.user}/panel/')
 
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'client_app/dashboard.html')
-
-    @skip #TODO: Ma być id uslugi
-    def test_new_visit_template_post(self):
-        self.authorize_client()
-        #TODO: Utworz słowinik z usługami w base.py
-        response = self.client.post(f'/{self.user}/nowa_wizyta/', data={'service':'service'})
-
-        self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'client_app/new_visit_calendar.html')
 
     def test_new_visit_template_no_post(self):
         self.authorize_client()
