@@ -7,28 +7,30 @@
     <link href="{% static 'calendar.css' %}" rel="stylesheet">
 </head>
 <body>
-    <div id="header">
-          <ul class="menu">
-                <li {% if section == 'dashboard' %}class="selected"{% endif %}>
-                    <a href="{% url 'dashboard' %}">Panel</a>
-                </li>
-                <li {% if section == 'dashboard_schedule' %}class="selected"{% endif %}>
-                    <a href="{% url 'dashboard_schedule' %}">Terminarz</a>
-                </li>
-                <li {% if section == 'dashboard_clients' %}class="selected"{% endif %}>
-                    <a href="{% url 'dashboard_clients' %}">Klienci</a>
-                </li>
-                <li {% if section == 'dashboard_settings' %}class="selected"{% endif %}>
-                    <a href="{% url 'dashboard_settings' %}">Ustawienia</a>
-                </li>
-                <li>
-                    <a href="{% url 'logout_screen' %}">Wyloguj</a>
-                </li>
-          </ul>
+    <div id="container">
+        <div id="header">
+              <ul class="menu">
+                    <li>
+                        <a href="{% url 'logout_screen' %}">Wyloguj</a>
+                    </li>
+                    <li {% if section == 'dashboard_settings' %}class="selected"{% endif %}>
+                        <a href="{% url 'dashboard_settings' %}">Ustawienia</a>
+                    </li>
+                    <li {% if section == 'dashboard_clients' %}class="selected"{% endif %}>
+                        <a href="{% url 'dashboard_clients' %}">Klienci</a>
+                    </li>
+                    <li {% if section == 'dashboard_schedule' %}class="selected"{% endif %}>
+                        <a href="{% url 'dashboard_schedule' %}">Terminarz</a>
+                    </li>
+                    <li {% if section == 'dashboard' %}class="selected"{% endif %}>
+                        <a href="{% url 'dashboard' %}">Panel</a>
+                    </li>
+              </ul>
+        </div>
+        <div id="content">
+            {% block content %}
+            {% endblock %}
+        </div>
     </div>
-  <div id="content">
-    {% block content %}
-    {% endblock %}
-  </div>
 </body>
 </html>

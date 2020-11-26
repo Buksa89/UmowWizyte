@@ -448,7 +448,7 @@ class ClientCalendar(Calendar):
 
     def formatmonthname(self, theyear, themonth):
 
-        s = f'<li>{self.service_name} - {self.get_month_name(themonth)} {theyear}</span></li>'
+        s = f'<li>{self.service_name}<br /><span class="year">{self.get_month_name(themonth)} {theyear}</span></li>'
         return s
 
     def formatday(self, day):

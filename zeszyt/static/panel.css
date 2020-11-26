@@ -1,5 +1,19 @@
 body{
-font-family: Helvetica;
+  font-family: Helvetica;
+  background-color:#efefef;
+  padding:0px;
+  margin: 0px;
+}
+
+#container {
+  margin: 0px auto;
+  max-width:800px;
+  background-color:#ffffff;
+height: 100%;
+}
+
+#content {
+padding:5px 20px;
 }
 
 form li {
@@ -20,7 +34,7 @@ ul.menu {
 }
 
 ul.menu li {
-  float: left;
+  float: right;
 }
 
 ul.menu li.selected{

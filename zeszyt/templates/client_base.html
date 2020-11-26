@@ -8,22 +8,24 @@
     <link href="{% static 'calendar.css' %}" rel="stylesheet">
 </head>
 <body>
-    <div id="header">
-          <ul class="menu">
-                <li {% if section == 'dashboard' %}class="selected"{% endif %}>
-                    <a href="{% url 'client_app_dashboard' username  %}">Wizyty</a>
-                </li>
-                <li {% if section == 'settings' %}class="selected"{% endif %}>
-                    <a href="#">Ustawienia</a>
-                </li>
-                <li>
-                    <a href="{% url 'client_app_logout' username  %}">Wyloguj</a>
-                </li>
-          </ul>
+    <div id="container">
+        <div id="header">
+              <ul class="menu">
+                    <li>
+                        <a href="{% url 'client_app_logout' username  %}">Wyloguj</a>
+                    </li>
+                    <li {% if section == 'settings' %}class="selected"{% endif %}>
+                        <a href="#">Ustawienia</a>
+                    </li>
+                    <li {% if section == 'dashboard' %}class="selected"{% endif %}>
+                        <a href="{% url 'client_app_dashboard' username  %}">Wizyty</a>
+                    </li>
+              </ul>
+        </div>
+        <div id="content">
+            {% block content %}
+            {% endblock %}
+        </div>
     </div>
-  <div id="content">
-    {% block content %}
-    {% endblock %}
-  </div>
 </body>
 </html>
