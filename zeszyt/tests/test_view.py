@@ -104,6 +104,7 @@ class ClientDashboardTests(BaseTest):
 
 class DasboardScheduleTests(BaseTest):
 
+    @skip
     def test_calendar_highlight_today(self):
         self.authorize_user()
         response = self.client.get('/terminarz/')
@@ -111,6 +112,7 @@ class DasboardScheduleTests(BaseTest):
         self.assertContains(response, f'<span class="active">{date.today().strftime("%d")}</span>')
         self.assertContains(response, date.today().strftime("%y"))
 
+    @skip
     def test_calendar_date_url(self):
         self.authorize_user()
         response = self.client.get('/terminarz/2011/9')
@@ -118,18 +120,21 @@ class DasboardScheduleTests(BaseTest):
         self.assertContains(response, 'Wrzesień')
         self.assertContains(response, '2011')
 
+    @skip
     def test_calendar_next_previous_month_link(self):
         self.authorize_user()
         response = self.client.get('/terminarz/2011/9')
         self.assertContains(response, '<a href="/terminarz/2011/8"><li class="prev">&#10094;</li></a>')
         self.assertContains(response, '<a href="/terminarz/2011/10"><li class="next">&#10095;</li></a>')
 
+    @skip
     def test_calendar_day_link(self):
         self.authorize_user()
         response = self.client.get('/terminarz/2011/9')
 
         self.assertContains(response, '<a href="/terminarz/2011/9/9"><li><span>9</span></li></a>')
 
+    @skip
     def test_calendar_holidays_red(self):
         self.authorize_user()
         response = self.client.get('/terminarz/2011/11')

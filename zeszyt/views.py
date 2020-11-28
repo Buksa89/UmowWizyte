@@ -1,6 +1,6 @@
 from calendar import HTMLCalendar
-from datetime import datetime
-from datetime import timedelta
+
+from datetime import date, datetime, timedelta
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
@@ -12,7 +12,6 @@ from django.urls import reverse
 from django.utils.decorators import method_decorator
 from django.utils.safestring import mark_safe
 from django.views import View
-from django.views.decorators.http import require_http_methods
 from django.views.generic.edit import CreateView
 from functools import wraps
 import holidays
@@ -75,27 +74,19 @@ class DashboardSchedule(View):
 
     @method_decorator(login_required)
     def get(self, request, year=datetime.now().year, month=datetime.now().month, day=False):
-        if day:
-            return render(request,self.template_schedule_name, {'section':self.section})
-
         work_time = get_object_or_404(WorkTime, user=request.user)
+        if day:
+            schedule = ScheduleCalendar(year, month, day ,work_time=work_time)
+            return render(request,self.template_schedule_name, {'section':self.section, 'schedule':schedule.display})
+
         calendar = ScheduleCalendar(year, month, work_time=work_time).formatmonth()
 
-        return render(request, self.template_calendar_name, {'section':self.section, 'calendar':mark_safe(calendar)})
+        return render(request, self.template_calendar_name, {'section':self.section, 'calendar':'tu bedzie terminarz'})
 
 
 class DashboardSettings(CreateView):
     template_name = 'dashboard/settings.html'
 
-
-    """    initial = {'size':'L'}
-    def get_form(self):
-        form = super(DashboardSettings, self).get_form()
-        initial_base = self.get_initial() 
-        initial_base['menu'] = Menu.objects.get(id=1)
-        form.initial = initial_base
-        form.fields['name'].widget = forms.widgets.Textarea()
-        return form"""
 
 
     @method_decorator(login_required)
@@ -199,7 +190,6 @@ def login_screen(request):
 
 """ Client Views """ # TODO: Do refaktoryzacji
 
-#TODO: Dowiedzieć się jak wczytać sesję w dekoratorze
 def client_login_required(function):
     @wraps(function)
     def wrap(request, *args, username, **kwargs):
@@ -257,7 +247,7 @@ class ClientAppDashboard(View):
 
     @method_decorator(client_login_required)
     def post(self, request, username):
-        if 'service' in request.POST.keys(): return redirect('client_app_new_visit_1', username, request.POST['service'])
+        if 'service' in request.POST.keys(): return redirect('client_app_new_visit', username, request.POST['service'])
         user = get_object_or_404(User, username__iexact=username)
         client = get_object_or_404(Client, phone_number=request.session.get('client_authorized')['phone'],user=user)
         form = ClientChooseVisitForm(user)
@@ -269,19 +259,28 @@ class ClientAppDashboard(View):
 
 
 
-class ClientAppNewVisit1(View):
+class ClientAppNewVisit(View):
     template_name = ''
     section = ''
-    def get(self, request, username, service_id, year=datetime.now().year, month=datetime.now().month, day=None):
-        if not day:
-            user = get_object_or_404(User, username__iexact=username)
-            service = get_object_or_404(Service, id=service_id, user=user)
-            available_dates = get_available_days_for_clients(username)
-            calendar = ClientCalendar(username, service_id, service.name, available_dates, year, month).formatmonth()
-            return render(request, 'client_app/new_visit_1.html', {'service':service.name, 'calendar': calendar, 'username':username})
-        else:
-            return render(request, 'client_app/new_visit_2.html', {'username': username})
 
+    def get(self, request, username, service_id, year=datetime.now().year, week = datetime.now().isocalendar()[1]):
+        user = get_object_or_404(User, username__iexact=username)
+        service = get_object_or_404(Service, id=service_id, user=user)
+        work_time = get_object_or_404(WorkTime, user=user)
+        available_dates = get_available_days_for_clients(username)
+        schedule = ClientSchedule(year, week, work_time, service_id, service.name, username, available_dates)
+        return render(request, 'client_app/new_visit.html',
+                      {'section': 'schedule', 'service': service.name,
+                       'schedule': schedule.display_week, 'username': username})
+
+
+class ClientAppConfirmVisit(View):
+    template_name = ''
+    section = ''
+
+    def get(self, request, username, service_id, year, month, day, hour, minute):
+        return render(request, 'client_app/confirm_visit.html', {'section': '', #'service': service.name,
+                       'username': username})
 
 
 class ClientAppLogout(View):
@@ -512,3 +511,141 @@ class ClientCalendar(Calendar):
     def get_day_url(self, day):
         """ Method return link for choose visit by clients """
         return reverse('client_app_new_visit_1', args=[self.username, self.service_id, self.year, self.month, day])
+
+class ClientSchedule:
+    def __init__(self, year, week, work_time, service_id, service_name, username, available_dates):
+        self.start_work_time = work_time.start_time
+        self.end_work_time = work_time.end_time
+        self.work_time = work_time
+        self.service_id = service_id
+        self.username = username
+        self.year = year
+        self.week = week
+        self.service_name = service_name
+        self.day = self.get_dates_from_week(year, week)
+        self.DAYS_OF_WEEK = ['Pn','Wt','Śr','Cz','Pt','So','Nd']
+
+    def display_header(self):
+
+        # Prepare links to navigate
+
+        prev_week_url = self.get_week_url(
+            (self.day[0] - timedelta(days=7)).year,
+            self.get_week_from_date(self.day[0] - timedelta(days=7)))
+
+        next_week_url = self.get_week_url(
+            (self.day[0] + timedelta(days=7)).year,
+            self.get_week_from_date(self.day[0] + timedelta(days=7)))
+
+        html_code = f'<div class="header"><ul>' \
+                    f'<a href="{prev_week_url}"><li class="prev">&#10094;</li></a>' \
+                    f'<a href="{next_week_url}"><li class="next">&#10095;</li></a>' \
+                    f'<li>{self.service_name}</li>' \
+                    f'</ul></div>'
+
+        return html_code
+
+    def display_dates_header(self):
+        html_code = '<div class="dates-header">'
+        html_code += '<ul><li class="empty"></li>'
+
+        # Years and months
+        years_and_months_to_display_dict = self.get_years_and_months(self.day)
+        for n, data in enumerate(years_and_months_to_display_dict):
+            css_class = ''
+            if len(years_and_months_to_display_dict) > 1 and n == len(years_and_months_to_display_dict)-1:
+                css_class = 'border-date'
+            html_code += f"<li style=\"width:{12.5*data['count']}%\" class=\"{css_class}\">" \
+                         f"{data['year']}<br />" \
+                         f"{self.get_month_name(data['month'])}" \
+                         f"</li>"
+        html_code += '</ul>'
+
+        # Days
+
+        html_code += f'<ul><li class="empty"></li>'
+        for n, day in enumerate(self.day):
+            css_class = []
+            if is_holiday(day) or n == 6: css_class.append('red')
+            if datetime.today().date() == day.date(): css_class.append('today')
+            if n == years_and_months_to_display_dict[0]['count']: css_class.append('border-date')
+            css_class = ' '.join(css_class)
+            html_code += f'<li class="{css_class}"><div>{day.day}' \
+                         f'<br />{self.DAYS_OF_WEEK[n]}</div></li>'
+        html_code += f'</ul></div>'
+
+        return html_code
+
+    def display_week(self):
+
+        html_code = self.display_header()
+        html_code += self.display_dates_header()
+
+        html_code += f'<ul class="schedule-content"><li><ul class="hours">'
+        # Hours column
+        hour = self.start_work_time
+        work_hours = []
+        while hour < self.end_work_time:
+            work_hours.append(hour)
+            html_code += f'<li>{hour.strftime("%H:%M")}</li>'
+            hour = (datetime.combine(date.today(), hour) + timedelta(minutes=15)).time()
+        html_code += '</ul></li>'
+
+        for day in self.day:
+            if not is_free_day(day, self.work_time):
+                html_code += '<li><ul>'
+                for hour in work_hours:
+                    html_code += f'<li></li>'
+                html_code += '</ul></li>'
+            else:
+                html_code += '<li><ul>'
+                for hour in work_hours:
+                    full_term = datetime.combine(day, hour)
+
+                    html_code += f'<a href="{self.get_term_url(full_term)}"><li>{hour.strftime("%H:%M")}</li></a>'
+                html_code += '</ul></li>'
+        html_code += f'</ul>'
+
+
+
+        return html_code
+
+    def get_years_and_months(self, dates):
+        var = []
+        for date_ in dates:
+            if not var:
+                var.append({'month': date_.month, 'year': date_.year, 'count': 1})
+            else:
+                exist = False
+                for n, data in enumerate(var):
+                    if var[n]['month'] == date_.month and var[n]['year'] == date_.year:
+                        var[n]['count'] += 1
+                        exist = True
+                        break
+                if not exist:
+                    var.append({'month': date_.month, 'year': date_.year, 'count': 1})
+        return var
+
+    def get_week_url(self, year, week):
+        return reverse('client_app_new_visit', args=[self.username, self.service_id, year, week])
+
+    def get_week_from_date(self, date):
+        return date.isocalendar()[1]
+
+    def get_dates_from_week(self, year, week):
+        days = []
+        days.append(datetime.fromisocalendar(year, week, 1))
+        for i in range(0,6):
+            days.append(days[-1] + timedelta(days=1))
+        return days
+
+    def get_month_name(self, month):
+        """ Method  return polish name of month """
+        months = ['Styczeń', 'Luty', 'Marzec', 'Kwiecień', 'Maj', 'Czerwiec', 'Lipiec', 'Sierpień', 'Wrzesień',
+                  'Październik', 'Listopad', 'Grudzień']
+        return (months[month - 1])
+
+    def get_term_url(self, term):
+        """ Method return link for choose visit by clients """
+        return reverse('client_app_confirm_visit', args=[self.username, self.service_id,
+                                                         term.year, term.month, term.day, term.hour, term.minute])

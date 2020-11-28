@@ -45,6 +45,8 @@ class ClientDashboardTests(BaseTest):
         self.assertNotEqual(response.status_code, 200)
 
 
+
+
 class DashboardTests(BaseTest):
 
     def test_user_panel_template(self):
