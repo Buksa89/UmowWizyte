@@ -6,7 +6,7 @@
     <p><a href="{% url 'dashboard_clients_add' %}" class="button">Dodaj klienta</a></p>
     {% if clients %}
     <table>
-        <tr>
+        <tr class="header">
                 <td>Imię</td>
                 <td>Nazwisko</td>
                 <td>Numer telefonu</td>
@@ -14,6 +14,7 @@
                 <td>email</td>
                 <td>Status</td>
                 <td>pin</td>
+                <td></td>
             </tr>
         {% for client in clients %}
             <tr>

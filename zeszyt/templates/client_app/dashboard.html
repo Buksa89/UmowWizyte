@@ -9,14 +9,32 @@
         <input type="submit" name="submit" value="Umów się">
     </form>
 </p>
+
+{% if visits %}
 <h2>Zbliżające się wizyty:</h2>
 <table>
-    <tr>
+    <tr class="header">
         <td>Rodzaj usługi</td>
         <td>Termin</td>
+        <td>Dzień</td>
+        <td>Godzina</td>
         <td>czas trwania</td>
         <td>Potwierdzona</td>
-        <td><a href="#">Odwołaj</a></td>
+        <td></td>
     </tr>
+    {% for visit in visits %}
+    <tr>
+        <td>{{ visit.name }}</td>
+        <td>{{ visit.date }}</td>
+        <td>{{visit.day}}</td>
+        <td>{{ visit.time }}</td>
+        <td>{{ visit.duration }}</td>
+        <td>{{ visit.is_confirmed }}</td>
+        <td><a href="#">Odwołaj</a>
+    </tr>
+    {% endfor %}
 </table>
+{% else %}
+    <h3>"Nie jesteś umówiony na żadną wizytę"</h3>
+{% endif %}
 {% endblock %}

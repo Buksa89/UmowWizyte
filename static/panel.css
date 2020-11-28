@@ -66,6 +66,47 @@ a.button:hover {
   background-color: #111111;
 }
 
-tr {
-  background-color: #dddddd;
+table {
+    border-collapse: collapse;
+    border-spacing: 0;
+    empty-cells: show;
+    border: 1px solid #cbcbcb;
+    color: #777;
+    line-height: 1.6;
+    font-family: Helvetica,Arial,sans-serif;
+    letter-spacing: .01em;
 }
+tr{
+    background-color: #e0e0e0;
+    color: #000;
+    text-align: left;
+    vertical-align: bottom;
+    border-collapse: collapse;
+    border-spacing: 0;
+    empty-cells: show;
+    }
+
+td{
+
+    color: #777;
+    line-height: 1.6;
+    vertical-align: inherit;
+    border-color: inherit;
+    border-left: 1px solid #cbcbcb;
+    margin: 0;
+    overflow: visible;
+    padding: .5em .5em;
+    background-color:white;
+    border-bottom-width: 0;
+    border-right-width: 0;
+    border-top-width: 0;
+    font-size: inherit;
+
+
+}
+
+table .header td{
+    background-color:#e0e0e0;
+    color:black;
+    font-weight:bold;}
+

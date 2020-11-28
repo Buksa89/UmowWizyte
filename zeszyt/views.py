@@ -15,8 +15,10 @@ from django.views import View
 from django.views.generic.edit import CreateView
 from functools import wraps
 import holidays
-from .forms import AddClientForm, AddServiceForm, ClientChooseVisitForm, ClientLoginForm, LoginForm, WorkTimeForm
-from .models import Client, Service, WorkTime
+from .forms import AddClientForm, AddServiceForm, AddVisit, ClientChooseVisitForm, ClientLoginForm, LoginForm, WorkTimeForm
+from .models import Client, Service, Visit, WorkTime
+
+DAYS_OF_WEEK = ['Poniedziałek', 'Wtorek', 'Środa', 'Czwartek', 'Piątek', 'Sobota', 'Niedziela']
 
 """ User Views """
 
@@ -239,22 +241,29 @@ class ClientAppDashboard(View):
     def get(self, request, username):
         user = get_object_or_404(User, username__iexact=username)
         client = get_object_or_404(Client, phone_number=request.session.get('client_authorized')['phone'],user=user)
-        form = ClientChooseVisitForm(user)
-        return render(request, self.template, {'form':form,
-                                               'username':user.username,
-                                                'client_name':client.name,
-                                                'section':'dashboard'})
+        visits_query = Visit.objects.filter(user=user, client=client)
+        visits = []
+        for visit in visits_query:
+            dict = {}
+            dict['name'] = visit.name
+            dict['date'] = visit.start.strftime("%Y-%m-%d")
+            dict['day'] = DAYS_OF_WEEK[visit.start.weekday()]
+            dict['time'] = visit.start.strftime("%H:%M")
+            dict['duration'] = str(visit.stop - visit.start)[:-3].rjust(5,'0')
+            dict['is_confirmed'] = visit.is_confirmed
+            visits.append(dict)
 
-    @method_decorator(client_login_required)
-    def post(self, request, username):
-        if 'service' in request.POST.keys(): return redirect('client_app_new_visit', username, request.POST['service'])
-        user = get_object_or_404(User, username__iexact=username)
-        client = get_object_or_404(Client, phone_number=request.session.get('client_authorized')['phone'],user=user)
         form = ClientChooseVisitForm(user)
         return render(request, self.template, {'form':form,
                                                'username':user.username,
                                                'client_name':client.name,
+                                               'visits':visits,
                                                'section':'dashboard'})
+
+    @method_decorator(client_login_required)
+    def post(self, request, username):
+        if 'service' in request.POST.keys(): return redirect('client_app_new_visit', username, request.POST['service'])
+        return redirect('client_app_dashboard', username)
 
 
 
@@ -277,10 +286,47 @@ class ClientAppNewVisit(View):
 class ClientAppConfirmVisit(View):
     template_name = ''
     section = ''
+    form = AddVisit()
+
 
     def get(self, request, username, service_id, year, month, day, hour, minute):
-        return render(request, 'client_app/confirm_visit.html', {'section': '', #'service': service.name,
-                       'username': username})
+        #TODO: Walidacja czy na pewno data i godzina wolne
+        user = get_object_or_404(User, username__iexact=username)
+        service = get_object_or_404(Service, id=service_id, user=user)
+        day_number = datetime(year, month, day).weekday()
+        day_name = DAYS_OF_WEEK[day_number]
+        day_str = str(day).rjust(2,'0')
+        month_str = str(month).rjust(2,'0')
+        hour_str = str(hour).rjust(2,'0')
+        minute_str = str(minute).rjust(2,'0')
+        date = f'{day_str}-{month_str}-{year}'
+        time = f'{hour_str}:{minute_str}'
+
+        return render(request, 'client_app/confirm_visit.html', {'section': '', 'service': service.name, 'date': date,
+                                                                 'day_name': day_name, 'time': time, 'form':self.form,
+                                                                 'username': username, 'service_id': service_id,
+                                                                 'year':year, 'month':month, 'day':day, 'hour':hour,
+                                                                 'minute':minute})
+
+    def post(self, request, username, service_id, year, month, day, hour, minute):
+        #TODO: Walidacja czy na pewno data i godzina wolne
+        # jeśli tak, redirect do strony glownej
+        # jesli nie, render jeszcze raz
+        # Potwierdzenie na głównej
+
+        form = AddVisit(data=self.request.POST)
+        user = get_object_or_404(User, username__iexact=username)
+        client = get_object_or_404(Client, phone_number=request.session.get('client_authorized')['phone'])
+        service = get_object_or_404(Service, id=service_id, user=user)
+        name = service.name
+        start = datetime(year, month, day, hour, minute)
+        stop = start + service.duration
+        is_available = True
+        is_confirmed = False
+
+        form.save(user, client, name, start, stop, is_available, is_confirmed)
+
+        return redirect('client_app_dashboard', username)
 
 
 class ClientAppLogout(View):
@@ -326,6 +372,8 @@ def is_holiday(date):
 def is_free_day(date, work_time):
     """ Function get date and return True if it is not working day """
     if not work_time.__dict__[date.strftime("%A").lower()]: return True
+
+
 
 
 class Calendar(HTMLCalendar):

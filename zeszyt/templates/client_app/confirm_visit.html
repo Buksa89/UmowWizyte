@@ -1,4 +1,11 @@
 {% extends "client_base.html" %}
 {% block content %}
-Dzien tygodnia
+    <p>Usługa: {{ service }}</p>
+    <p>Data: {{ date }} ({{ day_name }})</p>
+    <p>Godzina: {{ time }}</p>
+    <form name="add-visit-form" action="{% url 'client_app_confirm_visit' username service_id year month day hour minute %}" method="post">
+        {{ form.as_p }}
+        {% csrf_token %}
+        <input type="submit" name="submit" value="Potwierdź">
+    </form>
 {% endblock %}

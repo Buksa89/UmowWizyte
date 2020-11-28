@@ -1,7 +1,8 @@
 from django import forms
 from django.core.exceptions import NON_FIELD_ERRORS, ValidationError
+from django.forms import Textarea
 from random import choice
-from .models import Client, Service, WorkTime
+from .models import Client, Service, Visit, WorkTime
 
 
 def pin_generate():
@@ -19,10 +20,10 @@ def time_choices(hours=8):
         hour += ':'
         for minute in range(00,59,15):
             minute = str(minute).rjust(2, '0')
-            choices.append([hour+minute,hour+minute])
+            choices.append([hour+minute+':00',hour+minute])
 
     last = str(hours).rjust(2, '0') + ":00"
-    choices.append([last,last])
+    choices.append([last+':00',last])
     choices=tuple(choices)
     return choices
 
@@ -178,5 +179,31 @@ class WorkTimeForm(forms.ModelForm):
 
             'latest_visit': {'required': "Pole nie może być puste",
                              'invalid':"Liczba dni nieprawidłowa"},
+        }
 
+
+class AddVisit(forms.ModelForm):
+
+    def save(self, user, client, name, start, stop, is_available, is_confirmed):
+        self.instance.user = user
+        self.instance.client = client
+        self.instance.name = name
+        self.instance.start = start
+        self.instance.stop = stop
+        self.instance.is_available = is_available
+        self.instance.is_confirmed = is_confirmed
+        return super().save()
+
+    class Meta:
+        model = Visit
+        fields = ['description']
+        labels = {
+            'description': 'Dodatkowe informacje',
+        }
+        widgets = {
+            'description': Textarea(attrs={'cols': 80, 'rows': 2,
+                'placeholder': 'Dodatkowe informacje',}),
+            }
+        error_messages = {
+            'description': {'max_length': 'Opis jest za długi'},
         }

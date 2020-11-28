@@ -42,18 +42,18 @@ class Service(models.Model):
     def display_duration(self):
         # Duration should be display in format: 00:00.
         # TODO: Sprawdź czy istnieje funkcja która robi to bardziej elegancko
-        return str(self.duration)[-5:]
+        return str(self.duration)[-8:-3]
 
 
 class Visit(models.Model):
     user = models.ForeignKey(User, default ='', on_delete=models.CASCADE)
     client = models.ForeignKey(Client, default ='', on_delete=models.CASCADE)
     name = models.CharField(max_length=60, blank=False, default='')
-    start = models.TimeField(auto_now=False, auto_now_add=False)
-    stop = models.TimeField(auto_now=False, auto_now_add=False)
-    is_avaible = models.BooleanField(default=True)
+    start = models.DateTimeField(auto_now=False, auto_now_add=False)
+    stop = models.DateTimeField(auto_now=False, auto_now_add=False)
+    is_available = models.BooleanField(default=True)
     is_confirmed = models.BooleanField(default=False)
-    description = models.CharField(max_length=200, blank=True, default='')
+    description = models.CharField(max_length=400, blank=True, default='')
 
     def get_remove_url(self):
         return reverse('remove_visit', args=[self.id])
