@@ -1,0 +1,163 @@
+Bazowe
+    Model
++        Czy użytkownik tworzy się prawidłowo                                                                            test_models         UserTest        test_user_saving
++        Czy z użytkownikiem jest tworzony model WorkTime                                                                test_models         UserTest        test_create_work_time_for_user
+
+Klient
+    Login:
+TODO: Stworzenie zablokowanego okna logowania
+TODO: Test formularza pod kątem błędów
+
+        Views:
++            Czy przy błędnym logowaniu wyświetlają się wszystkie errory                                                test_view        LoginTests     test_incorrect_data_errors_display
++            Czy przy logowaniu ze złym loginem/pinem klient pozostaje niezalogowany w sesji                            test_view        LoginTests     test_incorrect_data_not_authorize
++            Czy przy logowaniu jako nieaktywny, klient pozostaje niezalogowany w sesji                                 test_view        LoginTests     test_not_active_client_not_auhorize
++            Czy przy prawidłowym logowaniu pojawia się w sesji                                                         test_view        LoginTests     test_correct_client_auhorized
++            Czy po wylogowaniu klient usuwany jest z sesji                                                             test_view        LoginTests     test_remove_client_from_session_after_logout
+             # Redirects
++            Przekierowywanie z podstron do strony logowania jeśli w sesji nie ma klienta dla danego usera              test.views       LoginTests     test_redirect_to_login_url_when_client_not_authorized_for_this_user
++            Przekierowanie z url loginu do url dashboard jesli klient jest w sesji                                     test.views       LoginTests     test_redirect_from_login_to_dashboard_url_when_client_authorized_for_this_user
++            Przekierowanie z url loginu do url dashboard po wprowadzeniu prawidłowych danych                           test.views       LoginTests     test_redirect_to_dashboard_after_POST_login
++            Przekierowanie do url login po wylogowaniu                                                                 test.views       LoginTests     test_redirect_after_logout
+
+        Templates
++            Czy url login wczytuje właściwą templatkę (login.html)                                                      test_template      LoginTests          test_login_template_display
++            Czy url login po wysłaniu POSTA wczytuje właściwą templatkę (login.html)                                    test_template      LoginTests          test_login_template_POST
+-            Czy url login wczytuje właściwą templatk dla nieaktywnego uzytkownika (login_not_active.html)               test_template      LoginTests          test_login_template_not_active
+
+        Forms
++            Czy url login wyświetla prawidłowy formularz (ClientLoginForm)                                             test_form          LoginTests          test_form_display
+-            Errory
+
+
+
+
+
+-   Schedule:
+ -        Views:
+  -
+
+ -        Templates:
+  -
+
+ -        Forms
+  -
+
+
+
+
+
+-  Settings:
+ -        Views:
+  -
+
+ -        Templates:
+  -
+
+ -        Forms
+  -
+
+
+User
+   Login:
+TODO: Test formularza pod kątem błędów
+        Views:
++            Czy przy błędnym logowaniu wyświetlają się wszystkie errory                                                test_view        LoginTests     test_incorrect_data_errors_display
++            Czy przy logowaniu ze złym loginem/hasłem user pozostaje niezalogowany w sesji                             test_view        LoginTests     test_incorrect_data_not_authorize
++            Czy przy logowaniu jako nieaktywny, user pozostaje niezalogowany w sesji                                   test_view        LoginTests     test_not_active_user_not_auhorize
++            Czy przy prawidłowym logowaniu pojawia się w sesji                                                         test_view        LoginTests     test_correct_user_auhorized
++            Czy po wylogowaniu user usuwany jest z sesji                                                               test_view        LoginTests     test_remove_user_from_session_after_logout
+             # Redirects
++            Przekierowywanie z podstron do strony logowania jeśli nie jest zalogowany                                  test_view        LoginTests     test_redirect_to_login_url_when_user_not_authorized
++            Przekierowanie z url loginu do url dashboard jesli  jest w sesji                                           test_view        LoginTests     test_redirect_from_login_to_dashboard_url_when_user_authorized
++            Przekierowanie z url loginu do url dashboard po wprowadzeniu prawidłowych danych                           test_view        LoginTests     test_user_redirect_to_dashboard_after_POST_login
++            Przekierowanie do url login po wylogowaniu                                                                 test_view        LoginTests     test_redirect_after_logout
+
+        Templates:
++            Czy url login wczytuje właściwą templatkę (login.html)                                                     test_template      LoginTests          test_login_template_display
++            Czy url login po wysłaniu POSTA wczytuje właściwą templatkę (login.html)                                   test_template      LoginTests          test_login_template_POST
+
+        Forms
++            Czy url login wyświetla prawidłowy formularz (LoginForm)                                                   test_form          LoginTests          test_form_display
+-            Errory
+
+
+-    Dashboard:
+ -        Views:
+  -           Czy wyświetla się menu
+
+ +        Templates:
+  +            Czy url dashboard wczytuje właściwą templatkę (dashboard.html)                                                      test_template      DashboardTests          test_dashboard_template_display
+-inne?
+
+ -        Forms
+  -
+
+
+-    Schedule:
+ -        Views:
+  -
+
+ -        Templates:
+  -
+
+ -        Forms
+  -
+
+    Clients:
+TODO: Edycja klienta
+TODO: Potwierdzenie usunięcia klienta
+TODO Walidacja unique
+
+         Views:
+               #Lista
++            Czy pusta lista się prawidłowo wyświetla                                                                  test_view       DashboardClientsTests            test_empty_clients_list_display
++            Czy klienci się wyświetlają na liście                                                                     test_view       DashboardClientsTests            test_clients_list_display
++            Czy inny user widzi moich klientów                                                                        test_view       DashboardClientsTests            test_other_user_sees_my_clients
+               #Dodawanie
++            Czy formularz dodawania się prawidłowo wyświetla                                                          test_view       DashboardClientsTests            test_add_client_form_display
++            Czy klienci się prawidłowo dodają                                                                         test_view       DashboardClientsTests            test_add_client_correctly
+               #Usuwanie
++            Czy klienci się prawidłowo usuwają                                                                        test_view       DashboardClientsTests            test_remove_client_correctly
++            Czy inny user może usunąć mojego klienta (404)                                                            test_view       DashboardClientsTests            test_other_user_can_remove_my_client
+
+
+         Templates:
++            Czy url dashboard/clients wczytuje właściwą templatkę (clients.html)                                     test_template      DashboardClientsTests          test_dashboard_clients_template_display
++            Czy url dashboard/clients_add wczytuje właściwą templatkę (clients_add.html)                             test_template      DashboardClientsTests          test_dashboard_clients_add_template_display
++            Czy url dashboard/clients_add po wysłaniu POST eczytuje właściwą templatkę (clients_add.html)            test_template      DashboardClientsTests          test_dashboard_clients_add_template_POST
+
+         Forms
++             Czy wczytuje się prawidłowy formularz dodawania klienta                                                 test_form               DashboardClientsTests       test_add_client_form_display
++             Walidacja pustych pól                                                                                   test_form               DashboardClientsTests       test_add_client_errors_for_blank_fields
++             Walidacja zbyt długich pól                                                                              test_form               DashboardClientsTests       test_add_client_errors_for_long_fields
++             Walidacja niepoprawnych pól                                                                             test_form               DashboardClientsTests       test_add_client_errors_for_incorrect_fields
+-             Walidacja zduplikowanych numerów telefonu                                                               test_form               DashboardClientsTests       test_add_client_error_for_duplicate
+
+         Model:
++             Czy model Client się zapisuje                                                                           test_model              ClientsTests                test_client_model_save
++             Czy wprowadzenie klienta bez nr telefonu, imienia, albo przypisania usera skutkuje błędem walidacji     test_model              ClientsTests                test_errors_missing_required_fields
++             Czy wprowadzenie błędnych pól skutkuje błędem walidacji                                                 test_model              ClientsTests                test_errors_incorrect_fields
++             Czy model klient jest powiązany z userem                                                                test_model              ClientsTests                test_client_is_related_to_user
++             Czy wprowadzenie dwóch klientów z tym samym numerem telefonu skutkuje błędem walidacji                  test_model              ClientsTests                test_errors_duplicate_numbers
++             Czy dwóch różnych userów może wprowadzić klienta z tym samym numerem telefonu                           test_model              ClientsTests                test_duplicate_numbers_for_different_users
+                # Usuwanie
++             Czy generuje się prawidłowy adres url do usuwania klienta                                               test_model              ClientsTests                test_get_remove_url
++             Czy klient się usuwa                                                                                    test_model              ClientsTests                test_client_remove
+
+
+    Settings:
+         Views:
+
+
+        Templates:
+
+
+        Forms
+
+
+        Model:
+
+
+
+
