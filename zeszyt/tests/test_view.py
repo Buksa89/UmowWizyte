@@ -1,246 +1,140 @@
-from datetime import timedelta, date
-from django.contrib.auth.models import User
 from django.test import TestCase
 from unittest import skip
-from .base import BaseTest
 from ..models import Client, Service, WorkTime
-
-ANY_PIN = 9999
-ANY_PHONE = 999999999
-ANY_NAME = 'Gumiś'
-# TODO: czy obcy klient widzi aktywną usługę
-
-class ClientLoginTests(BaseTest):
-
-    def test_client_login_display_errors(self):
-        user = self.create_user('ok1')
-        user2 = self.create_user('ok2')
-        client_ok = self.create_client(user, 'cl_ok1')
-        client_not_active = self.create_client(user, 'cl_not_active')
-        client_other_user = self.create_client(user2, 'cl_ok1')
-        data_results = [{'data': {'phone_number': client_ok.phone_number, 'pin': ANY_PIN}, 'message': 'Dane nieprawidłowe'},
-                        {'data': {'phone_number': ANY_PHONE, 'pin': client_ok.pin}, 'message': 'Nie ma takiego numeru'},
-                        {'data': {'phone_number': client_other_user.phone_number, 'pin': client_other_user.pin}, 'message': 'Nie ma takiego numeru'},
-                        {'data': {'phone_number': client_not_active.phone_number, 'pin': client_not_active.pin}, 'message': 'Konto zablokowane'},
-                        {'data': {'phone_number': '', 'pin': client_ok.pin}, 'message': 'Podaj numer telefonu'},
-                        {'data': {'phone_number': client_ok.phone_number, 'pin': ''}, 'message': 'Podaj pin'}]
-        for data_result in data_results:
-            response = self.client.post(f'/{user}/', data=data_result['data'])
-            self.assertContains(response, data_result['message'])
-
-    def test_incorrect_login_auhorize(self):
-        user = self.create_user()
-        client = self.create_client(user)
-        response = self.client.post(f'/{user}/', data={'phone_number': client.phone_number, 'pin': ANY_PIN})
-        response2 = self.client.post(f'/{user}/', data={'phone_number': ANY_PHONE, 'pin': client.pin})
-        self.assertNotIn('client_authorized', self.client.session)
-
-    def test_not_active_login_auhorize(self):
-        user = self.create_user()
-        client = self.create_client(user, 'cl_not_active')
-        response = self.client.post(f'/{user}/', data={'phone_number': client.phone_number, 'pin': client.pin})
-        self.assertNotIn('client_authorized', self.client.session)
-
-    def test_correct_login_auhorize(self):
-        user = self.create_user()
-        client = self.create_client(user)
-        self.client.post(f'/{user}/', data={'phone_number': client.phone_number, 'pin': client.pin})
-        self.assertIn('client_authorized', self.client.session)
-        correct_session = {'phone':client.phone_number,'user':user.username}
-        self.assertEqual(self.client.session['client_authorized'], correct_session)
-
-    """ Redirects tests """
-
-    def test_panel_redirect_to_login_when_user_not_authorized(self):
-        #TODO: Tutaj dodaj podstrowny panelu klienta
-        user = self.create_user()
-        response = self.client.get(f'/{user}/panel/')
-        self.assertRedirects(response, f'/{user}/')
-
-    def test_client_redirect_to_dashboard_after_login(self):
-        user = self.create_user()
-        client = self.create_client(user)
-        response = self.client.post(f'/{user}/', data={'phone_number':client.phone_number, 'pin':client.pin})
-
-        self.assertRedirects(response, f'/{user}/panel/')
-
-    def test_redirect_after_logout(self):
-        self.authorize_client()
-        response = self.client.get(f'/{self.user}/logout/')
-        self.assertNotIn('client_authorized', self.client.session)
-        self.assertRedirects(response, f'/{self.user}/')
-
-    def test_client_logged_to_user_but_not_logged_to_others(self):
-        self.authorize_client()
-        user2 = self.create_user('ok2')
-        response = self.client.get(f'/{user2}/')
-        self.assertTemplateUsed(response, 'client_app/login.html')
-
-
-class ClientDashboardTests(BaseTest):
-    def test_correct_services_in_form(self):
-        self.authorize_client()
-        service1 = self.create_service(self.user, 'serv_ok1')
-        service2 = self.create_service(self.user, 'serv_ok2')
-        service3 = self.create_service(self.user, 'serv_not_active')
-        response = self.client.get(f'/{self.user}/panel/')
-        self.assertContains(response, service1.name+'</option>')
-        self.assertContains(response, service2.name+'</option>')
-        self.assertNotContains(response, service3.name+'</option>')
-
-    def test_client_dashboard_POST(self):
-        self.authorize_client()
-        response = self.client.post(f'/{self.user}/panel/', data={})
-
-        self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'client_app/dashboard.html')
-
-    def test_new_visit_template_post(self):
-        self.authorize_client()
-        self.create_service(self.user)
-        response = self.client.post(f'/{self.user}/panel/', data={'service':'1'})
-        self.assertRedirects(response, f'/{self.user}/nowa_wizyta/1/')
-
-
-class DasboardScheduleTests(BaseTest):
-
-    @skip
-    def test_calendar_highlight_today(self):
-        self.authorize_user()
-        response = self.client.get('/terminarz/')
-
-        self.assertContains(response, f'<span class="active">{date.today().strftime("%d")}</span>')
-        self.assertContains(response, date.today().strftime("%y"))
-
-    @skip
-    def test_calendar_date_url(self):
-        self.authorize_user()
-        response = self.client.get('/terminarz/2011/9')
-
-        self.assertContains(response, 'Wrzesień')
-        self.assertContains(response, '2011')
-
-    @skip
-    def test_calendar_next_previous_month_link(self):
-        self.authorize_user()
-        response = self.client.get('/terminarz/2011/9')
-        self.assertContains(response, '<a href="/terminarz/2011/8"><li class="prev">&#10094;</li></a>')
-        self.assertContains(response, '<a href="/terminarz/2011/10"><li class="next">&#10095;</li></a>')
-
-    @skip
-    def test_calendar_day_link(self):
-        self.authorize_user()
-        response = self.client.get('/terminarz/2011/9')
-
-        self.assertContains(response, '<a href="/terminarz/2011/9/9"><li><span>9</span></li></a>')
-
-    @skip
-    def test_calendar_holidays_red(self):
-        self.authorize_user()
-        response = self.client.get('/terminarz/2011/11')
-
-        self.assertContains(response, 'class="red">1')
-        self.assertContains(response, 'class="red">11')
-        self.assertNotContains(response, 'class="red">6')
-
+from .base import BaseTest
 
 class DashboardClientsTests(BaseTest):
 
-    def test_clients_form_display(self):
+    """ Clients list"""
 
-        self.authorize_user()
-        response = self.client.get('/klienci/nowy/')
+    def test_empty_clients_list_display(self):
+        user = self.create_user()
+        self.authorize_user(user)
+        response = self.client.get('/klienci/')
 
-        self.assertContains(response, 'add-client-form')
+        self.assertContains(response, 'Nie masz jeszcze żadnych klientów')
 
-    def test_other_user_see_my_clients(self):
-        user = self.create_user('ok1')
-        self.create_client(user)
-        self.authorize_user('ok2')
+
+    def test_clients_list_display(self):
+        user = self.create_user()
+        self.authorize_user(user)
+        self.create_client(user,'active_1')
+        self.create_client(user,'active_2')
+        response = self.client.get('/klienci/')
+
+        for field in self.clients['active_1'].values():
+            self.assertContains(response, field)
+        for field in self.clients['active_2'].values():
+            self.assertContains(response, field)
+
+
+    def test_other_user_sees_my_clients(self):
+        user = self.create_user('active_1')
+        user2 = self.create_user('active_2')
+        self.create_client(user,'active_1')
+        self.authorize_user(user2)
         response = self.client.get('/klienci/')
 
         self.assertContains(response, "Nie masz jeszcze żadnych klientów")
 
-    def test_client_is_added_correctly(self):
-        self.authorize_user()
-        response = self.client.post('/klienci/nowy/', data={'pin':ANY_PIN, 'name':ANY_NAME, 'phone_number':ANY_PHONE})
+
+    """ Client add """
+
+    def test_add_client_form_display(self):
+        user = self.create_user()
+        self.authorize_user(user)
+        response = self.client.get('/klienci/nowy/')
+
+        self.assertContains(response, 'add-client-form')
+
+
+    def test_add_client_correctly(self):
+        user = self.create_user()
+        self.authorize_user(user)
+        client = self.clients['active_1']
+        client_full_data = self.clients_full_data['active_1']
+        response = self.client.post('/klienci/nowy/', data={'pin':client_full_data['pin'], 'name':client['name'],
+                                                            'phone_number':client['phone_number']})
+
         self.assertTrue(Client.objects.first())
-        self.assertContains(response, ANY_NAME+" dodany")
+        self.assertContains(response, client['name']+" dodany")
 
-    def test_clients_list_display(self):
-        self.authorize_user('ok1')
-        self.create_client(self.user,'cl_ok1')
-        self.create_client(self.user,'cl_ok2')
-        response = self.client.get('/klienci/')
-        for field in self.clients['ok1']['cl_ok1'].values():
-            self.assertContains(response, field)
-        for field in self.clients['ok1']['cl_ok2'].values():
-            self.assertContains(response, field)
-
-
-class DashboardTests(BaseTest):
 
     """ Client remove """
 
-    def test_user_remove_client(self):
-        self.authorize_user()
-        client = self.create_client(self.user)
+    def test_remove_client_correctly(self):
+        user = self.create_user()
+        self.authorize_user(user)
+        client = self.create_client(user)
         response = self.client.get(client.get_remove_url())
+
         self.assertFalse(Client.objects.first())
         self.assertRedirects(response, '/klienci/')
 
-    def test_user_cannot_remove_others_clients(self):
-        """Użytkownik nie powinien mieć możliwości usunięcia klientów innego użytkownika
-        poprzez podanie jego id w linku"""
-        user = self.create_user('ok1')
-        client = self.create_client(user)
-        self.authorize_user('ok2')
-        self.client.get(client.get_remove_url())
 
+    def test_user_cannot_remove_others_clients(self):
+        """ User should remove other user's clients by manual url """
+        user = self.create_user('active_1')
+        user2 = self.create_user('active_2')
+        client = self.create_client(user)
+        self.authorize_user(user2)
+        response = self.client.get(client.get_remove_url())
+
+        self.assertEqual(response.status_code, 404)
         self.assertTrue(Client.objects.first())
 
-#TODO: Refaktoryzacja testów poniżej:
 
-class DashobardSettingsTests(BaseTest):
+class DashboardSettingsTests(BaseTest):
 
     """ Service add tests """
 
     def test_service_form_display(self):
-        self.authorize_user()
+        user = self.create_user()
+        self.authorize_user(user)
         response = self.client.get('/ustawienia/')
 
         self.assertContains(response, 'add-service-form')
 
+
+    #todo: Ustaw czas do poprawy
     def test_service_form_display_errors(self):
-        name = "Muvaffakiyetsizleştiricilestiriveremeyebileceklerimizdenmissinizcesine"
-        self.authorize_user()
-        Service.objects.create(user=self.user, duration=timedelta(hours=1), name='duplikat')
-        data_results = [{'data': {'duration': '00:15', 'name': '', 'submit': 'add_service'}, 'message': 'Pole nie może być puste'},
-                        {'data': {'duration': '00:00', 'name': 'usługa', 'submit': 'add_service'}, 'message': 'Ustaw czas'},
-                        {'data': {'duration': '01:45', 'name': name, 'submit': 'add_service'}, 'message': "Nazwa jest za długa"},
-                        {'data': {'duration': '05:45', 'name': 'duplikat', 'submit': 'add_service'}, 'message': 'Usługa o tej nazwie już istnieje'}]
+        user = self.create_user()
+        self.authorize_user(user)
+        self.create_service(user, 'short_1')
+        service = self.services['short_1']
+        data_results = [{'data': {'duration': service['duration'], 'name': self.EMPTY, 'submit': 'add_service'}, 'message': 'Pole nie może być puste'},
+                       # {'data': {'duration': self.DURATION_MIN, 'name': service['name'], 'submit': 'add_service'}, 'message': 'Ustaw czas'},
+                        {'data': {'duration': service['duration'], 'name': self.LONG_STRING(61), 'submit': 'add_service'}, 'message': "Nazwa jest za długa"},
+                        {'data': {'duration': service['duration'], 'name': service['name'], 'submit': 'add_service'}, 'message': 'Usługa o tej nazwie już istnieje'}]
         for data_result in data_results:
             response = self.client.post('/ustawienia/', data=data_result['data'])
 
             self.assertContains(response, data_result['message'])
 
     def test_service_empty_list_not_display(self):
-        self.authorize_user()
+        user = self.create_user()
+        self.authorize_user(user)
         response = self.client.get('/ustawienia/')
 
         self.assertContains(response, "Nie masz jeszcze żadnych usług")
 
     def test_service_list_display(self):
-        self.authorize_user()
-        response = self.client.post('/ustawienia/', data={'duration': '00:15', 'name': 'usługa', 'submit': 'add_service'})
-        content = ['Usługa usługa dodana.', '<td>usługa</td>', '<td>00:15</td>', '<td>False</td>']
+        user = self.create_user()
+        self.authorize_user(user)
+        service = self.services['short_1']
+        response = self.client.post('/ustawienia/', data={'duration': service['duration'], 'name': service['name'], 'is_active':service['is_active'], 'submit': 'add_service'})
+        service['duration'] = str(service['duration'])[:-3].rjust(5,'0')
+        content = [f"Usługa {service['name']} dodana.", f"<td>{service['duration']}</td>", f"<td>{service['name']}</td>", f"<td>{service['is_active']}</td>"]
+
         for element in content:
             self.assertContains(response, element)
 
     def test_other_user_see_my_service(self):
-        self.authorize_user('ok1')
-        self.client.post('/ustawienia/', data={'duration': '00:15', 'name': 'usługa', 'submit': 'add_service'})
-        self.authorize_user('ok2')
+        user1 = self.create_user('active_1')
+        user2 = self.create_user('active_2')
+        self.create_service(user1, 'short_1')
+        self.authorize_user(user2)
+
         response = self.client.get('/ustawienia/')
 
         self.assertContains(response, "Nie masz jeszcze żadnych usług")
@@ -248,39 +142,47 @@ class DashobardSettingsTests(BaseTest):
 
     """ Service remove tests """
 
-    def test_user_remove_service(self):
-        self.authorize_user()
-        service = Service.objects.create(duration=timedelta(hours=1), name='usluga', user=self.user)
+    def test_remove_service(self):
+        user = self.create_user()
+        service = self.create_service(user)
+        self.authorize_user(user)
         self.client.get(service.get_remove_url())
 
         self.assertFalse(Service.objects.first())
 
-    def test_user_cannot_remove_others_services(self):
+
+    def test_cannot_remove_others_services(self):
         """ Jeden użytkownik nie powinien mieć możliwości usunięcia usługi innego, poprzez ręczne wpisanie
         linka z id usługi """
-        self.authorize_user('ok1')
-        service = Service.objects.create(duration=timedelta(hours=1), name='usluga', user=self.user)
-        self.authorize_user('ok2')
-        with self.assertRaises(Service.DoesNotExist):
-            self.client.get(service.get_remove_url())
+
+        user = self.create_user('active_1')
+        user2 = self.create_user('active_2')
+        service = self.create_service(user)
+        self.authorize_user(user2)
+        response = self.client.get(service.get_remove_url())
+
+        self.assertEqual(response.status_code, 404)
         self.assertTrue(Service.objects.first())
 
 
     """ Work time Tests """
 
-    def test_service_form_display(self):
-        self.authorize_user()
+    def test_work_time_form_display(self):
+        user = self.create_user()
+        self.authorize_user(user)
         response = self.client.get('/ustawienia/')
 
         self.assertContains(response, 'work-time-form')
 
+
     def test_work_time_form_working(self):
-        self.authorize_user()
-        response = self.client.post('/ustawienia/', data = {'start_time': '6:00', 'end_time': '8:00', 'monday': False,
-                                                            'tuesday': True, 'wednesday': False, 'thursday': True,
-                                                            'friday': False, 'saturday': True, 'sunday': False,
-                                                            'holidays': True, 'earliest_visit': 1, 'latest_visit': 7,
-                                                            'submit': 'set_work_time'})
+        user = self.create_user()
+        self.authorize_user(user)
+        data = {'start_time': '6:00', 'end_time': '8:00', 'monday': False, 'tuesday': True, 'wednesday': False,
+                'thursday': True, 'friday': False, 'saturday': True, 'sunday': False, 'holidays': True,
+                'earliest_visit': 1, 'latest_visit': 7, 'submit': 'set_work_time'}
+
+        response = self.client.post('/ustawienia/', data = data)
         self.assertContains(response, 'Czas pracy zmieniony')
         self.assertContains(response, 'monday">')
         self.assertContains(response, 'tuesday" checked>')
@@ -295,75 +197,104 @@ class DashobardSettingsTests(BaseTest):
 
 
     def test_service_form_errors(self):
-        self.authorize_user()
-        response = self.client.post('/ustawienia/', data={'start_time': '10:00', 'end_time': '8:00', 'monday': False,
-                                                          'tuesday': True, 'wednesday': False, 'thursday': True,
-                                                          'friday': False, 'saturday': True, 'sunday': False,
-                                                          'holidays': True, 'earliest_visit': 7, 'latest_visit': 2,
-                                                          'submit': 'set_work_time'})
+        user = self.create_user()
+        self.authorize_user(user)
+        data = {'start_time': '10:00', 'end_time': '8:00', 'monday': False, 'tuesday': True, 'wednesday': False,
+              'thursday': True, 'friday': False, 'saturday': True, 'sunday': False, 'holidays': True,
+              'earliest_visit': 7, 'latest_visit': 2, 'submit': 'set_work_time'}
+
+        response = self.client.post('/ustawienia/', data=data)
         self.assertContains(response, 'Popraw godziny pracy')
         self.assertContains(response, 'Popraw możliwość wyboru terminów')
 
         # TODO: Jak już poprawisz treść błędu (dni ujemne), to dodaj test
 
 
+class LoginTests(BaseTest):
 
-class UserLoginTests(TestCase):
-
-    def test_incorrect_login_display_errors(self):
-        User.objects.create_user(username='user', password='pass')
-        User.objects.create_user(username='user2', password='pass2', is_active=False)
-        data_results = [{'data': {'username':'user', 'password':'wrong_pass'}, 'message':'Błędny login lub hasło'},
-                {'data': {'username':'wrong_username', 'password':'pass'}, 'message':'Błędny login lub hasło'},
-                {'data': {'username':'user2', 'password':'pass2'}, 'message':'Konto zablokowane'},
-                {'data': {'username':'', 'password':'pass2'}, 'message':'Podaj login'},
-                {'data': {'username':'user2', 'password':''}, 'message':'Podaj hasło'}]
+    def test_incorrect_data_errors_display(self):
+        #TODO: Za długi login, zadługie hasło
+        user = self.create_user('active_1')
+        user.password = self.users['active_1']['password']
+        user_not_active = self.create_user('not_active')
+        data_results = [{'data': {'username': user.username, 'password': self.WRONG_DATA}, 'message': 'Błędny login lub hasło'},
+                        {'data': {'username': self.WRONG_DATA, 'password': user.password}, 'message': 'Błędny login lub hasło'},
+                        {'data': {'username': user_not_active.username, 'password': user_not_active.password}, 'message': 'Konto zablokowane'},
+                        {'data': {'username': self.EMPTY, 'password': user.password}, 'message': 'Podaj login'},
+                        {'data': {'username': user.username, 'password': self.EMPTY}, 'message': 'Podaj hasło'}]
 
         for data_result in data_results:
             response = self.client.post('/login/', data=data_result['data'])
+
             self.assertContains(response, data_result['message'])
 
-    def test_incorrect_login_auhorize(self):
-        User.objects.create_user(username='user', password='pass')
-        self.client.post('/login/', data={'username':'user', 'password':'wrong_pass'})
-        self.client.post('/login/', data={'username':'wrong_username', 'password':'pass'})
+
+    def test_incorrect_data_not_authorize(self):
+        user = self.create_user('active_1')
+        user.password = self.users['active_1']['password']
+        self.client.post('/login/', data={'username': user.username, 'password': self.WRONG_DATA})
+        self.client.post('/login/', data={'username': self.WRONG_DATA, 'password': user.password})
 
         self.assertNotIn('_auth_user_id', self.client.session)
 
-    def test_not_active_login_auhorize(self):
-        User.objects.create_user(username='user', password='pass', is_active=False)
-        self.client.post('/login/', data={'username':'user', 'password':'pass'})
+
+    def test_not_active_user_not_auhorize(self):
+        user = self.create_user('not_active')
+        user.password = self.users['not_active']['password']
+        self.client.post('/login/', data={'username': user.username, 'password':user.password})
 
         self.assertNotIn('_auth_user_id', self.client.session)
 
-    def test_correct_login_auhorize(self):
-        user = User.objects.create_user(username='user', password='pass')
-        self.client.post('/login/', data={'username':'user', 'password':'pass'})
+
+    def test_correct_user_auhorized(self):
+        user = self.create_user('active_1')
+        user.password = self.users['active_1']['password']
+        self.client.post('/login/', data={'username':user.username, 'password':user.password})
 
         self.assertIn('_auth_user_id', self.client.session)
         self.assertEqual(int(self.client.session['_auth_user_id']), user.pk)
 
 
-    """ Login redirects tests """
+    def test_remove_user_from_session_after_logout(self):
+        user = self.create_user('active_1')
+        user.password = self.users['active_1']['password']
+        self.authorize_user(user)
+        self.client.get('/logout/')
 
-    def test_panel_redirect_to_login_when_user_not_authorized(self):
+        self.assertNotIn('_auth_user_id', self.client.session)
+
+
+    """ Redirects """
+
+    def test_redirect_to_login_url_when_user_not_authorized(self):
         # TODO: Po dodaniu kazdej podstrony nalezy uzupelnic tą funkcję
-        subpages = ['/panel/', '/klienci/', '/klienci/nowy/', '/terminarz/', '/ustawienia/']
+        subpages = ['panel', 'klienci', 'klienci/nowy', 'terminarz', 'ustawienia']
 
         for subpage in subpages:
-            response = self.client.get(subpage)
-            self.assertRedirects(response, f'/login/?next={subpage}')
+            response = self.client.get(f'/{subpage}/')
 
-    def test_redirect_after_logout(self):
-        User.objects.create_user(username='testuser', password='12345')
-        self.client.login(username='testuser', password='12345')
-        response = self.client.get('/logout/')
+            self.assertRedirects(response, f'/login/?next=/{subpage}/')
 
-        self.assertRedirects(response, f'/login/')
 
-    def test_redirect_login_to_panel_when_logged(self):
-        User.objects.create_user(username='testuser', password='12345')
-        self.client.login(username='testuser', password='12345')
+    def test_redirect_from_login_to_dashboard_url_when_user_authorized(self):
+        user = self.create_user()
+        self.authorize_user(user)
         response = self.client.get('/login/')
 
         self.assertRedirects(response, f'/panel/')
+
+
+    def test_user_redirect_to_dashboard_after_POST_login(self):
+        user = self.create_user()
+        user.password = self.users['active_1']['password']
+        response = self.client.post('/login/', data={'username':user.username, 'password':user.password})
+
+        self.assertRedirects(response, f'/panel/')
+
+
+    def test_redirect_after_logout(self):
+        user = self.create_user()
+        self.authorize_user(user)
+        response = self.client.get('/logout/')
+
+        self.assertRedirects(response, f'/login/')

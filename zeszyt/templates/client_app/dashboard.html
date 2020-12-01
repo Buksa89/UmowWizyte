@@ -30,7 +30,7 @@
         <td>{{ visit.time }}</td>
         <td>{{ visit.duration }}</td>
         <td>{{ visit.is_confirmed }}</td>
-        <td><a href="#">Odwołaj</a>
+        <td><a href="{% url 'client_app_cancel_visit' username visit.id %}">Odwołaj</a>
     </tr>
     {% endfor %}
 </table>

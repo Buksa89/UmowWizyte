@@ -1,3 +1,5 @@
+Testy modelu nie sprawdzają długości wprowadzanych danych w formularza poza services
+
 Bazowe
     Model
 +        Czy użytkownik tworzy się prawidłowo                                                                            test_models         UserTest        test_user_saving
@@ -34,11 +36,13 @@ TODO: Test formularza pod kątem błędów
 
 
 -   Schedule:
+dodaj czas trwania usługi
  -        Views:
   -
 
  -        Templates:
-  -
+  -         czy url wskazuje właściwą templatkę
+            czy url z rokiem i tygodniem wskazuje właściwą templatkę
 
  -        Forms
   -
@@ -61,6 +65,7 @@ TODO: Test formularza pod kątem błędów
 User
    Login:
 TODO: Test formularza pod kątem błędów
+
         Views:
 +            Czy przy błędnym logowaniu wyświetlają się wszystkie errory                                                test_view        LoginTests     test_incorrect_data_errors_display
 +            Czy przy logowaniu ze złym loginem/hasłem user pozostaje niezalogowany w sesji                             test_view        LoginTests     test_incorrect_data_not_authorize
@@ -105,9 +110,10 @@ TODO: Test formularza pod kątem błędów
   -
 
     Clients:
+TODO: Walidacja unique
+
 TODO: Edycja klienta
 TODO: Potwierdzenie usunięcia klienta
-TODO Walidacja unique
 
          Views:
                #Lista
@@ -147,17 +153,66 @@ TODO Walidacja unique
 
 
     Settings:
+TODO: Sprawdzenie templatki dla każdego formularza
+TODO: Naprawić wyświetlanie godzin pracy
+TODO: Ujemny czas pracy
+TODO: Walidacja duplikatów usług
+
+TODO: Potwierdzenie usuwania usługi
+TODO: Formularz wysyłania maila do mnie
+TODO: Zmiana hasła
+
          Views:
+                #services
+                Czy wyświetla się formularz dodawania usługi                                                            test_view           DashboardSettingsTests      test_service_form_display
+                Czy błędy formularza usługi prawidłowo się wyświetlają                                                  test_view           DashboardSettingsTests      test_service_form_display_errors
+                Czy pusta lista usług prawidłowo się wyświetla                                                          test_view           DashboardSettingsTests      test_service_empty_list_not_display
+                Czy pełna lista usług prawidłowo się wyświetla                                                          test_view           DashboardSettingsTests      test_service_list_display
+                Czy inni użytkownicy nie widzą moich usług                                                              test_view           DashboardSettingsTests      test_other_user_see_my_service
+                # services remove
+                Url usuwania usług                                                                                      test_view           DashboardSettingsTests      test_user_remove_service
+                czy inni użytkownicy nie mogą usunąć moich usług (404)                                                  test_view           DashboardSettingsTests      test_user_cannot_remove_others_services
+
+                # work_time
+                Czy wyświetla się formularz ustawiania czasu pracy                                                      test_view           DashboardSettingsTests      test_work_time_form_display
+                Czy formularz działa                                                                                    test_view           DashboardSettingsTests      test_work_time_form_working
+                Czy błędy formularza usługi prawidłowo się wyświetlają                                                  test_view           DashboardSettingsTests      test_service_form_errors
 
 
         Templates:
-
++           Czy templatka dla url wyświetla się prawidłowo?                                                             test_template           DashboardSettingsTests      test_dashboard_settings_template
+-           Czy templatka po wysłaniu POST wyświetla się prawidłowo? (3 rozne formularze - dla kazdego powinna dzialac  test_template           DashboardSettingsTests      test_dashboard_settings_template_POST
 
         Forms
+                #add service
++             Czy wczytuje się prawidłowy formularz dodawania usługi                                                  test_form               DashboardSettingsTests       test_service_uses_service_form
++             Walidacja pustych pól                                                                                   test_form               DashboardSettingsTests       test_add_service_form_validation_for_blank_fields
++             Walidacja nieprawidłowego czasu                                                                         test_form               DashboardSettingsTests       test_add_service_form_validation_for_wrong_duration
++             Walidacja zbyt krótkiego/długiego czasu                                                                 test_form               DashboardSettingsTests       test_add_service_errors_for_incorrect_fields
++             Walidacja zbyt dlugiej nazwy                                                                            test_form               DashboardSettingsTests       test_add_service_form_validation_for_long_names
+-             Walidacja zduplikowanych usług                                                                          test_form               DashboardSettingsTests       test_add_service_error_for_duplicate
+                #worktime
++             Czy wczytuje się prawidłowy formularz edycji czasu pracy                                                test_form               DashboardSettingsTests       test_service_uses_work_time_form
++             Walidacja pustych pól                                                                                   test_form               DashboardSettingsTests       test_work_time_form_validation_for_blank_fields
++             Walidacja nieprawidłowych pól                                                                           test_form               DashboardSettingsTests       test_work_time_form_validation_for_wrong_fields
+-spolszc      Walidacja ujemnych dni                                                                                  test_form               DashboardSettingsTests       test_work_time_form_validation_for_negative_days
 
 
         Model:
-
-
+                #service
++             Czy model Service się zapisuje                                                                          test_model              ServiceTests                test_service_model_save
++             Czy wprowadzenie usługi bez nazwy, czasu trwania lub nazwy skutkuje błędem walidacji                    test_model              ServiceTests                test_errors_missing_required_fields
++             Czy wprowadzenie czasu równego 0 bądź większego od 8                                                    test_model              ServiceTests                test_errors_incorrect_duration
++             Czy model service jest powiązany z userem                                                               test_model              ServiceTests                test_service_is_related_to_user
++             Czy wprowadzenie dwóch usług o tej samej nazwie skutkuje błędem walidacji                               test_model              ServiceTests                test_errors_duplicate_service_name
++             Czy dwóch różnych userów może wprowadzić usługe o tej samej nazwie                                      test_model              ServiceTests                test_duplicate_services_for_different_users
+                # Usuwanie
++             Czy generuje się prawidłowy adres url do usuwania usługi                                                test_model              ServiceTests                test_get_remove_url
++             Czy usługa się usuwa                                                                                    test_model              ServiceTests                test_service_remove
+                #worktime
++             Czy WorkTime się edytuje                                                                                  test_model             WorkTimeTests            test_worktime_edit
+-             Czy można dodać ujemny czas pracy                                                                         test_model             WorkTimeTests            test_work_negative_days_error
++             Czy można dodać koniec czasu pracy przed jego początkiem                                                  test_model             WorkTimeTests            test_work_hours_error
++             Czy można dodać koniec możliwości dodawania wizyt przed początkiem?                                       test_model             WorkTimeTests            test_work_avaible_days_error
 
 

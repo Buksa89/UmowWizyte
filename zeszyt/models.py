@@ -1,9 +1,11 @@
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.db.models import Q
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.urls import reverse
+from django.utils import timezone
 
 class Client(models.Model):
     """ Client is different model than user. User can create clients. then he is owner of them"""
@@ -42,7 +44,7 @@ class Service(models.Model):
     def display_duration(self):
         # Duration should be display in format: 00:00.
         # TODO: Sprawdź czy istnieje funkcja która robi to bardziej elegancko
-        return str(self.duration)[-8:-3]
+        return str(self.duration)[:-3].rjust(5,'0')
 
 
 class Visit(models.Model):
@@ -57,6 +59,28 @@ class Visit(models.Model):
 
     def get_remove_url(self):
         return reverse('remove_visit', args=[self.id])
+
+    def clean(self):
+        #  TODO: !!! Testy walidacji
+        errors = []
+        self.start = timezone.make_aware(self.start, timezone.get_default_timezone())
+        self.stop = timezone.make_aware(self.stop, timezone.get_default_timezone())
+        start_d = self.start.date()
+        stop_d = self.stop.date()
+
+        if self.stop.date() != self.start.date():
+            current_visits = Visit.objects.filter(Q(user=self.user, client=self.client, start__year=start_d.year, start__month=start_d.month, start__day=start_d.day) |
+                                                  Q(user=self.user, client=self.client, stop__year=start_d.year, stop__month=start_d.month, stop__day=start_d.day) |
+                                                  Q(user=self.user, client=self.client, start__year=stop_d.year, start__month=stop_d.month, start__day=stop_d.day) |
+                                                  Q(user=self.user, client=self.client, stop__year=stop_d.year, stop__month=stop_d.month, stop__day=stop_d.day))
+        else:
+            current_visits = Visit.objects.filter(Q(user=self.user, client=self.client, start__year=start_d.year, start__month=start_d.month, start__day=start_d.day) |
+                                                  Q(user=self.user, client=self.client, stop__year=start_d.year, stop__month=start_d.month, stop__day=start_d.day))
+
+        for visit in current_visits:
+            if visit.start <= self.start < visit.stop or visit.start < self.stop <= visit.stop:
+                raise ValidationError('Termin zajęty')
+
 
 class WorkTime(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)

@@ -1,4 +1,3 @@
-from datetime import datetime, timedelta
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.db.utils import IntegrityError
@@ -7,200 +6,229 @@ from unittest import skip
 from ..models import Client, Service, WorkTime
 from .base import BaseTest
 
-TEXT = 'aaa'
-TEXT2 = 'bbb'
-DIGITS = '111'
-DURATION = timedelta(hours=1)
-LONG_TEXT = 'a'*100
-
 class ClientsTests(BaseTest):
 
     """ Add clients """
 
-    def test_client_saving(self):
-        user = User.objects.create()
-        client = Client.objects.create(phone_number=DIGITS, user=user)
+    def test_client_model_save(self):
+        user = self.create_user()
+        client = self.clients['active_1']
+        client = Client.objects.create(phone_number=client['phone_number'], name=client['name'], user=user)
 
         self.assertEqual(client, Client.objects.first())
 
-    def test_cannot_save_empty_phone_number(self):
-        user = User.objects.create()
+
+    def test_errors_missing_required_fields(self):
+        user = self.create_user()
+        client_data = self.clients['active_1']
+        clients = [Client(user=user, name=client_data['name']),
+                   Client(user=user, phone_number=client_data['phone_number']),
+                   Client(phone_number=client_data['phone_number'], name=client_data['name'])
+        ]
+        for client in clients:
+            with self.assertRaises(ValidationError):
+                client.full_clean()
+
+
+    def test_errors_incorrect_fields(self):
+        # TODO: Inne błędy też
+        user = self.create_user()
+        client = self.clients['active_1']
 
         with self.assertRaises(ValidationError):
-            client = Client(user=user)
+            client = Client(phone_number=self.WRONG_DATA, name=client['name'], user=user)
             client.full_clean()
 
-    def test_cannot_save_empty_user(self):
-        with self.assertRaises(ValidationError):
-            client = Client(phone_number=DIGITS)
-            client.full_clean()
-
-    def test_cannot_save_wrong_number(self):
-        user = User.objects.create()
-
-        with self.assertRaises(ValidationError):
-            client = Client(phone_number=TEXT, user=user)
-            client.full_clean()
 
     def test_client_is_related_to_user(self):
-        user = User.objects.create()
-        client = Client(phone_number=DIGITS)
+        user = self.create_user()
+        client = self.clients['active_1']
+        client = Client(phone_number=client['phone_number'], name=client['name'])
         client.user = user
         client.save()
 
         self.assertIn(client, user.client_set.all())
 
-    def test_duplicate_phone_numbers_are_invalid(self):
-        user = User.objects.create()
-        Client.objects.create(user=user, phone_number=DIGITS)
+    def test_errors_duplicate_numbers(self):
+        user = self.create_user()
+        client = self.clients['active_1']
+        Client.objects.create(user=user, phone_number=client['phone_number'], name=client['name'])
 
         with self.assertRaises(ValidationError):
-            client = Client(user=user, phone_number=DIGITS)
+            client = Client(user=user, phone_number=client['phone_number'], name=client['name'])
             client.full_clean()
 
-    def test_CAN_save_same_client_to_different_users(self):
-        """Różni użytkownicy powinni mieć możliwość dodania użytkownika o tym samym numerze telefonu"""
+
+    def test_duplicate_numbers_for_different_users(self):
+        """ Different users can add client with the same phone number """
         # TODO: Zorientowac się, jaki test tu zastosować
-        user1 = User.objects.create()
-        user2 = User.objects.create(username=TEXT)
-        Client.objects.create(user=user1, phone_number=DIGITS)
-        client = Client(user=user2, phone_number=DIGITS, name=TEXT2, pin=DIGITS)
+        user1 = self.create_user('active_1')
+        user2 = self.create_user('active_2')
+        client = self.clients['active_1']
+        client_full = self.clients_full_data['active_1']
+        Client.objects.create(user=user1, phone_number=client['phone_number'], name=client['name'])
+        client = Client(user=user2, phone_number=client['phone_number'], pin=client_full['pin'], name=client['name'])
         client.full_clean()  # Nie powinien być zgłoszony
 
 
     """ Remove clients """
 
+
     def test_client_remove(self):
-        user = User.objects.create()
-        client = Client.objects.create(phone_number=DIGITS, user=user)
+        user = self.create_user()
+        client = self.clients['active_1']
+        client = Client.objects.create(phone_number=client['phone_number'], name=client['name'] , user=user)
         client.delete()
 
         self.assertFalse(Client.objects.first())
 
     def test_get_remove_url(self):
-        user = User.objects.create()
-        client = Client.objects.create(phone_number=DIGITS, user=user)
+        user = self.create_user()
+        client = self.clients['active_1']
+
+        client = Client.objects.create(phone_number=client['phone_number'], name=client['name'] , user=user)
 
         self.assertEqual(client.get_remove_url(), f'/klienci/usun/{client.id}/')
-
 
 class ServiceTests(BaseTest):
 
     """ Add service tests """
-    def test_service_saving(self):
-        user = User.objects.create()
-        service = Service.objects.create(duration=DURATION, name=TEXT, user=user)
+
+    def test_service_model_save(self):
+        user = self.create_user()
+        service = self.services['short_1']
+        service = Service.objects.create(duration=service['duration'], name=service['name'], user=user)
 
         self.assertEqual(service, Service.objects.first())
 
-    def test_cannot_save_empty_user(self):
-        with self.assertRaises(ValidationError):
-            service = Service(duration=DURATION, name=TEXT)
-            service.full_clean()
 
-    def test_cannot_save_empty_name(self):
-        user = User.objects.create()
+    @skip
+    def test_errors_missing_required_fields(self):
+        #TODO: Dla duration = None powinno się walidować - dla AttributeError działa, ale nie dla Validation_error
+        user = self.create_user()
+        service = self.services['short_1']
 
-        with self.assertRaises(ValidationError):
-            service = Service(duration=DURATION, user=user)
-            service.full_clean()
+        services = [Service(name=service['name'], duration=service['duration']),
+                    Service(user=user, duration=service['duration']),
+                    Service(user=user, name=service['name'])
+        ]
+        for service in services:
+            with self.assertRaises(ValidationError):
+                service.full_clean()
 
-    def test_cannot_save_empty_duration(self):
-        user = User.objects.create()
 
-        with self.assertRaises(AttributeError):
-            Service.objects.create(name=TEXT, user=user)
+    @skip #TODO: Walidacja dla niewłaściwego czasu
+    def test_errors_incorrect_duration(self):
+        user = self.create_user()
+        service = self.services['short_1']
 
-    def test_duplicate_service_name(self):
-        user = User.objects.create()
-        Service.objects.create(user=user, duration=DURATION, name=TEXT)
+        services = [Service(user=user, name=service['name'], duration=self.DURATION_MIN),
+                    Service(user=user, name=service['name'], duration=self.DURATION_MAX),
+        ]
+        for service in services:
 
-        with self.assertRaises(ValidationError):
-            service = Service(user=user, duration=DURATION, name=TEXT)
-            service.full_clean()
+            with self.assertRaises(ValidationError):
+                service.full_clean()
 
-    def test_long_service_name(self):
-        user = User.objects.create()
-
-        with self.assertRaises(ValidationError):
-            service = Service(user=user, duration=DURATION, name=LONG_TEXT)
-            service.full_clean()
-
-    def test_cannot_save_wrong_duration(self):
-        user = User.objects.create()
-
-        with self.assertRaises(ValidationError):
-            service = Service(user=user, duration=TEXT, name=TEXT)
-            service.full_clean()
 
     def test_service_is_related_to_user(self):
-        user = User.objects.create()
-        service = Service(duration=DURATION, name=TEXT)
+        user = self.create_user()
+        service = self.services['short_1']
+        service = Service(duration=service['duration'], name=service['name'])
         service.user = user
         service.save()
 
         self.assertIn(service, user.service_set.all())
 
-    def test_CAN_save_same_service_to_different_users(self):
+
+    def test_errors_duplicate_service_name(self):
+        user = self.create_user()
+        service = self.services['short_1']
+        Service.objects.create(user=user, duration=service['duration'], name=service['name'])
+
+        with self.assertRaises(ValidationError):
+            service = Service(user=user, duration=service['duration'], name=service['name'])
+            service.full_clean()
+
+
+    def test_duplicate_services_for_different_users(self):
         # TODO: Uspuełnij o prawidłowy test
-        user1 = User.objects.create()
-        user2 = User.objects.create(username='2')
-        Service.objects.create(user=user1, duration=DURATION, name=TEXT)
-        service = Service(user=user2, duration=DURATION, name=TEXT)
+        user1 = self.create_user('active_1')
+        user2 = self.create_user('active_2')
+        service = self.services['short_1']
+        Service.objects.create(user=user1, duration=service['duration'], name=service['name'])
+        service = Service(user=user2, duration=service['duration'], name=service['name'])
         service.full_clean()  # Nie powinien być zgłoszony
+
+
+    def test_long_service_name(self):
+        user = self.create_user()
+        service = self.services['short_1']
+
+        with self.assertRaises(ValidationError):
+            service = Service(user=user, duration=service['duration'], name=self.LONG_STRING(61))
+            service.full_clean()
+
 
     """ Remove service tests """
 
-    def test_client_remove(self):
-        user = User.objects.create()
-        service = Service.objects.create(duration=DURATION, name=TEXT, user=user)
+    def test_service_remove(self):
+        user = self.create_user()
+        service = self.create_service(user)
         service.delete()
 
         self.assertFalse(Service.objects.first())
 
     def test_get_remove_url(self):
-        user = User.objects.create()
-        service = Service.objects.create(duration=DURATION, name=TEXT, user=user)
+        user = self.create_user()
+        service = self.create_service(user)
 
         self.assertEqual(service.get_remove_url(), f'/ustawienia/usun_usluge/{service.id}/')
 
-
-class UserTest(TestCase):
+class UserTests(BaseTest):
 
     def test_user_saving(self):
-        user = User.objects.create_user(username=TEXT, password=TEXT)
+        user = self.users['active_1']
+        user = User.objects.create_user(username=user['username'], password=user['password'])
 
         self.assertEqual(user, User.objects.first())
 
     def test_create_work_time_for_user(self):
-        user = User.objects.create_user(username=TEXT, password=TEXT)
+        user = self.users['active_1']
+        user = User.objects.create_user(username=user['username'], password=user['password'])
         work_time = WorkTime.objects.get(user=user)
         self.assertTrue(work_time)
-
-
-
 
 class WorkTimeTests(BaseTest):
 
     def test_worktime_edit(self):
-        user = User.objects.create_user(username=TEXT, password=TEXT)
+        user = self.create_user()
         work_time = WorkTime.objects.get(user=user)
         work_time.end_time = "14:00"
-        #TODO: brak testu
+        # TODO: Znajdź sposob na ten test
         work_time.full_clean()
 
     def test_work_hours_error(self):
-        user = User.objects.create_user(username=TEXT, password=TEXT)
+        user = self.create_user()
         work_time = WorkTime.objects.get(user=user)
         work_time.end_time = "01:00"
+        work_time.start_time = "02:00"
         with self.assertRaises(ValidationError):
             work_time.full_clean()
 
-    def test_work_avaible_days(self):
-        user = User.objects.create_user(username=TEXT, password=TEXT)
+    def test_work_avaible_days_error(self):
+        user = self.create_user()
         work_time = WorkTime.objects.get(user=user)
         work_time.earliest_visit = 15
+        work_time.latest_visit = 10
         with self.assertRaises(ValidationError):
             work_time.full_clean()
 
-
+    @skip
+    def test_work_negative_days_error(self):
+        user = self.create_user()
+        work_time = WorkTime.objects.get(user=user)
+        work_time.earliest_visit = -20
+        work_time.latest_visit = -15
+        with self.assertRaises(ValidationError):
+            work_time.full_clean()

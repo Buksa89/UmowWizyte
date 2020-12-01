@@ -13,6 +13,8 @@ def pin_generate():
 
 
 def time_choices(hours=8):
+    #TODO: !!! Usun zera z wierszy 24, 27 aby wygenerowac godziny pracy.
+    # jednoczesnie zera powinny zostac dla duration przy tworzeniu usługi
     """ Generating list of times from 0 to hours. Step = 15min"""
     choices = []
     for hour in range(0, hours):
@@ -183,7 +185,7 @@ class WorkTimeForm(forms.ModelForm):
 
 
 class AddVisit(forms.ModelForm):
-
+    # TODO: Testy formularza
     def save(self, user, client, name, start, stop, is_available, is_confirmed):
         self.instance.user = user
         self.instance.client = client

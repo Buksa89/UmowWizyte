@@ -1,14 +1,15 @@
 from calendar import HTMLCalendar
-
 from datetime import date, datetime, timedelta
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
 from django.contrib.auth.models import User
 from django.db import transaction
+from django.db.models import Q
 from django.db.utils import IntegrityError
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
+from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.utils.safestring import mark_safe
 from django.views import View
@@ -19,6 +20,8 @@ from .forms import AddClientForm, AddServiceForm, AddVisit, ClientChooseVisitFor
 from .models import Client, Service, Visit, WorkTime
 
 DAYS_OF_WEEK = ['Poniedziałek', 'Wtorek', 'Środa', 'Czwartek', 'Piątek', 'Sobota', 'Niedziela']
+
+#TODO: formularz godzin pracy nie przyjmuje godziny 24
 
 """ User Views """
 
@@ -65,7 +68,7 @@ class DashboardClientsAdd(CreateView):
 def dashboard_clients_remove(request, client_id):
     #TODO: Dodaj potwierdzenie usunięcia
     user = User.objects.get(username=request.user)
-    Client.objects.filter(id=client_id,user=user).delete()
+    get_object_or_404(Client, id=client_id,user=user).delete()
     return redirect(dashboard_clients)
 
 
@@ -134,7 +137,7 @@ class DashboardSettings(CreateView):
         service_form = AddServiceForm(data=request.POST)
         created_service = None
         if service_form.is_valid():
-            if request.POST['duration'] == '00:00':  # Usługa nie może trwać 0
+            if request.POST['duration'] == '00:00:00':  # Usługa nie może trwać 0
                 service_form.add_error(None, 'Ustaw czas')
             else:
                 try:
@@ -161,7 +164,7 @@ class DashboardSettings(CreateView):
 def dashboard_settings_service_remove(request,service_id):
     #TODO: Dodaj potwierdzenie usunięcia
     user = User.objects.get(username=request.user)
-    Service.objects.get(id=service_id,user=user).delete()
+    get_object_or_404(Service, id=service_id,user=user).delete()
     return redirect('dashboard_settings')
 
 
@@ -196,6 +199,7 @@ def client_login_required(function):
     @wraps(function)
     def wrap(request, *args, username, **kwargs):
         if is_client_authenticated(request, username):
+            #TODO: username w sesji zgadza sie z username strony
             return function(request, *args, username, **kwargs)
         else:
             return redirect('client_app_login', username)
@@ -234,6 +238,7 @@ class ClientAppLogin(CreateView):
 
 
 
+#TODO: !!! Testy widoku
 class ClientAppDashboard(View):
     template = 'client_app/dashboard.html'
 
@@ -251,6 +256,7 @@ class ClientAppDashboard(View):
             dict['time'] = visit.start.strftime("%H:%M")
             dict['duration'] = str(visit.stop - visit.start)[:-3].rjust(5,'0')
             dict['is_confirmed'] = visit.is_confirmed
+            dict['id'] = visit.id
             visits.append(dict)
 
         form = ClientChooseVisitForm(user)
@@ -268,21 +274,23 @@ class ClientAppDashboard(View):
 
 
 
+#TODO: !!! Testy widoku
 class ClientAppNewVisit(View):
     template_name = ''
     section = ''
-
     def get(self, request, username, service_id, year=datetime.now().year, week = datetime.now().isocalendar()[1]):
         user = get_object_or_404(User, username__iexact=username)
+        client = get_object_or_404(Client, phone_number=request.session.get('client_authorized')['phone'],user=user)
         service = get_object_or_404(Service, id=service_id, user=user)
         work_time = get_object_or_404(WorkTime, user=user)
         available_dates = get_available_days_for_clients(username)
-        schedule = ClientSchedule(year, week, work_time, service_id, service.name, username, available_dates)
+        schedule = ClientSchedule(year, week, work_time, service_id, service.name, username, available_dates, client)
         return render(request, 'client_app/new_visit.html',
                       {'section': 'schedule', 'service': service.name,
                        'schedule': schedule.display_week, 'username': username})
 
 
+#TODO: !!! Testy widoku
 class ClientAppConfirmVisit(View):
     template_name = ''
     section = ''
@@ -329,6 +337,17 @@ class ClientAppConfirmVisit(View):
         return redirect('client_app_dashboard', username)
 
 
+class ClientAppCancelVisit(View):
+
+    def get(self, request, username, visit_id):
+        user = get_object_or_404(User, username__iexact=username)
+        client = get_object_or_404(Client, phone_number=request.session['client_authorized']['phone'], user=user)
+        Visit.objects.filter(user=user, client=client, id=visit_id).delete()
+
+        return redirect('client_app_dashboard', username)
+
+
+
 class ClientAppLogout(View):
     def get(self, request, username):
         request.session.pop('client_authorized', None)
@@ -338,7 +357,9 @@ class ClientAppLogout(View):
 """ Other Views """
 
 def welcome_screen(request):
-    return render(request, 'welcome.html', {})
+    users = User.objects.filter(~Q(username='admin'))
+    print(users)
+    return render(request, 'welcome.html', {'users':users})
 
 
 """ Funkcje pomocnicze """
@@ -560,13 +581,18 @@ class ClientCalendar(Calendar):
         """ Method return link for choose visit by clients """
         return reverse('client_app_new_visit_1', args=[self.username, self.service_id, self.year, self.month, day])
 
+
 class ClientSchedule:
-    def __init__(self, year, week, work_time, service_id, service_name, username, available_dates):
+
+    def __init__(self, year, week, work_time, service_id, service_name, username, available_dates, client):
+        self.client = client
         self.start_work_time = work_time.start_time
         self.end_work_time = work_time.end_time
         self.work_time = work_time
         self.service_id = service_id
+        self.user = get_object_or_404(User, username__iexact=username)
         self.username = username
+        self.available_dates = available_dates
         self.year = year
         self.week = week
         self.service_name = service_name
@@ -640,19 +666,30 @@ class ClientSchedule:
         html_code += '</ul></li>'
 
         for day in self.day:
-            if not is_free_day(day, self.work_time):
+            if day.date() not in self.available_dates:
                 html_code += '<li><ul>'
                 for hour in work_hours:
-                    html_code += f'<li></li>'
+                    html_code += f'<li>{hour.strftime("%H:%M")}</li>'
                 html_code += '</ul></li>'
             else:
                 html_code += '<li><ul>'
+
+                #
                 for hour in work_hours:
                     full_term = datetime.combine(day, hour)
 
                     html_code += f'<a href="{self.get_term_url(full_term)}"><li>{hour.strftime("%H:%M")}</li></a>'
                 html_code += '</ul></li>'
+            print(self.get_available_hours_in_day(day.date()))
         html_code += f'</ul>'
+        #
+        # Pobranie godzin
+
+        """for n, hour in enumerate(work_hours):
+                    full_term = datetime.combine(day, hour)
+                    html_code += f'<li class="avaliable">{hour.strftime("%H:%M")}</li>'
+                html_code += '</ul></li>'
+        html_code += f'</ul>'"""
 
 
 
@@ -697,3 +734,39 @@ class ClientSchedule:
         """ Method return link for choose visit by clients """
         return reverse('client_app_confirm_visit', args=[self.username, self.service_id,
                                                          term.year, term.month, term.day, term.hour, term.minute])
+
+    def get_available_hours_in_day(self, date):
+        visits = Visit.objects.filter(Q(user=self.user, client=self.client, start__year=date.year, start__month=date.month, start__day=date.day) |
+                                      Q(user=self.user, client=self.client, stop__year=date.year, stop__month=date.month, stop__day=date.day))
+
+        #'[[self.work_time.start_time.strftime("%H:%M"),self.work_time.end_time.strftime("%H:%M")]]
+
+        start_work = timezone.make_aware(datetime.combine(date,self.work_time.start_time), timezone.get_default_timezone())
+        end_work = timezone.make_aware(datetime.combine(date,self.work_time.end_time), timezone.get_default_timezone())
+        time_zero = timezone.make_aware(datetime(date.year, date.month, date.day, 0, 0), timezone.get_default_timezone())
+        time_midnight = timezone.make_aware(datetime(date.year, date.month, date.day, 23, 45), timezone.get_default_timezone())
+        avaliable_hours = [[time_zero, start_work], [time_midnight, end_work]]
+
+        for visit in visits:
+            #TODO Zmien w calym projekcie stop na end
+            if visit.start <= time_zero: visit.start = time_zero
+            if visit.stop >= time_midnight: visit.stop = time_midnight
+            avaliable_hours.append([visit.start, visit.stop])
+
+        def sort_by_start_time(period):
+            return period[0]
+
+        avaliable_hours.sort(key=sort_by_start_time)
+
+
+                #if visit.stop < start_av_period:
+                    #avaliable_hours.insert(n, "new")
+
+                #print(visit.start)
+                #print(visit.stop)
+
+
+        for n, periods in enumerate(avaliable_hours):
+            for m, date in enumerate(periods):
+                avaliable_hours[n][m] = date.strftime('%H:%M')
+        return avaliable_hours

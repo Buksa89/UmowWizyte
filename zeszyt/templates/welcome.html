@@ -3,7 +3,11 @@
 <html>
 <head></head>
 <body>
-Aplikacja umawiająca wizyty<br />
-Brak dostępu
+    <p><a href="{% url 'login_screen' %}">Logowanie</a></p><br />
+
+Użytkownicy:
+    {% for user in users %}
+    <p><a href="{% url 'client_app_login' user.username %}">{{ user.username }}</a></p>
+    {% endfor %}
 </body>
 </html>
