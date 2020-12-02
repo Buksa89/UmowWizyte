@@ -18,11 +18,19 @@ class LoginTests(BaseTest):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'client_app/login.html')
 
-    @skip
     def test_login_template_not_active(self):
-        # TODO: Strona logowania powinna być nieaktywna dla zablokowanych uzytkownikow
-        user = self.create_user()
+        """ If user is not active, his app shouldnt be available for clients """
+        user = self.create_user('not_active')
         response = self.client.get(f'/{user}/')
 
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'client_app/login_not_active.html')
+
+class DashboardTests(BaseTest):
+    def test_dashboard_template_display(self):
+        user = self.create_user()
+        client = self.create_client(user)
+        self.authorize_client(client)
+        response = self.client.get(f'/{user}/panel/')
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'client_app/dashboard.html')

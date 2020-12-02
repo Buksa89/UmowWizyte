@@ -29,6 +29,15 @@ def time_choices(hours=8):
     choices=tuple(choices)
     return choices
 
+class only_digits (object):
+    def __init__(self, message_type):
+        self.message = ''
+        if message_type == 'phone': self.message = 'Podaj prawidłowy numer telefonu'
+        elif message_type == 'pin': self.message = 'Podaj prawidłowy pin'
+
+    def __call__(self, value):
+        if value.isdigit() == False:
+            raise ValidationError(self.message)
 
 class LoginForm(forms.Form):
     username = forms.CharField(label='Imię', error_messages={'required': 'Podaj login'})
@@ -37,8 +46,8 @@ class LoginForm(forms.Form):
 
 
 class ClientLoginForm(forms.Form):
-    phone_number = forms.CharField(label='Telefon', error_messages={'required': 'Podaj numer telefonu'})
-    pin = forms.CharField(label='pin', error_messages={'required': 'Podaj pin'})
+    phone_number = forms.CharField(validators=[only_digits('phone')], label='Telefon', error_messages={'required': 'Podaj numer telefonu'})
+    pin = forms.CharField(validators=[only_digits('pin')], label='pin', error_messages={'required': 'Podaj pin'})
 
 
 class AddClientForm(forms.ModelForm):
@@ -48,16 +57,6 @@ class AddClientForm(forms.ModelForm):
         self.instance.user = user
         self.instance.pin = pin_generate()
         return super().save()
-
-    def only_int(value):
-        if value.isdigit() == False:
-            raise ValidationError('Podaj prawidłowy numer telefonu')
-
-    phone_number = forms.CharField(validators=[only_int],
-                                   error_messages={'required': 'Pole nie może być puste',
-                                                   'max_length': 'Numer jest za długi'},
-                                   widget=forms.TextInput(attrs={'placeholder': 'Telefon'}),
-                                   label='Telefon*',)
 
 
 
@@ -69,16 +68,14 @@ class AddClientForm(forms.ModelForm):
             'name': 'Imię*',
             'surname': 'Nazwisko',
             'description': 'Dodatkowe info',
+            'phone_number': 'Telefon*',
         }
         widgets = {
-            'email': forms.fields.TextInput(attrs={
-                'placeholder': 'Mail',}),
-            'name': forms.fields.TextInput(attrs={
-                'placeholder': 'Imię (to pole wyświetla sie klientowi!)',}),
-            'surname': forms.fields.TextInput(attrs={
-                'placeholder': 'Nazwisko',}),
-            'description': forms.fields.TextInput(attrs={
-                'placeholder': 'Opis (Tego pola klient nie widzi',}),
+            'email': forms.fields.TextInput(attrs={'placeholder': 'Mail',}),
+            'name': forms.fields.TextInput(attrs={'placeholder': 'Imię (to pole wyświetla sie klientowi!)',}),
+            'surname': forms.fields.TextInput(attrs={'placeholder': 'Nazwisko',}),
+            'description': forms.fields.TextInput(attrs={'placeholder': 'Opis (Tego pola klient nie widzi',}),
+            'phone_number': forms.TextInput(attrs={'placeholder': 'Telefon'}),
             }
         error_messages = {
             'name': {'required': "Pole nie może być puste",
@@ -86,6 +83,8 @@ class AddClientForm(forms.ModelForm):
             'email': {'invalid': 'Email nieprawidłowy','max_length': 'Email jest za długi'},
             'surname': {'max_length': 'Nazwisko jest za długie'},
             'description': {'max_length': 'Opis jest za długi'},
+            'phone_number': {'required': 'Pole nie może być puste',
+                             'max_length': 'Numer jest za długi'},
             NON_FIELD_ERRORS: {
                 'unique_together': "Posiadasz już klienta z tym numerem telefonu",
             }

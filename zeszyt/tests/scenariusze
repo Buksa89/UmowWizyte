@@ -7,8 +7,6 @@ Bazowe
 
 Klient
     Login:
-TODO: Stworzenie zablokowanego okna logowania
-TODO: Test formularza pod kątem błędów
 
         Views:
 +            Czy przy błędnym logowaniu wyświetlają się wszystkie errory                                                test_view        LoginTests     test_incorrect_data_errors_display
@@ -25,12 +23,31 @@ TODO: Test formularza pod kątem błędów
         Templates
 +            Czy url login wczytuje właściwą templatkę (login.html)                                                      test_template      LoginTests          test_login_template_display
 +            Czy url login po wysłaniu POSTA wczytuje właściwą templatkę (login.html)                                    test_template      LoginTests          test_login_template_POST
--            Czy url login wczytuje właściwą templatk dla nieaktywnego uzytkownika (login_not_active.html)               test_template      LoginTests          test_login_template_not_active
++            Czy url login wczytuje właściwą templatk dla nieaktywnego uzytkownika (login_not_active.html)               test_template      LoginTests          test_login_template_not_active
 
         Forms
 +            Czy url login wyświetla prawidłowy formularz (ClientLoginForm)                                             test_form          LoginTests          test_form_display
--            Errory
++            Czy formularz prawidłowo waliduje błędnie wprowadzone dane                                                 test_form          LoginTests          test_incorrect_data_errors_display
 
+
+Klient
+    Dashboard
+        Views
++            Czy klient widzi formularz                                                                                  test_view           DashboardTests      test_form_display
++            Czy po otrzymaniu POST prawidłowo przekierowuje                                                             test_view           DashboardTests      test_dashboard_POST_redirect
++            Czy klient widzi swoje usługi                                                                               test_view           DashboardTests      test_correct_services_in_form
++            klient nie widzi zablokowanych usług                                                                        test_view           DashboardTests      test_only_active_services_in_form
++            Czy klient nie widzi usług innych użytkowników                                                              test_view           DashboardTests      test_incorrect_services_in_form
++            czy klient nie może wybrać cudzej usługi przez manualny url (404)                                           test_view           DashboardTests      test_cant_get_other_users_service
++            czy klient nie może wybrać zablokowanej usługi przez manualny url (404)                                     test_view           DashboardTests      test_cant_get_not_active_service
+            czy pusta lista wizyt się prawidłowo wyświetla                                                              test_view           DashboardTests      test_empty_visits_lists
+            czy lista wizyt się prawidłowo wyświetla                                                                    test_view           DashboardTests      test_visits_lists
+            czy klient nie widzi wizyt innych klientów                                                                  test_view           DashboardTests      test_cant_see_other_clients_visit
+            Czy klient nie może odwołać cudzej wizyty                                                                   test_view           DashboardTests      test_cant_cancel_other_clients_visit
+        Templates
++            Czy templatka jest prawidłowa                                                                               test_template      DashboardTests      test_dashboard_template_display
+        Forms
++            Czy wyświetla się formularz wyboru usługi                                                                   test_form          DashboardTests      test_form_display
 
 
 
@@ -64,7 +81,6 @@ dodaj czas trwania usługi
 
 User
    Login:
-TODO: Test formularza pod kątem błędów
 
         Views:
 +            Czy przy błędnym logowaniu wyświetlają się wszystkie errory                                                test_view        LoginTests     test_incorrect_data_errors_display
@@ -84,7 +100,7 @@ TODO: Test formularza pod kątem błędów
 
         Forms
 +            Czy url login wyświetla prawidłowy formularz (LoginForm)                                                   test_form          LoginTests          test_form_display
--            Errory
++            Czy formularz prawidłowo waliduje błędnie wprowadzone dane                                                 test_form          LoginTests          test_incorrect_data_errors_display
 
 
 -    Dashboard:
@@ -152,11 +168,12 @@ TODO: Potwierdzenie usunięcia klienta
 +             Czy klient się usuwa                                                                                    test_model              ClientsTests                test_client_remove
 
 
+
     Settings:
 TODO: Sprawdzenie templatki dla każdego formularza
 TODO: Naprawić wyświetlanie godzin pracy
-TODO: Ujemny czas pracy
 TODO: Walidacja duplikatów usług
+#TODO: formularz godzin pracy nie przyjmuje godziny 24
 
 TODO: Potwierdzenie usuwania usługi
 TODO: Formularz wysyłania maila do mnie
@@ -164,19 +181,19 @@ TODO: Zmiana hasła
 
          Views:
                 #services
-                Czy wyświetla się formularz dodawania usługi                                                            test_view           DashboardSettingsTests      test_service_form_display
-                Czy błędy formularza usługi prawidłowo się wyświetlają                                                  test_view           DashboardSettingsTests      test_service_form_display_errors
-                Czy pusta lista usług prawidłowo się wyświetla                                                          test_view           DashboardSettingsTests      test_service_empty_list_not_display
-                Czy pełna lista usług prawidłowo się wyświetla                                                          test_view           DashboardSettingsTests      test_service_list_display
-                Czy inni użytkownicy nie widzą moich usług                                                              test_view           DashboardSettingsTests      test_other_user_see_my_service
++                Czy wyświetla się formularz dodawania usługi                                                            test_view           DashboardSettingsTests      test_service_form_display
+-                Czy błędy formularza usługi prawidłowo się wyświetlają                                                  test_view           DashboardSettingsTests      test_service_form_display_errors
++                Czy pusta lista usług prawidłowo się wyświetla                                                          test_view           DashboardSettingsTests      test_service_empty_list_not_display
++                Czy pełna lista usług prawidłowo się wyświetla                                                          test_view           DashboardSettingsTests      test_service_list_display
++                Czy inni użytkownicy nie widzą moich usług                                                              test_view           DashboardSettingsTests      test_other_user_see_my_service
                 # services remove
-                Url usuwania usług                                                                                      test_view           DashboardSettingsTests      test_user_remove_service
-                czy inni użytkownicy nie mogą usunąć moich usług (404)                                                  test_view           DashboardSettingsTests      test_user_cannot_remove_others_services
++                Url usuwania usług                                                                                      test_view           DashboardSettingsTests      test_user_remove_service
++                czy inni użytkownicy nie mogą usunąć moich usług (404)                                                  test_view           DashboardSettingsTests      test_user_cannot_remove_others_services
 
                 # work_time
-                Czy wyświetla się formularz ustawiania czasu pracy                                                      test_view           DashboardSettingsTests      test_work_time_form_display
-                Czy formularz działa                                                                                    test_view           DashboardSettingsTests      test_work_time_form_working
-                Czy błędy formularza usługi prawidłowo się wyświetlają                                                  test_view           DashboardSettingsTests      test_service_form_errors
++                Czy wyświetla się formularz ustawiania czasu pracy                                                      test_view           DashboardSettingsTests      test_work_time_form_display
++                Czy formularz działa                                                                                    test_view           DashboardSettingsTests      test_work_time_form_working
++-               Czy błędy formularza prawidłowo się wyświetlają                                                         test_view           DashboardSettingsTests      test_service_form_errors
 
 
         Templates:
@@ -195,7 +212,7 @@ TODO: Zmiana hasła
 +             Czy wczytuje się prawidłowy formularz edycji czasu pracy                                                test_form               DashboardSettingsTests       test_service_uses_work_time_form
 +             Walidacja pustych pól                                                                                   test_form               DashboardSettingsTests       test_work_time_form_validation_for_blank_fields
 +             Walidacja nieprawidłowych pól                                                                           test_form               DashboardSettingsTests       test_work_time_form_validation_for_wrong_fields
--spolszc      Walidacja ujemnych dni                                                                                  test_form               DashboardSettingsTests       test_work_time_form_validation_for_negative_days
++-            Walidacja ujemnych dni                                                                                  test_form               DashboardSettingsTests       test_work_time_form_validation_for_negative_days
 
 
         Model:

@@ -154,3 +154,14 @@ class LoginTests(BaseTest):
         self.assertEqual(response.status_code, 200)
         self.assertIsInstance(response.context['form'], LoginForm)
 
+
+    def test_incorrect_data_errors_display(self):
+        user = self.users['active_1']
+        data_results = [{'data': {'username': self.EMPTY, 'password': user['password']}, 'field':'username', 'message': 'Podaj login'},
+                        {'data': {'username': user['username'], 'pasword': self.EMPTY}, 'field':'password', 'message': 'Podaj hasło'},
+                        ]
+
+        for data_result in data_results:
+            form = LoginForm(data=data_result['data'])
+            self.assertFalse(form.is_valid())
+            self.assertEqual(form.errors[data_result['field']], [data_result['message']])

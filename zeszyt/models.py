@@ -7,10 +7,17 @@ from django.dispatch import receiver
 from django.urls import reverse
 from django.utils import timezone
 
+
 class Client(models.Model):
-    """ Client is different model than user. User can create clients. then he is owner of them"""
+
+    """ Client is different model than user. User is owner of clients and can create themm """
+
+    def only_digits(value):
+        if value.isdigit() == False:
+            raise ValidationError('Podaj prawidłowy numer telefonu')
+
     user = models.ForeignKey(User, default ='', on_delete=models.CASCADE)
-    phone_number = models.CharField(blank=False, max_length=20)
+    phone_number = models.CharField(blank=False, max_length=20, validators=[only_digits])
     email = models.EmailField(max_length=40, blank=True, default='')
     name = models.CharField(max_length=20, blank=False, default='')
     surname = models.CharField(max_length=40, blank=True, default='')
@@ -27,19 +34,22 @@ class Client(models.Model):
         return reverse('dashboard_clients_remove', args=[self.id])
 
 
+
 class Service(models.Model):
+
+    """ User create services. Then his client can choose one of services and book visit """
 
     user = models.ForeignKey(User, default ='', on_delete=models.CASCADE)
     name = models.CharField(max_length=60, blank=False, default='')
     duration = models.DurationField(blank=False, default='')
     is_active = models.BooleanField(default=True)
+
     class Meta:
         # One user cannot add two services with the same name
         unique_together = ('user', 'name')
 
     def get_remove_url(self):
         return reverse('dashboard_settings_service_remove', args=[self.id])
-
 
     def display_duration(self):
         # Duration should be display in format: 00:00.
@@ -48,6 +58,11 @@ class Service(models.Model):
 
 
 class Visit(models.Model):
+
+    """ Visits can be created by user or by client. If client do it, user need to confirmed visit (is_confirmed -> True)
+     Client can cancel visit. if he do it before confirmation, visit is deleted. If after, user need to confirm it
+     to delete"""
+
     user = models.ForeignKey(User, default ='', on_delete=models.CASCADE)
     client = models.ForeignKey(Client, default ='', on_delete=models.CASCADE)
     name = models.CharField(max_length=60, blank=False, default='')
@@ -61,7 +76,6 @@ class Visit(models.Model):
         return reverse('remove_visit', args=[self.id])
 
     def clean(self):
-        #  TODO: !!! Testy walidacji
         errors = []
         self.start = timezone.make_aware(self.start, timezone.get_default_timezone())
         self.stop = timezone.make_aware(self.stop, timezone.get_default_timezone())
@@ -83,6 +97,8 @@ class Visit(models.Model):
 
 
 class WorkTime(models.Model):
+
+
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     start_time = models.TimeField(auto_now=False, auto_now_add=False, default="8:00")
     end_time = models.TimeField(auto_now=False, auto_now_add=False, default="16:00")
@@ -103,6 +119,7 @@ class WorkTime(models.Model):
             errors.append('Popraw godziny pracy')
         if self.earliest_visit >= self.latest_visit:
             errors.append('Popraw możliwość wyboru terminów')
+
         errors = ', '.join(errors)
         if errors:
             raise ValidationError(errors)

@@ -199,21 +199,29 @@ class DashboardSettingsTests(BaseTest):
     def test_service_form_errors(self):
         user = self.create_user()
         self.authorize_user(user)
-        data = {'start_time': '10:00', 'end_time': '8:00', 'monday': False, 'tuesday': True, 'wednesday': False,
-              'thursday': True, 'friday': False, 'saturday': True, 'sunday': False, 'holidays': True,
-              'earliest_visit': 7, 'latest_visit': 2, 'submit': 'set_work_time'}
+        data = self.work_time
+        error_visits = []
+        error_data = [{'data':{'start_time': '10:00', 'end_time': '8:00', },'message':'Popraw godziny pracy'},
+                      {'data':{'earliest_visit': 7, 'latest_visit': 2, },'message':'Popraw możliwość wyboru terminów'},
+                      #TODO: Spolszczenie tego błędu
+                      {'data':{'earliest_visit': -7, 'latest_visit': -2},'message':'Ensure this value is greater than or equal to 0.'}
+                     ]
+        for error_element in error_data:
+            error_visit = {}
+            error_visit['data'] = data.copy()
+            error_visit['message'] = error_element['message']
+            for field, value in error_element['data'].items():
+                error_visit['data'][field] = value
+            error_visits.append(error_visit)
 
-        response = self.client.post('/ustawienia/', data=data)
-        self.assertContains(response, 'Popraw godziny pracy')
-        self.assertContains(response, 'Popraw możliwość wyboru terminów')
-
-        # TODO: Jak już poprawisz treść błędu (dni ujemne), to dodaj test
+        for error_visit in error_visits:
+            response = self.client.post('/ustawienia/', data=error_visit['data'])
+            self.assertContains(response, error_visit['message'])
 
 
 class LoginTests(BaseTest):
 
     def test_incorrect_data_errors_display(self):
-        #TODO: Za długi login, zadługie hasło
         user = self.create_user('active_1')
         user.password = self.users['active_1']['password']
         user_not_active = self.create_user('not_active')

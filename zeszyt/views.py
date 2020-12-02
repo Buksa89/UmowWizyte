@@ -21,7 +21,7 @@ from .models import Client, Service, Visit, WorkTime
 
 DAYS_OF_WEEK = ['Poniedziałek', 'Wtorek', 'Środa', 'Czwartek', 'Piątek', 'Sobota', 'Niedziela']
 
-#TODO: formularz godzin pracy nie przyjmuje godziny 24
+
 
 """ User Views """
 
@@ -208,12 +208,16 @@ def client_login_required(function):
 
 class ClientAppLogin(CreateView):
     template = 'client_app/login.html'
+    template_banned = 'client_app/login_not_active.html'
 
     def get(self, request, username):
         if is_client_authenticated(request, username): return redirect('client_app_dashboard', username)
         user = get_object_or_404(User, username__iexact=username)
-        form = ClientLoginForm()
-        return render(request, self.template, {'form':form, 'user':user.username})
+        if user.is_active:
+            form = ClientLoginForm()
+            return render(request, self.template, {'form':form, 'user':user.username})
+        else:
+            return render(request, self.template_banned, {'user': user.username})
 
     def post(self, request, username):
         if is_client_authenticated(request, username): return redirect('client_app_dashboard', username)
@@ -238,7 +242,6 @@ class ClientAppLogin(CreateView):
 
 
 
-#TODO: !!! Testy widoku
 class ClientAppDashboard(View):
     template = 'client_app/dashboard.html'
 
@@ -281,7 +284,7 @@ class ClientAppNewVisit(View):
     def get(self, request, username, service_id, year=datetime.now().year, week = datetime.now().isocalendar()[1]):
         user = get_object_or_404(User, username__iexact=username)
         client = get_object_or_404(Client, phone_number=request.session.get('client_authorized')['phone'],user=user)
-        service = get_object_or_404(Service, id=service_id, user=user)
+        service = get_object_or_404(Service, id=service_id, user=user, is_active=True)
         work_time = get_object_or_404(WorkTime, user=user)
         available_dates = get_available_days_for_clients(username)
         schedule = ClientSchedule(year, week, work_time, service_id, service.name, username, available_dates, client)
@@ -358,7 +361,6 @@ class ClientAppLogout(View):
 
 def welcome_screen(request):
     users = User.objects.filter(~Q(username='admin'))
-    print(users)
     return render(request, 'welcome.html', {'users':users})
 
 

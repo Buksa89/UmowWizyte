@@ -3,14 +3,103 @@ from unittest import skip
 from ..forms import ClientLoginForm
 from .base import BaseTest
 
+class DashboardTests(BaseTest):
+
+    def test_form_display(self):
+        user = self.create_user()
+        client = self.create_client(user)
+        self.authorize_client(client)
+        response = self.client.get(f'/{user}/panel/')
+
+        self.assertContains(response, 'choose-visit-form')
+
+    def test_dashboard_POST_redirect(self):
+        user = self.create_user()
+        client = self.create_client(user)
+        self.authorize_client(client)
+        service = self.create_service(user)
+        response = self.client.post(f'/{user}/panel/', data={'service':service.id})
+
+        self.assertRedirects(response, f'/{user}/nowa_wizyta/{service.id}/')
+
+    def test_correct_services_in_form(self):
+        user = self.create_user()
+        client = self.create_client(user)
+        self.authorize_client(client)
+        services = []
+        services_types = ['short_1', 'short_2', 'long_1', 'long_2']
+        for service in services_types:
+            services.append(self.create_service(user, service))
+        response = self.client.get(f'/{user}/panel/')
+
+        for service in services:
+           self.assertContains(response, f'<option value="{service.id}">{service.name}</option>')
+
+
+    def test_only_active_services_in_form(self):
+        user = self.create_user()
+        client = self.create_client(user)
+        self.authorize_client(client)
+        service_active = self.create_service(user, 'short_1')
+        service_not_active = self.create_service(user, 'not_active')
+        response = self.client.get(f'/{user}/panel/')
+
+        self.assertContains(response, f'<option value="{service_active.id}">{service_active.name}</option>')
+        self.assertNotContains(response, f'<option value="{service_not_active.id}">{service_not_active.name}</option>')
+
+
+    def test_incorrect_services_in_form(self):
+        user1 = self.create_user('active_1')
+        user2 = self.create_user('active_2')
+        service_user_2 = self.create_service(user2, 'short_1')
+        client = self.create_client(user1)
+        self.authorize_client(client)
+        response = self.client.get(f'/{user1}/panel/')
+
+        self.assertNotContains(response, f'<option value="{service_user_2.id}">{service_user_2.name}</option>')
+
+
+    def test_cant_get_other_users_service(self):
+        user1 = self.create_user('active_1')
+        user2 = self.create_user('active_2')
+        service_user_2 = self.create_service(user2)
+        client = self.create_client(user1)
+        self.authorize_client(client)
+        response = self.client.get(f'/{user1}/nowa_wizyta/{service_user_2.id}/')
+
+        self.assertEqual(response.status_code, 404)
+
+
+    def test_cant_get_not_active_service(self):
+        user = self.create_user()
+        service = self.create_service(user,'not_active')
+        client = self.create_client(user)
+        self.authorize_client(client)
+        response = self.client.get(f'/{user}/nowa_wizyta/{service.id}/')
+
+        self.assertEqual(response.status_code, 404)
+
+    def test_empty_visits_lists(self):
+        user = self.create_user()
+        client = self.create_client(user)
+        self.authorize_client(client)
+        response = self.client.get(f'/{user}/panel/')
+
+        self.assertContains(response, 'Nie jesteś umówiony na żadną wizytę')
+
+    def test_visits_lists(self):
+        user = self.create_user()
+        client = self.create_client(user)
+        self.authorize_client(client)
+        response = self.client.get(f'/{user}/panel/')
+
+        self.assertContains(response, 'Nie jesteś umówiony na żadną wizytę')
+
+
+
 class LoginTests(BaseTest):
 
     def test_incorrect_data_errors_display(self):
-        #TODO: Testy za długiego pinu,
-        # za długiego numeru
-        # pin not digits
-        # tel_not_digits
-        #TODO Anyphone i anypin ze zmiennej
 
         user_active_1 = self.create_user('active_1')
         user_active_2 = self.create_user('active_2')
@@ -24,11 +113,12 @@ class LoginTests(BaseTest):
                         {'data': {'phone_number': client_of_user_2.phone_number, 'pin': client_of_user_2.pin}, 'message': 'Nie ma takiego numeru'},
                         {'data': {'phone_number': client_not_active.phone_number, 'pin': client_not_active.pin}, 'message': 'Konto zablokowane'},
                         {'data': {'phone_number': self.EMPTY, 'pin': client_of_user_1.pin}, 'message': 'Podaj numer telefonu'},
-                        {'data': {'phone_number': client_of_user_1.phone_number, 'pin': self.EMPTY}, 'message': 'Podaj pin'}]
+                        {'data': {'phone_number': client_of_user_1.phone_number, 'pin': self.EMPTY}, 'message': 'Podaj pin'},
+                        {'data': {'phone_number': client_of_user_1.phone_number, 'pin': self.WRONG_DATA}, 'message': 'Podaj prawidłowy pin'},
+                        {'data': {'phone_number': self.WRONG_DATA, 'pin': client_of_user_1.pin}, 'message': 'Podaj prawidłowy numer telefonu'},]
 
         for data_result in data_results:
             response = self.client.post(f'/{user_active_1}/', data=data_result['data'])
-
             self.assertContains(response, data_result['message'])
 
     def test_incorrect_data_not_authorize(self):
@@ -68,7 +158,6 @@ class LoginTests(BaseTest):
     """ Redirects tests """
 
     def test_redirect_to_login_url_when_client_not_authorized_for_this_user(self):
-        # TODO: Tutaj dodaj podstrowny panelu klienta
         user = self.create_user('active_1')
         user2 = self.create_user('active_2')
         client = self.create_client(user2)
