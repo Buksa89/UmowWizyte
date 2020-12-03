@@ -1,6 +1,5 @@
 from django import forms
 from django.core.exceptions import NON_FIELD_ERRORS, ValidationError
-from django.forms import Textarea
 from random import choice
 from .models import Client, Service, Visit, WorkTime
 
@@ -10,7 +9,6 @@ def pin_generate():
     pin = ''
     for i in range(0,4): pin += choice('0123456789')
     return(pin)
-
 
 def time_choices(hours=8):
     #TODO: !!! Usun zera z wierszy 24, 27 aby wygenerowac godziny pracy.
@@ -43,12 +41,6 @@ class LoginForm(forms.Form):
     username = forms.CharField(label='Imię', error_messages={'required': 'Podaj login'})
     password = forms.CharField(widget=forms.PasswordInput, label='Hasło',
                                error_messages={'required': 'Podaj hasło'})
-
-
-class ClientLoginForm(forms.Form):
-    phone_number = forms.CharField(validators=[only_digits('phone')], label='Telefon', error_messages={'required': 'Podaj numer telefonu'})
-    pin = forms.CharField(validators=[only_digits('pin')], label='pin', error_messages={'required': 'Podaj pin'})
-
 
 class AddClientForm(forms.ModelForm):
 
@@ -90,7 +82,6 @@ class AddClientForm(forms.ModelForm):
             }
         }
 
-
 class AddServiceForm(forms.ModelForm):
 
     class Meta:
@@ -122,22 +113,6 @@ class AddServiceForm(forms.ModelForm):
     def save(self, user):
         self.instance.user = user
         return super().save()
-
-
-class ClientChooseVisitForm(forms.Form):
-
-    def __init__(self, user):
-        super(ClientChooseVisitForm, self).__init__()
-        self.user = user
-        self.fields['service'] = forms.ChoiceField(label='', choices=self.get_avaible_visits())
-
-    def get_avaible_visits(self):
-        services = Service.objects.filter(user=self.user, is_active=True)
-        service_list = ()
-        for service in services:
-            service_list += ((service.id,service.name),)
-        return service_list
-
 
 class WorkTimeForm(forms.ModelForm):
 
@@ -182,29 +157,3 @@ class WorkTimeForm(forms.ModelForm):
                              'invalid':"Liczba dni nieprawidłowa"},
         }
 
-
-class AddVisit(forms.ModelForm):
-    # TODO: Testy formularza
-    def save(self, user, client, name, start, stop, is_available, is_confirmed):
-        self.instance.user = user
-        self.instance.client = client
-        self.instance.name = name
-        self.instance.start = start
-        self.instance.stop = stop
-        self.instance.is_available = is_available
-        self.instance.is_confirmed = is_confirmed
-        return super().save()
-
-    class Meta:
-        model = Visit
-        fields = ['description']
-        labels = {
-            'description': 'Dodatkowe informacje',
-        }
-        widgets = {
-            'description': Textarea(attrs={'cols': 80, 'rows': 2,
-                'placeholder': 'Dodatkowe informacje',}),
-            }
-        error_messages = {
-            'description': {'max_length': 'Opis jest za długi'},
-        }

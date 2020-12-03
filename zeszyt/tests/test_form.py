@@ -1,6 +1,6 @@
 from django.test import TestCase
 from unittest import skip
-from ..forms import AddClientForm, AddServiceForm, ClientChooseVisitForm, ClientLoginForm, LoginForm, WorkTimeForm
+from ..forms import AddClientForm, AddServiceForm, LoginForm, WorkTimeForm
 from .base import BaseTest
 
 

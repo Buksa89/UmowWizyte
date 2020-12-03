@@ -1,7 +1,7 @@
 from django.test import TestCase
 from unittest import skip
 from ..forms import ClientLoginForm
-from .base import BaseTest
+from zeszyt.tests.base import BaseTest
 
 class DashboardTests(BaseTest):
 

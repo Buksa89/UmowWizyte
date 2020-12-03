@@ -1,6 +1,6 @@
 from django.test import TestCase
 from unittest import skip
-from .base import BaseTest
+from zeszyt.tests.base import BaseTest
 
 
 class LoginTests(BaseTest):

@@ -21,12 +21,4 @@ urlpatterns = [
     path('ustawienia/', views.DashboardSettings.as_view(), name='dashboard_settings'),
     path('ustawienia/usun_usluge/<int:service_id>/', views.dashboard_settings_service_remove, name='dashboard_settings_service_remove'),
 
-    path('<str:username>/', views.ClientAppLogin.as_view(), name='client_app_login'),
-    path('<str:username>/panel/', views.ClientAppDashboard.as_view(), name='client_app_dashboard'),
-    path('<str:username>/logout/', views.ClientAppLogout.as_view(), name='client_app_logout'),
-    path('<str:username>/nowa_wizyta/<int:service_id>/', views.ClientAppNewVisit.as_view(), name='client_app_new_visit'),
-    path('<str:username>/nowa_wizyta/<int:service_id>/<int:year>/<int:week>/', views.ClientAppNewVisit.as_view(), name='client_app_new_visit'),
-    path('<str:username>/nowa_wizyta/<int:service_id>/<int:year>/<int:month>/<int:day>/<int:hour>/<int:minute>', views.ClientAppConfirmVisit.as_view(), name='client_app_confirm_visit'),
-    path('<str:username>/odwolaj/<int:visit_id>/', views.ClientAppCancelVisit.as_view(), name='client_app_cancel_visit'),
-
 ]
