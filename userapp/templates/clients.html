@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}Panel | Klienci{% endblock %}
+
+{% block content %}
+    <p><a href="{% url 'dashboard_clients_add' %}" class="button">Dodaj klienta</a></p>
+    {% if clients %}
+    <table>
+        <tr class="header">
+                <td>Imię</td>
+                <td>Nazwisko</td>
+                <td>Numer telefonu</td>
+                <td>Opis</td>
+                <td>email</td>
+                <td>Status</td>
+                <td>pin</td>
+                <td></td>
+            </tr>
+        {% for client in clients %}
+            <tr>
+                <td>{{ client.name }}</td>
+                <td>{{ client.surname }}</td>
+                <td>{{ client.phone_number }}</td>
+                <td>{{ client.description }}</td>
+                <td>{{ client.email }}</td>
+                <td>{{ client.is_active }}</td>
+                <td>{{ client.pin }}</td>
+                <td><a href="{{ client.get_remove_url }}">Usuń</a> | Edytuj | Zablokuj
+            </tr>
+        {% endfor %}
+    </table>
+    {% else %}
+        <h3>"Nie masz jeszcze żadnych klientów"</h3>
+    {% endif %}
+{% endblock %}

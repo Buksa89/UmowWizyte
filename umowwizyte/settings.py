@@ -30,8 +30,8 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
-    'zeszyt',
-    'client_app',
+    'userapp',
+    'clientapp',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
