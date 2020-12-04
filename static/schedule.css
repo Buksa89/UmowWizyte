@@ -69,7 +69,8 @@ background:#333333;
 ul.schedule-content {
   margin: 0;
   padding: 0;
-  background-color:#eee;
+  background-color:#444;
+  color: #555;
 }
 
 
@@ -84,11 +85,11 @@ ul.schedule-content li {
 ul.schedule-content li ul{
   margin: 0;
   padding: 0;
-  color: #ddd;
 }
 
 ul.schedule-content li ul.hours {
   background: #ddd;
+  position:relative;
 }
 
 ul.schedule-content li ul li {
