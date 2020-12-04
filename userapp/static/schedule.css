@@ -89,6 +89,7 @@ ul.schedule-content li ul{
 
 ul.schedule-content li ul.hours {
   background: #ddd;
+  position:relative;
 }
 
 ul.schedule-content li ul li {

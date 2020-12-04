@@ -218,13 +218,12 @@ class ClientSchedule:
         self.start_work_time = work_time.start_time
         self.end_work_time = work_time.end_time
         self.work_time = work_time
-        self.service_id = service_id
         self.user = get_object_or_404(User, username__iexact=username)
+        self.service = get_object_or_404(Service, id=service_id, user=self.user)
         self.username = username
         self.available_dates = available_dates
         self.year = year
         self.week = week
-        self.service_name = service_name
         self.day = self.get_dates_from_week(year, week)
         self.DAYS_OF_WEEK = ['Pn','Wt','Śr','Cz','Pt','So','Nd']
 
@@ -243,7 +242,7 @@ class ClientSchedule:
         html_code = f'<div class="header"><ul>' \
                     f'<a href="{prev_week_url}"><li class="prev">&#10094;</li></a>' \
                     f'<a href="{next_week_url}"><li class="next">&#10095;</li></a>' \
-                    f'<li>{self.service_name}</li>' \
+                    f'<li>{self.service.name}</li>' \
                     f'</ul></div>'
 
         return html_code
@@ -288,11 +287,14 @@ class ClientSchedule:
         # Hours column
         hour = self.start_work_time
         work_hours = []
-        while hour < self.end_work_time:
+        while hour <= self.end_work_time:
             work_hours.append(hour)
             html_code += f'<li>{hour.strftime("%H:%M")}</li>'
             hour = (datetime.combine(date.today(), hour) + timedelta(minutes=15)).time()
         html_code += '</ul></li>'
+
+        simple_duration = int(self.service.duration / timedelta(minutes=15))
+        print(simple_duration)
 
         for day in self.day:
             if day.date() not in self.available_dates:
@@ -303,13 +305,27 @@ class ClientSchedule:
             else:
                 html_code += '<li><ul>'
 
-                #
-                for hour in work_hours:
-                    full_term = datetime.combine(day, hour)
-
-                    html_code += f'<a href="{self.get_term_url(full_term)}"><li>{hour.strftime("%H:%M")}</li></a>'
+                av_time = self.get_available_hours_in_day(day.date())
+                for i, hour in enumerate(work_hours):
+                    li_class = ""
+                    if not av_time[hour.strftime("%H:%M")]:
+                        html_code += f'<li>{hour.strftime("%H:%M")}</li>'
+                    else:
+                        full_term = datetime.combine(day, hour)
+                        flag = True
+                        for n in range(simple_duration):
+                            try:
+                                if av_time[work_hours[i+n].strftime("%H:%M")]:
+                                    continue
+                            except: pass
+                            flag = False
+                        if flag:
+                            html_code += f'<a href="{self.get_term_url(full_term)}"><li class="avaliable">{hour.strftime("%H:%M")}</li></a>'
+                        else:
+                            html_code += f'<li class="avaliable">{hour.strftime("%H:%M")}</li>'
+                    #html_code += f'<a href="{self.get_term_url(full_term)}"><li>{hour.strftime("%H:%M")}</li></a>'
                 html_code += '</ul></li>'
-            self.get_available_hours_in_day(day.date())
+
         html_code += f'</ul>'
         #
         # Pobranie godzin
@@ -341,7 +357,7 @@ class ClientSchedule:
         return var
 
     def get_week_url(self, year, week):
-        return reverse('client_app_new_visit', args=[self.username, self.service_id, year, week])
+        return reverse('client_app_new_visit', args=[self.username, self.service.id, year, week])
 
     def get_week_from_date(self, date):
         return date.isocalendar()[1]
@@ -361,21 +377,18 @@ class ClientSchedule:
 
     def get_term_url(self, term):
         """ Method return link for choose visit by clients """
-        return reverse('client_app_confirm_visit', args=[self.username, self.service_id,
+        return reverse('client_app_confirm_visit', args=[self.username, self.service.id,
                                                          term.year, term.month, term.day, term.hour, term.minute])
 
     def get_available_hours_in_day(self, date):
         visits = Visit.objects.filter(Q(user=self.user, client=self.client, start__year=date.year, start__month=date.month, start__day=date.day) |
                                       Q(user=self.user, client=self.client, end__year=date.year, end__month=date.month, end__day=date.day))
 
-        #'[[self.work_time.start_time.strftime("%H:%M"),self.work_time.end_time.strftime("%H:%M")]]
-
         start_work = timezone.make_aware(datetime.combine(date,self.work_time.start_time), timezone.get_default_timezone())
         end_work = timezone.make_aware(datetime.combine(date,self.work_time.end_time), timezone.get_default_timezone())
-        time_zero = timezone.make_aware(datetime(date.year, date.month, date.day, 0, 0), timezone.get_default_timezone())
-        time_midnight = timezone.make_aware(datetime(date.year, date.month, date.day, 23, 59,59), timezone.get_default_timezone())
 
-        avaliable_intervals = interval.openclosed(start_work, end_work)
+        avaliable_intervals = interval.closedopen(start_work, end_work)
+
         for visit in visits:
             visit = interval.closedopen(visit.start, visit.end)
             avaliable_intervals -= visit
