@@ -51,6 +51,9 @@ class Service(models.Model):
     def get_remove_url(self):
         return reverse('dashboard_settings_service_remove', args=[self.id])
 
+    def get_lock_url(self):
+        return reverse('dashboard_settings_service_lock', args=[self.id])
+
     def display_duration(self):
         # Duration should be display in format: 00:00.
         # TODO: Sprawdź czy istnieje funkcja która robi to bardziej elegancko

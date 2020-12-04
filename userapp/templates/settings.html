@@ -32,8 +32,15 @@
                 <tr>
                     <td>{{ service.name }}</td>
                     <td>{{ service.display_duration }}</td>
-                    <td>{{ service.is_active }}</td>
-                    <td><a href="{{ service.get_remove_url }}">Usuń</a> | Zablokuj
+                    <td>{{ service.status }}</td>
+                    <td><a href="{{ service.get_remove_url }}">Usuń</a> |
+                        <a href="{{ service.get_lock_url }}">
+                            {% if service.is_active is True %}
+                                Zablokuj
+                            {% else %}
+                                Odblokuj
+                            {% endif %}
+                        </a>
                 </tr>
             {% endfor %}
         </table>

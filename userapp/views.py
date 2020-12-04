@@ -152,14 +152,8 @@ class DashboardSettings(CreateView):
 
     @method_decorator(login_required)
     def get(self, request):
-        user = User.objects.get(username=request.user)
-        services = Service.objects.filter(user=user)
-        service_form = AddServiceForm()
-        work_time = WorkTime.objects.get(user=user)
-        work_time.__dict__['start_time'] = work_time.__dict__['start_time'].strftime("%H:%M")
-        work_time.__dict__['end_time'] = work_time.__dict__['end_time'].strftime("%H:%M")
-        work_time_form = WorkTimeForm(initial=work_time.__dict__,instance=work_time)
-
+        user, service_form, work_time_form = self.settings_prepare_data(request)
+        services = self.settings_prepare_services(user)
         return render(request, 'settings.html', {'work_time_form': work_time_form,
                                                         'service_form': service_form,
                                                        'services': services,
@@ -169,18 +163,18 @@ class DashboardSettings(CreateView):
     def post(self, request):
         created_service = None
         work_time_changed = False
-        user = User.objects.get(username=request.user)
-        services = Service.objects.filter(user=user)
-        service_form = AddServiceForm()
-        work_time = WorkTime.objects.get(user=user)
-        work_time.__dict__['start_time'] = work_time.__dict__['start_time'].strftime("%H:%M")
-        work_time.__dict__['end_time'] = work_time.__dict__['end_time'].strftime("%H:%M")
-        work_time_form = WorkTimeForm(initial=work_time.__dict__,instance=work_time)
+        user, service_form, work_time_form = self.settings_prepare_data(request)
+
         if 'submit' not in request.POST.keys(): None
         elif request.POST['submit'] == 'add_service':
             service_form, created_service = self.dashboard_settings_services(request, user)
         elif request.POST['submit'] == 'set_work_time':
             work_time_form, work_time_changed = self.dashboard_settings_work_time(request, user)
+
+        services = self.settings_prepare_services(user)
+
+
+
 
         return render(request, 'settings.html', {'work_time_form': work_time_form,
                                                         'service_form': service_form,
@@ -188,6 +182,34 @@ class DashboardSettings(CreateView):
                                                        'created_service': created_service,
                                                        'work_time_changed': work_time_changed,
                                                        'section':'dashboard_settings'})
+
+    def settings_prepare_services(self, user):
+        services = Service.objects.filter(user=user)
+        services = self.generate_service_list(services)
+        return services
+
+    def settings_prepare_data(self, request):
+        user = User.objects.get(username=request.user)
+        service_form = AddServiceForm()
+        work_time = WorkTime.objects.get(user=user)
+        work_time.__dict__['start_time'] = work_time.__dict__['start_time'].strftime("%H:%M")
+        work_time.__dict__['end_time'] = work_time.__dict__['end_time'].strftime("%H:%M")
+        work_time_form = WorkTimeForm(initial=work_time.__dict__, instance=work_time)
+        return user, service_form, work_time_form
+
+    def generate_service_list(self, services):
+        service_list = []
+        for service in services:
+            dict = {}
+            dict['name'] = service.name
+            dict['display_duration'] = service.display_duration
+            dict['is_active'] = service.is_active
+            if service.is_active: dict['status'] = 'Aktywna'
+            else: dict['status'] = 'Zablokowana'
+            dict['get_remove_url'] = service.get_remove_url
+            dict['get_lock_url'] = service.get_lock_url
+            service_list.append(dict)
+        return service_list
 
     def dashboard_settings_services(self, request, user):
         service_form = AddServiceForm(data=request.POST)
@@ -201,11 +223,11 @@ class DashboardSettings(CreateView):
                         service_form.save(user=user)
                     created_service = request.POST.get('name', '')
                     service_form = AddServiceForm()
+
                 except IntegrityError:
                     # TODO: Tą walidację przenieś do formularza
                     service_form.add_error(None, 'Usługa o tej nazwie już istnieje')
         return service_form, created_service
-
 
     def dashboard_settings_work_time(self, request, user):
         work_time = WorkTime.objects.get(user=user)
@@ -216,12 +238,29 @@ class DashboardSettings(CreateView):
         return form, False
 
 
+
 @login_required
 def dashboard_settings_service_remove(request,service_id):
     #TODO: Dodaj potwierdzenie usunięcia
     user = User.objects.get(username=request.user)
     get_object_or_404(Service, id=service_id,user=user).delete()
     return redirect('dashboard_settings')
+
+class DashboardSettingsServiceLock(CreateView):
+
+    @method_decorator(login_required)
+    def get(self, request, service_id):
+        user = User.objects.get(username=request.user)
+        service = get_object_or_404(Service, id=service_id,user=user)
+        if service.is_active:
+            service.is_active = False
+            service.save()
+        else:
+            service.is_active = True
+            service.save()
+
+        return redirect('dashboard_settings')
+
 
 
 def login_screen(request):

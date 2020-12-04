@@ -1,4 +1,8 @@
 Testy modelu nie sprawdzają długości wprowadzanych danych w formularza poza services
+Test wizyt
+testy zatwierdzania wizyt
+test blokowania usługi
+
 
 Bazowe
     Model
@@ -171,7 +175,6 @@ TODO: Potwierdzenie usunięcia klienta
 
     Settings:
 TODO: Sprawdzenie templatki dla każdego formularza
-TODO: Naprawić wyświetlanie godzin pracy
 TODO: Walidacja duplikatów usług
 #TODO: formularz godzin pracy nie przyjmuje godziny 24
 

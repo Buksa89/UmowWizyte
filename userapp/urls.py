@@ -22,5 +22,6 @@ urlpatterns = [
 
     path('ustawienia/', views.DashboardSettings.as_view(), name='dashboard_settings'),
     path('ustawienia/usun_usluge/<int:service_id>/', views.dashboard_settings_service_remove, name='dashboard_settings_service_remove'),
+    path('ustawienia/blokada_uslugi/<int:service_id>/', views.DashboardSettingsServiceLock.as_view(), name='dashboard_settings_service_lock'),
 
 ]

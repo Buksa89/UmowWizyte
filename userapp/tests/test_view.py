@@ -124,7 +124,7 @@ class DashboardSettingsTests(BaseTest):
         service = self.services['short_1']
         response = self.client.post('/ustawienia/', data={'duration': service['duration'], 'name': service['name'], 'is_active':service['is_active'], 'submit': 'add_service'})
         service['duration'] = str(service['duration'])[:-3].rjust(5,'0')
-        content = [f"Usługa {service['name']} dodana.", f"<td>{service['duration']}</td>", f"<td>{service['name']}</td>", f"<td>{service['is_active']}</td>"]
+        content = [f"Usługa {service['name']} dodana.", f"<td>{service['duration']}</td>", f"<td>{service['name']}</td>", f"<td>Aktywna</td>"]
 
         for element in content:
             self.assertContains(response, element)
