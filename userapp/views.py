@@ -24,9 +24,66 @@ from .models import Client, Service, Visit, WorkTime
 
 """ User Views """
 
-@login_required
-def dashboard(request):
-    return render(request, 'dashboard.html', {'section':'dashboard'})
+class Dashboard(CreateView):
+
+    """ In Dashboard User can see all not-confirmed wisit and confirm or reject them
+    Also he can see schedule for today and tomorrow"""
+
+    template_name = 'dashboard.html'
+    section = 'dashboard'
+    #TODO: Wyświetlanie dwóch najbliższych dni
+    schedule = ''
+
+    @method_decorator(login_required)
+    def get(self, request):
+        visits_list = []
+        user = User.objects.get(username=request.user)
+        visits = Visit.objects.filter(user=user, is_confirmed=False)
+
+        for visit in visits:
+            client = [visit.client.name, visit.client.surname, visit.client.phone_number]
+            client = '<br />'.join(client)
+            datetime_ = visit.start.strftime('%y-%m-%d<br />%H:%M')
+            reject_url = visit.get_reject_url()
+            confirm_url = visit.get_confirm_url()
+
+            if visit.is_available: status = "Nowa"
+            else: status = "<b>Odwołana</b>"
+
+            visits_list.append({'id':visit.id, 'client':client, 'name':visit.name, 'status':status, 'date':datetime_,
+                                'description':visit.description, 'reject_url':reject_url, 'confirm_url':confirm_url})
+
+        return render(request, self.template_name, {'section':self.section, 'visits':visits_list, 'schedule':self.schedule})
+
+
+class DashboardVisitReject(CreateView):
+
+    @method_decorator(login_required)
+    def get(self, request, visit_id):
+        user = User.objects.get(username=request.user)
+        visit = get_object_or_404(Visit, id=visit_id,user=user)
+        if visit.is_available: visit.delete()
+        else:
+            visit.is_available = True
+            visit.is_confirmed = True
+            visit.save()
+
+
+        return redirect('dashboard')
+
+
+class DashboardVisitConfirm(CreateView):
+
+    @method_decorator(login_required)
+    def get(self, request, visit_id):
+        user = User.objects.get(username=request.user)
+        visit = get_object_or_404(Visit, id=visit_id,user=user)
+        if visit.is_available:
+            visit.is_confirmed = True
+            visit.save()
+        else:
+            visit.delete()
+        return redirect('dashboard')
 
 
 @login_required
@@ -169,7 +226,7 @@ def dashboard_settings_service_remove(request,service_id):
 
 def login_screen(request):
     if request.user.is_authenticated:
-        return redirect(dashboard)
+        return redirect('dashboard')
     else:
         if request.method == 'POST':
             form = LoginForm(request.POST)
@@ -179,7 +236,7 @@ def login_screen(request):
                                     password=cd['password'])
                 if user:
                     login(request, user)
-                    return redirect(dashboard)
+                    return redirect('dashboard')
                 elif User.objects.filter(username=cd['username'], is_active=False):
                     form.clean()
                     form.add_error(None, 'Konto zablokowane')

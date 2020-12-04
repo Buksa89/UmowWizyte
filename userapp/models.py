@@ -72,8 +72,6 @@ class Visit(models.Model):
     is_confirmed = models.BooleanField(default=False)
     description = models.CharField(max_length=400, blank=True, default='')
 
-    def get_remove_url(self):
-        return reverse('remove_visit', args=[self.id])
 
     def clean(self):
         errors = []
@@ -95,9 +93,17 @@ class Visit(models.Model):
             if visit.start <= self.start < visit.end or visit.start < self.end <= visit.end:
                 raise ValidationError('Termin zajęty')
 
+    def get_confirm_url(self):
+        return reverse('dashboard_visit_confirm', args=[self.id])
+
+    def get_reject_url(self):
+        return reverse('dashboard_visit_reject', args=[self.id])
+
+    def get_cancel_url(self):
+        return reverse('client_app_cancel_visit', args=[self.user, self.id])
+
 
 class WorkTime(models.Model):
-
 
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     start_time = models.TimeField(auto_now=False, auto_now_add=False, default="8:00")

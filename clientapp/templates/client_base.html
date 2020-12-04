@@ -6,6 +6,19 @@
     <title>{{ username }}</title>
     <link href="{% static 'panel.css' %}" rel="stylesheet">
     <link href="{% static 'schedule.css' %}" rel="stylesheet">
+    <script>
+        function on_hover(id, numbers) {
+            for (i = id; i < id+numbers; i++) {
+                document.getElementById(i).classList.add("hover");
+
+                }
+        }
+        function out_hover(id, numbers) {
+            for (i = id; i < id+numbers; i++) {
+                    document.getElementById(i).classList.remove("hover");
+                }
+        }
+    </script>
 </head>
 <body>
     <div id="container">

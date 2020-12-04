@@ -8,7 +8,9 @@ urlpatterns = [
     path('login/', views.login_screen, name='login_screen'),
     path('logout/', auth_views.LogoutView.as_view(), name='logout_screen'),
 
-    path('panel/', views.dashboard, name='dashboard'),
+    path('panel/', views.Dashboard.as_view(), name='dashboard'),
+    path('panel/odrzuc_wizyte/<int:visit_id>/', views.DashboardVisitReject.as_view(), name='dashboard_visit_reject'),
+    path('panel/potwierdz_wizyte/<int:visit_id>/', views.DashboardVisitConfirm.as_view(), name='dashboard_visit_confirm'),
 
     path('terminarz/', views.DashboardSchedule.as_view(), name='dashboard_schedule'),
     path('terminarz/<int:year>/<int:month>', views.DashboardSchedule.as_view(), name='dashboard_schedule'),

@@ -84,8 +84,12 @@ class ClientAppDashboard(View):
             dict['day'] = DAYS_OF_WEEK[visit.start.weekday()]
             dict['time'] = visit.start.strftime("%H:%M")
             dict['duration'] = str(visit.end - visit.start)[:-3].rjust(5,'0')
-            dict['is_confirmed'] = visit.is_confirmed
-            dict['id'] = visit.id
+            if visit.is_available: dict['status'] = 'Zarezerwowana'
+            else: dict['status'] = 'Odwołana'
+            if visit.is_confirmed: dict['status'] += ' (Potwierdzona)'
+            else: dict['status'] += ' (Niepotwierdzona)'
+            dict['is_avaliable'] = visit.is_available
+            dict['cancel_url'] = visit.get_cancel_url()
             visits.append(dict)
 
         form = ClientChooseVisitForm(user)
@@ -171,7 +175,13 @@ class ClientAppCancelVisit(View):
     def get(self, request, username, visit_id):
         user = get_object_or_404(User, username__iexact=username)
         client = get_object_or_404(Client, phone_number=request.session['client_authorized']['phone'], user=user)
-        Visit.objects.filter(user=user, client=client, id=visit_id).delete()
+        visit = get_object_or_404(Visit, user=user, client=client, id=visit_id)
+        if visit.is_confirmed:
+            visit.is_available = False
+            visit.is_confirmed = False
+            visit.save()
+        elif visit.is_available:
+            visit.delete()
 
         return redirect('client_app_dashboard', username)
 
@@ -293,10 +303,8 @@ class ClientSchedule:
         html_code += '</ul></li>'
 
         simple_duration = int(self.service.duration / timedelta(minutes=15))
-        print(simple_duration)
-        html_code += '<style>ul.schedule-content li ul a li:hover {padding-bottom:'+str(simple_duration*33+10)+'px; margin-bottom:-'+str(simple_duration*33)+'px;}</style>'
 
-        for day in self.day:
+        for d, day in enumerate(self.day):
             if day.date() not in self.available_dates:
                 html_code += '<li><ul>'
                 for hour in work_hours:
@@ -307,10 +315,10 @@ class ClientSchedule:
 
                 av_time = self.get_available_hours_in_day(day.date())
                 for i, hour in enumerate(work_hours):
-                    li_class = ""
                     if not av_time[hour.strftime("%H:%M")]:
                         html_code += f'<li>&nbsp;</li>'
                     else:
+                        id = d*100 + i
                         full_term = datetime.combine(day, hour)
                         flag = True
                         for n in range(simple_duration):
@@ -320,9 +328,9 @@ class ClientSchedule:
                             except: pass
                             flag = False
                         if flag:
-                            html_code += f'<a href="{self.get_term_url(full_term)}"><li class="avaliable">&nbsp;</li></a>'
+                            html_code += f'<a href="{self.get_term_url(full_term)}" onmouseover="on_hover({id}, {simple_duration})" onmouseout="out_hover({id}, {simple_duration})"><li class="avaliable" id="{id}">&nbsp;</li></a>'
                         else:
-                            html_code += f'<li class="avaliable">&nbsp;</li>'
+                            html_code += f'<li class="avaliable" id="{id}">&nbsp;</li>'
                     #html_code += f'<a href="{self.get_term_url(full_term)}"><li>{hour.strftime("%H:%M")}</li></a>'
                 html_code += '</ul></li>'
 

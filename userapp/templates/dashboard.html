@@ -3,5 +3,27 @@
 {% block title %}Panel{% endblock %}
 
 {% block content %}
-Tutaj będzie lista wizyt do zatwierdzenia
+{% if visits %}
+    <table>
+        <tr class="header">
+                <td>Typ</td>
+                <td>Klient</td>
+                <td>Termin</td>
+                <td>Status</td>
+                <td>Dodatkowe info</td>
+                <td></td>
+            </tr>
+        {% for visit in visits %}
+            <tr>
+                <td>{{ visit.name }}</td>
+                <td>{{ visit.client|safe }}</td>
+                <td>{{ visit.date|safe }}</td>
+                <td>{{ visit.status|safe }}</td>
+                <td>{{ visit.description }}</td>
+                <td><a href="{{ visit.confirm_url }}">Potwierdź</a><br />
+                    <a href="{{ visit.reject_url }}">Odrzuć</a>
+            </tr>
+        {% endfor %}
+    </table>
+    {% endif %}
 {% endblock %}

@@ -29,8 +29,12 @@
         <td>{{visit.day}}</td>
         <td>{{ visit.time }}</td>
         <td>{{ visit.duration }}</td>
-        <td>{{ visit.is_confirmed }}</td>
-        <td><a href="{% url 'client_app_cancel_visit' username visit.id %}">Odwołaj</a>
+        <td>{{ visit.status }}</td>
+        <td>
+            {% if visit.is_avaliable is True %}
+                <a href="{{ visit.cancel_url }}">Odwołaj</a>
+            {% endif %}
+        </td>
     </tr>
     {% endfor %}
 </table>
