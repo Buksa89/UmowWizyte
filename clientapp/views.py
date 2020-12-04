@@ -16,6 +16,7 @@ from django.views import View
 from django.views.generic.edit import CreateView
 from functools import wraps
 import holidays
+import portion as interval
 from .forms import AddVisit, ClientChooseVisitForm, ClientLoginForm
 from userapp.models import Client, Service, Visit, WorkTime
 
@@ -25,7 +26,6 @@ def client_login_required(function):
     @wraps(function)
     def wrap(request, *args, username, **kwargs):
         if is_client_authenticated(request, username):
-            #TODO: username w sesji zgadza sie z username strony
             return function(request, *args, username, **kwargs)
         else:
             return redirect('client_app_login', username)
@@ -33,8 +33,8 @@ def client_login_required(function):
 
 
 class ClientAppLogin(CreateView):
-    template = 'clientapp/login.html'
-    template_banned = 'clientapp/login_not_active.html'
+    template = 'client_login.html'
+    template_not_active = 'client_login_not_active.html'
 
     def get(self, request, username):
         if is_client_authenticated(request, username): return redirect('client_app_dashboard', username)
@@ -43,7 +43,7 @@ class ClientAppLogin(CreateView):
             form = ClientLoginForm()
             return render(request, self.template, {'form':form, 'user':user.username})
         else:
-            return render(request, self.template_banned, {'user': user.username})
+            return render(request, self.template_not_active, {'user': user.username})
 
     def post(self, request, username):
         if is_client_authenticated(request, username): return redirect('client_app_dashboard', username)
@@ -69,7 +69,7 @@ class ClientAppLogin(CreateView):
 
 
 class ClientAppDashboard(View):
-    template = 'clientapp/dashboard.html'
+    template = 'client_dashboard.html'
 
     @method_decorator(client_login_required)
     def get(self, request, username):
@@ -83,7 +83,7 @@ class ClientAppDashboard(View):
             dict['date'] = visit.start.strftime("%Y-%m-%d")
             dict['day'] = DAYS_OF_WEEK[visit.start.weekday()]
             dict['time'] = visit.start.strftime("%H:%M")
-            dict['duration'] = str(visit.stop - visit.start)[:-3].rjust(5,'0')
+            dict['duration'] = str(visit.end - visit.start)[:-3].rjust(5,'0')
             dict['is_confirmed'] = visit.is_confirmed
             dict['id'] = visit.id
             visits.append(dict)
@@ -114,7 +114,7 @@ class ClientAppNewVisit(View):
         work_time = get_object_or_404(WorkTime, user=user)
         available_dates = get_available_days_for_clients(username)
         schedule = ClientSchedule(year, week, work_time, service_id, service.name, username, available_dates, client)
-        return render(request, 'clientapp/new_visit.html',
+        return render(request, 'client_new_visit.html',
                       {'section': 'schedule', 'service': service.name,
                        'schedule': schedule.display_week, 'username': username})
 
@@ -139,7 +139,7 @@ class ClientAppConfirmVisit(View):
         date = f'{day_str}-{month_str}-{year}'
         time = f'{hour_str}:{minute_str}'
 
-        return render(request, 'clientapp/confirm_visit.html', {'section': '', 'service': service.name, 'date': date,
+        return render(request, 'client_confirm_visit.html', {'section': '', 'service': service.name, 'date': date,
                                                                  'day_name': day_name, 'time': time, 'form':self.form,
                                                                  'username': username, 'service_id': service_id,
                                                                  'year':year, 'month':month, 'day':day, 'hour':hour,
@@ -157,11 +157,11 @@ class ClientAppConfirmVisit(View):
         service = get_object_or_404(Service, id=service_id, user=user)
         name = service.name
         start = datetime(year, month, day, hour, minute)
-        stop = start + service.duration
+        end = start + service.duration
         is_available = True
         is_confirmed = False
 
-        form.save(user, client, name, start, stop, is_available, is_confirmed)
+        form.save(user, client, name, start, end, is_available, is_confirmed)
 
         return redirect('client_app_dashboard', username)
 
@@ -230,7 +230,7 @@ class ClientSchedule:
 
     def display_header(self):
 
-        # Prepare links to navigate
+        # Prepare links to navigate: next week, previous wekk
 
         prev_week_url = self.get_week_url(
             (self.day[0] - timedelta(days=7)).year,
@@ -309,7 +309,7 @@ class ClientSchedule:
 
                     html_code += f'<a href="{self.get_term_url(full_term)}"><li>{hour.strftime("%H:%M")}</li></a>'
                 html_code += '</ul></li>'
-            print(self.get_available_hours_in_day(day.date()))
+            self.get_available_hours_in_day(day.date())
         html_code += f'</ul>'
         #
         # Pobranie godzin
@@ -366,36 +366,37 @@ class ClientSchedule:
 
     def get_available_hours_in_day(self, date):
         visits = Visit.objects.filter(Q(user=self.user, client=self.client, start__year=date.year, start__month=date.month, start__day=date.day) |
-                                      Q(user=self.user, client=self.client, stop__year=date.year, stop__month=date.month, stop__day=date.day))
+                                      Q(user=self.user, client=self.client, end__year=date.year, end__month=date.month, end__day=date.day))
 
         #'[[self.work_time.start_time.strftime("%H:%M"),self.work_time.end_time.strftime("%H:%M")]]
 
         start_work = timezone.make_aware(datetime.combine(date,self.work_time.start_time), timezone.get_default_timezone())
         end_work = timezone.make_aware(datetime.combine(date,self.work_time.end_time), timezone.get_default_timezone())
         time_zero = timezone.make_aware(datetime(date.year, date.month, date.day, 0, 0), timezone.get_default_timezone())
-        time_midnight = timezone.make_aware(datetime(date.year, date.month, date.day, 23, 45), timezone.get_default_timezone())
-        avaliable_hours = [[time_zero, start_work], [time_midnight, end_work]]
+        time_midnight = timezone.make_aware(datetime(date.year, date.month, date.day, 23, 59,59), timezone.get_default_timezone())
 
+        avaliable_intervals = interval.openclosed(start_work, end_work)
         for visit in visits:
-            #TODO Zmien w calym projekcie stop na end
-            if visit.start <= time_zero: visit.start = time_zero
-            if visit.stop >= time_midnight: visit.stop = time_midnight
-            avaliable_hours.append([visit.start, visit.stop])
+            visit = interval.closedopen(visit.start, visit.end)
+            avaliable_intervals -= visit
 
-        def sort_by_start_time(period):
-            return period[0]
+        return_dict = {}
+        list_of_hours = generate_hours_list(start_work, end_work, 15)
 
-        avaliable_hours.sort(key=sort_by_start_time)
+        for hour in list_of_hours:
+            key = hour.strftime("%H:%M")
+            if hour in avaliable_intervals:
+                return_dict[key] = True
+            else:
+                return_dict[key] = False
 
+        return return_dict
 
-                #if visit.stop < start_av_period:
-                    #avaliable_hours.insert(n, "new")
+def generate_hours_list(start, end, step=15):
+    list = []
+    flag_time = start
+    while flag_time <= end:
+        list.append(flag_time)
+        flag_time += timedelta(minutes=step)
 
-                #print(visit.start)
-                #print(visit.stop)
-
-
-        for n, periods in enumerate(avaliable_hours):
-            for m, date in enumerate(periods):
-                avaliable_hours[n][m] = date.strftime('%H:%M')
-        return avaliable_hours
+    return list

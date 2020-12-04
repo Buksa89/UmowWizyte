@@ -67,7 +67,7 @@ class Visit(models.Model):
     client = models.ForeignKey(Client, default ='', on_delete=models.CASCADE)
     name = models.CharField(max_length=60, blank=False, default='')
     start = models.DateTimeField(auto_now=False, auto_now_add=False)
-    stop = models.DateTimeField(auto_now=False, auto_now_add=False)
+    end = models.DateTimeField(auto_now=False, auto_now_add=False)
     is_available = models.BooleanField(default=True)
     is_confirmed = models.BooleanField(default=False)
     description = models.CharField(max_length=400, blank=True, default='')
@@ -78,21 +78,21 @@ class Visit(models.Model):
     def clean(self):
         errors = []
         self.start = timezone.make_aware(self.start, timezone.get_default_timezone())
-        self.stop = timezone.make_aware(self.stop, timezone.get_default_timezone())
+        self.end = timezone.make_aware(self.end, timezone.get_default_timezone())
         start_d = self.start.date()
-        stop_d = self.stop.date()
+        end_d = self.end.date()
 
-        if self.stop.date() != self.start.date():
+        if self.end.date() != self.start.date():
             current_visits = Visit.objects.filter(Q(user=self.user, client=self.client, start__year=start_d.year, start__month=start_d.month, start__day=start_d.day) |
-                                                  Q(user=self.user, client=self.client, stop__year=start_d.year, stop__month=start_d.month, stop__day=start_d.day) |
-                                                  Q(user=self.user, client=self.client, start__year=stop_d.year, start__month=stop_d.month, start__day=stop_d.day) |
-                                                  Q(user=self.user, client=self.client, stop__year=stop_d.year, stop__month=stop_d.month, stop__day=stop_d.day))
+                                                  Q(user=self.user, client=self.client, end__year=start_d.year, end__month=start_d.month, end__day=start_d.day) |
+                                                  Q(user=self.user, client=self.client, start__year=end_d.year, start__month=end_d.month, start__day=end_d.day) |
+                                                  Q(user=self.user, client=self.client, end__year=end_d.year, end__month=end_d.month, end__day=end_d.day))
         else:
             current_visits = Visit.objects.filter(Q(user=self.user, client=self.client, start__year=start_d.year, start__month=start_d.month, start__day=start_d.day) |
-                                                  Q(user=self.user, client=self.client, stop__year=start_d.year, stop__month=start_d.month, stop__day=start_d.day))
+                                                  Q(user=self.user, client=self.client, end__year=start_d.year, end__month=start_d.month, end__day=start_d.day))
 
         for visit in current_visits:
-            if visit.start <= self.start < visit.stop or visit.start < self.stop <= visit.stop:
+            if visit.start <= self.start < visit.end or visit.start < self.end <= visit.end:
                 raise ValidationError('Termin zajęty')
 
 

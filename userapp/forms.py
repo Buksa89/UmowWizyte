@@ -1,7 +1,9 @@
+from datetime import datetime, timedelta
 from django import forms
 from django.core.exceptions import NON_FIELD_ERRORS, ValidationError
 from random import choice
 from .models import Client, Service, Visit, WorkTime
+from clientapp.views import generate_hours_list
 
 
 def pin_generate():
@@ -10,22 +12,27 @@ def pin_generate():
     for i in range(0,4): pin += choice('0123456789')
     return(pin)
 
-def time_choices(hours=8):
-    #TODO: !!! Usun zera z wierszy 24, 27 aby wygenerowac godziny pracy.
-    # jednoczesnie zera powinny zostac dla duration przy tworzeniu usługi
-    """ Generating list of times from 0 to hours. Step = 15min"""
-    choices = []
-    for hour in range(0, hours):
-        hour = str(hour).rjust(2, '0')
-        hour += ':'
-        for minute in range(00,59,15):
-            minute = str(minute).rjust(2, '0')
-            choices.append([hour+minute+':00',hour+minute])
 
-    last = str(hours).rjust(2, '0') + ":00"
-    choices.append([last+':00',last])
-    choices=tuple(choices)
+def time_choices(hours=8, sec=False):
+    """ Generating list of times from 0 to hours. Step = 15min"""
+    start = datetime(1, 1, 1, 0, 0, 0)
+    end = start + timedelta(hours=hours)
+    list = generate_hours_list(start, end)
+
+    choices = []
+    for hour in list:
+        if sec == True: value = hour.strftime("%H:%M:%S")
+        else: value = hour.strftime("%H:%M")
+        label = hour.strftime("%H:%M")
+        choices.append([value,label])
+
+    if choices[-1][0] == '00:00:00':
+        choices[-1][1] = '24:00'
+
     return choices
+
+
+
 
 class only_digits (object):
     def __init__(self, message_type):
@@ -94,7 +101,7 @@ class AddServiceForm(forms.ModelForm):
         }
         widgets = {
             'name': forms.fields.TextInput(attrs={'placeholder': 'Nazwa',}),
-            'duration': forms.Select(choices=time_choices()),
+            'duration': forms.Select(choices=time_choices(8, True)),
             'is_active': forms.CheckboxInput()
             }
 
@@ -136,8 +143,8 @@ class WorkTimeForm(forms.ModelForm):
             'latest_visit': 'Terminy wizyt (za ile dni najpóźniej)',
         }
         widgets = {
-            'start_time': forms.Select(choices=time_choices(24)),
-            'end_time': forms.Select(choices=time_choices(24)),
+            'start_time': forms.Select(choices=time_choices(24, False)),
+            'end_time': forms.Select(choices=time_choices(24, False)),
             'monday': forms.CheckboxInput(),
             'tuesday': forms.CheckboxInput(),
             'wednesday': forms.CheckboxInput(),

@@ -9,14 +9,14 @@ class LoginTests(BaseTest):
         response = self.client.get(f'/{user}/')
 
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'clientapp/login.html')
+        self.assertTemplateUsed(response, 'client_login.html')
 
     def test_login_template_POST(self):
         user = self.create_user('active_1')
         response = self.client.post(f'/{user}/', data={})
 
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'clientapp/login.html')
+        self.assertTemplateUsed(response, 'client_login.html')
 
     def test_login_template_not_active(self):
         """ If user is not active, his app shouldnt be available for clients """
@@ -24,7 +24,7 @@ class LoginTests(BaseTest):
         response = self.client.get(f'/{user}/')
 
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'clientapp/login_not_active.html')
+        self.assertTemplateUsed(response, 'client_login_not_active.html')
 
 class DashboardTests(BaseTest):
     def test_dashboard_template_display(self):
@@ -33,4 +33,4 @@ class DashboardTests(BaseTest):
         self.authorize_client(client)
         response = self.client.get(f'/{user}/panel/')
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'clientapp/dashboard.html')
+        self.assertTemplateUsed(response, 'client_dashboard.html')

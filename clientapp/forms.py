@@ -36,12 +36,12 @@ class ClientChooseVisitForm(forms.Form):
 
 
 class AddVisit(forms.ModelForm):
-    def save(self, user, client, name, start, stop, is_available, is_confirmed):
+    def save(self, user, client, name, start, end, is_available, is_confirmed):
         self.instance.user = user
         self.instance.client = client
         self.instance.name = name
         self.instance.start = start
-        self.instance.stop = stop
+        self.instance.end = end
         self.instance.is_available = is_available
         self.instance.is_confirmed = is_confirmed
         return super().save()
