@@ -37,7 +37,7 @@ background:#333333;
 .dates-header ul {
   padding: 0;
   margin: 0;
-  background-color:#555555;
+  background-color:#ddd;
 }
 .dates-header ul li {
   background-color:#ddd;
@@ -48,7 +48,7 @@ background:#333333;
   padding: 5px 0;
 }
 .dates-header ul li.empty {
-  background-color:#555555;
+  background-color:#ddd;
 }
 
 .dates-header .border-date {
@@ -69,7 +69,7 @@ background:#333333;
 ul.schedule-content {
   margin: 0;
   padding: 0;
-  background-color:#444;
+  background-color:#ddd;
   color: #555;
 }
 
@@ -78,8 +78,10 @@ ul.schedule-content li {
   list-style-type: none;
   display: inline-block;
   width: 12.5%;
+  postion:relative;
   text-align: center;
   font-size:14px;
+  box-shadow: 0px -1px 0px 0px #d0d0d0;
 }
 
 ul.schedule-content li ul{
@@ -89,7 +91,6 @@ ul.schedule-content li ul{
 
 ul.schedule-content li ul.hours {
   background: #ddd;
-  position:relative;
 }
 
 ul.schedule-content li ul li {
@@ -101,6 +102,11 @@ ul.schedule-content li ul li {
 
 ul.schedule-content li ul.hours li {
   color: #777;
+}
+ul.schedule-content li ul.hours li span {
+  position:relative;
+  top:-18px;
+  background-color:#ddd;
 }
 
 ul.schedule-content li ul li.avaliable {
@@ -126,6 +132,7 @@ ul.schedule-content li ul a li.avaliable{
 ul.schedule-content li ul a li:hover {
   background-color:#82EB61;
   color:#ffffff;
+  position:relative;
 }
 
 

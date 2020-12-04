@@ -282,25 +282,25 @@ class ClientSchedule:
 
         html_code = self.display_header()
         html_code += self.display_dates_header()
-
         html_code += f'<ul class="schedule-content"><li><ul class="hours">'
         # Hours column
         hour = self.start_work_time
         work_hours = []
         while hour <= self.end_work_time:
             work_hours.append(hour)
-            html_code += f'<li>{hour.strftime("%H:%M")}</li>'
+            html_code += f'<li><span>{hour.strftime("%H:%M")}</span></li>'
             hour = (datetime.combine(date.today(), hour) + timedelta(minutes=15)).time()
         html_code += '</ul></li>'
 
         simple_duration = int(self.service.duration / timedelta(minutes=15))
         print(simple_duration)
+        html_code += '<style>ul.schedule-content li ul a li:hover {padding-bottom:'+str(simple_duration*33+10)+'px; margin-bottom:-'+str(simple_duration*33)+'px;}</style>'
 
         for day in self.day:
             if day.date() not in self.available_dates:
                 html_code += '<li><ul>'
                 for hour in work_hours:
-                    html_code += f'<li>{hour.strftime("%H:%M")}</li>'
+                    html_code += f'<li>&nbsp;</li>'
                 html_code += '</ul></li>'
             else:
                 html_code += '<li><ul>'
@@ -309,7 +309,7 @@ class ClientSchedule:
                 for i, hour in enumerate(work_hours):
                     li_class = ""
                     if not av_time[hour.strftime("%H:%M")]:
-                        html_code += f'<li>{hour.strftime("%H:%M")}</li>'
+                        html_code += f'<li>&nbsp;</li>'
                     else:
                         full_term = datetime.combine(day, hour)
                         flag = True
@@ -320,21 +320,13 @@ class ClientSchedule:
                             except: pass
                             flag = False
                         if flag:
-                            html_code += f'<a href="{self.get_term_url(full_term)}"><li class="avaliable">{hour.strftime("%H:%M")}</li></a>'
+                            html_code += f'<a href="{self.get_term_url(full_term)}"><li class="avaliable">&nbsp;</li></a>'
                         else:
-                            html_code += f'<li class="avaliable">{hour.strftime("%H:%M")}</li>'
+                            html_code += f'<li class="avaliable">&nbsp;</li>'
                     #html_code += f'<a href="{self.get_term_url(full_term)}"><li>{hour.strftime("%H:%M")}</li></a>'
                 html_code += '</ul></li>'
 
         html_code += f'</ul>'
-        #
-        # Pobranie godzin
-
-        """for n, hour in enumerate(work_hours):
-                    full_term = datetime.combine(day, hour)
-                    html_code += f'<li class="avaliable">{hour.strftime("%H:%M")}</li>'
-                html_code += '</ul></li>'
-        html_code += f'</ul>'"""
 
 
 
