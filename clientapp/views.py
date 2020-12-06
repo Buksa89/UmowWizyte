@@ -1,5 +1,5 @@
 from calendar import HTMLCalendar
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, time, timedelta
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
@@ -288,29 +288,33 @@ class ClientSchedule:
         return html_code
 
     def display_week(self):
-
         html_code = self.display_header()
         html_code += self.display_dates_header()
         html_code += f'<ul class="schedule-content"><li><ul class="hours">'
         # Hours column
         hour = self.start_work_time
         work_hours = []
+
         while hour <= self.end_work_time:
             work_hours.append(hour)
             html_code += f'<li><span>{hour.strftime("%H:%M")}</span></li>'
-            hour = (datetime.combine(date.today(), hour) + timedelta(minutes=15)).time()
-        html_code += '</ul></li>'
 
+            hour = (datetime.combine(date.today(), hour) + timedelta(minutes=15)).time()
+
+            #TODO problemy z godziną 24:00
+            if hour == time(0,0,0) : break;
+
+        html_code += '</ul></li>'
         simple_duration = int(self.service.duration / timedelta(minutes=15))
 
         for d, day in enumerate(self.day):
             if day.date() not in self.available_dates:
-                html_code += '<li><ul>'
+                html_code += f'<li><ul class=day-{d}>'
                 for hour in work_hours:
                     html_code += f'<li>&nbsp;</li>'
                 html_code += '</ul></li>'
             else:
-                html_code += '<li><ul>'
+                html_code += f'<li><ul class=day-{d}>'
 
                 av_time = self.get_available_hours_in_day(day.date())
                 for i, hour in enumerate(work_hours):

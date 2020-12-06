@@ -4,7 +4,7 @@ from django.test import TestCase
 from django.test import Client
 from django.utils import timezone
 from ..models import Client as ClientModel
-from ..models import Service
+from ..models import Service, Visit
 
 
 
@@ -41,26 +41,27 @@ class BaseTest(TestCase):
                 }
     work_time = {'regular': {'start_time': '8:00', 'end_time': '16:00', 'monday': True, 'tuesday': True, 'wednesday': True,
                              'thursday': True, 'friday': True, 'saturday': False, 'sunday': False, 'holidays': False,
-                             'earliest_visit': 0, 'latest_visit': 14, 'submit': 'set_work_time'
+                             'earliest_visit': 0, 'latest_visit': 14,
                              },
                  'early_bird': {'start_time': '0:00', 'end_time': '8:00', 'monday': True, 'tuesday': True,'wednesday': True,
                              'thursday': True, 'friday': True, 'saturday': False, 'sunday': False, 'holidays': False,
-                             'earliest_visit': 0, 'latest_visit': 14, 'submit': 'set_work_time'
+                             'earliest_visit': 0, 'latest_visit': 14,
                              },
                  'weekend_holidays_free': {'start_time': '8:00', 'end_time': '16:00', 'monday': True, 'tuesday': True, 'wednesday': True,
                                            'thursday': True, 'friday': True, 'saturday': False, 'sunday': False, 'holidays': False,
-                                           'earliest_visit': 0, 'latest_visit': 1000, 'submit': 'set_work_time'
+                                           'earliest_visit': 0, 'latest_visit': 1000,
                                            },
                  'middle_week_free_eb':{'start_time': '0:00', 'end_time': '8:00', 'monday': False, 'tuesday': False, 'wednesday': False,
                                         'thursday': False, 'friday': False, 'saturday': True, 'sunday': True, 'holidays': True,
-                                        'earliest_visit': 0, 'latest_visit': 1000, 'submit': 'set_work_time'
+                                        'earliest_visit': 0, 'latest_visit': 1000,
                                        }
                 }
-    visits = {'short_1': {'name': services['short_1']['name'], 'start': correct_datetime(datetime(2022, 1, 1, 12, 0)), 'end': correct_datetime(datetime(2022, 1, 1, 13, 0))},
-              'overlap_1': {'name': services['short_1']['name'], 'start': correct_datetime(datetime(2022, 1, 1, 11, 15)), 'end': correct_datetime(datetime(2022, 1, 1, 12, 15))},
-              'overlap_2': {'name': services['short_1']['name'], 'start': correct_datetime(datetime(2022, 1, 1, 12, 45)), 'end': correct_datetime(datetime(2022, 1, 1, 13, 45))},
-              'not_overlap_1': {'name': services['short_1']['name'], 'start': correct_datetime(datetime(2022, 1, 1, 11, 0)), 'end': correct_datetime(datetime(2022, 1, 1, 12, 0))},
-              'not_overlap_2': {'name': services['short_1']['name'], 'start': correct_datetime(datetime(2022, 1, 1, 13, 0)), 'end': correct_datetime(datetime(2022, 1, 1, 14, 0))},
+    visits = {'short_1': {'name': services['short_1']['name'], 'start': correct_datetime(datetime(2022, 10, 24, 12, 0)), 'end': correct_datetime(datetime(2022, 10, 24, 13, 0))},
+              'overlap_1': {'name': services['short_1']['name'], 'start': correct_datetime(datetime(2022, 10, 24, 11, 15)), 'end': correct_datetime(datetime(2022, 10, 24, 12, 15))},
+              'overlap_2': {'name': services['short_1']['name'], 'start': correct_datetime(datetime(2022, 10, 24, 12, 45)), 'end': correct_datetime(datetime(2022, 10, 24, 13, 45))},
+              'not_overlap_1': {'name': services['short_1']['name'], 'start': correct_datetime(datetime(2022, 10, 24, 11, 0)), 'end': correct_datetime(datetime(2022, 10, 24, 12, 0))},
+              'not_overlap_2': {'name': services['short_1']['name'], 'start': correct_datetime(datetime(2022, 10, 24, 13, 0)), 'end': correct_datetime(datetime(2022, 10, 24, 14, 0))},
+
               }
 
     weeks = {'with_holiday': {'week': 44, 'year': 2022},
@@ -97,6 +98,22 @@ class BaseTest(TestCase):
                                           pin=self.clients_full_data[client]['pin'],
                                           is_active=self.clients_full_data[client]['is_active'])
 
+    def work_time_save(self, worktime, data):
+        worktime.start_time = self.work_time[data]['start_time']
+        worktime.end_time = self.work_time[data]['end_time']
+        worktime.monday = self.work_time[data]['monday']
+        worktime.tuesday = self.work_time[data]['tuesday']
+        worktime.wednesday = self.work_time[data]['wednesday']
+        worktime.thursday = self.work_time[data]['thursday']
+        worktime.friday = self.work_time[data]['friday']
+        worktime.saturday = self.work_time[data]['saturday']
+        worktime.sunday = self.work_time[data]['sunday']
+        worktime.holidays = self.work_time[data]['holidays']
+        worktime.earliest_visit = self.work_time[data]['earliest_visit']
+        worktime.latest_visit = self.work_time[data]['latest_visit']
+        worktime.save()
+
+
     def authorize_client(self, client):
         session = self.client.session
         session['client_authorized'] = {'phone': client.phone_number, 'user':client.user.username}
@@ -108,4 +125,11 @@ class BaseTest(TestCase):
                                           duration=self.services[service]['duration'],
                                           is_active=self.services[service]['is_active'])
 
+    def create_visit(self, user, client, visit='short_1'):
+        return Visit.objects.create(user=user,
+                                    client = client,
+                                    name = self.visits[visit]['name'],
+                                    start = self.visits[visit]['start'],
+                                    end = self.visits[visit]['end'],
+                                    description = '')
 

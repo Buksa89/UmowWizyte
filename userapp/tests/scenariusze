@@ -74,21 +74,29 @@ Schedule:
 +        Czy miesiące/lata się prawidłowo wyświetlają                                                                    test_view           AddVisitTests       test_months_header
 +        Czy godziny się wyświetlają prawidłowo, zależnie od ustawień                                                    test_view           AddVisitTests       test_hours_display
 +        czy bazowy url podświetla dzień dzisiejszy                                                                      test_view           AddVisitTests       test_highlight_today
-+        Czy niedziele i święta są podświetlone                                                                          test_view           AddVisitTests       test_
-
-         dostepnosc dni
-        czy święta są dostępne/niedostępne - zależnie od ustawień
-        Czy dni są dostępne/niedostępne zależnie od ustawień
++        Czy niedziele i święta są podświetlone                                                                          test_view           AddVisitTests       test_test_highlight_sundays_and_holidays
++        Czy dni są dostępne/niedostępne zależnie od ustawień                                                            test_view           AddVisitTests       test_days_access
++         czy cudza wizyta wyswietla blad 404                                                                             test_view           AddVisitTests       test_other_users_services
 
         # wizyty
-        urle, podswietlanie wlasciwych godzin
++        czy wolne godziny generują prawidłowe urle                                                                      test_view           AddVisitTests       test_correct_url_to_visit_confirm
++        czy zarezerwowane wizyty blokują linki                                                                          test_view           AddVisitTests       test_booked_time_not_avaliable
 
 - confirm
+        czy zarezerwowana godzina wyswietla blad
+        czy cudza wizyta wyswietla blad 404
+        czy wyswietla sie data, godzina, czas trwania, nazwa wizyty
+
 
     Templates:
 +        czy url wskazuje właściwą templatkę                                                                             test_template       AddVisitTests       test_schedule_template_display
 +        czy url z rokiem i tygodniem wskazuje właściwą templatkę                                                        test_template       AddVisitTests       test_schedule_url_template_display
 - templatki confirm
+templatki post
+
+    Forms
+        instancja
+        walidacje
 
 
 
@@ -197,7 +205,7 @@ TODO: Potwierdzenie usunięcia klienta
     Settings:
 TODO: Sprawdzenie templatki dla każdego formularza
 TODO: Walidacja duplikatów usług
-#TODO: formularz godzin pracy nie przyjmuje godziny 24
+TODO: formularz godzin pracy nie przyjmuje godziny 24
 
 TODO: Potwierdzenie usuwania usługi
 TODO: Formularz wysyłania maila do mnie

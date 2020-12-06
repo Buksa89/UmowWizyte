@@ -210,6 +210,7 @@ class DashboardSettingsTests(BaseTest):
         for error_element in error_data:
             error_visit = {}
             error_visit['data'] = data.copy()
+            error_visit['data']['submit'] = 'set_work_time'
             error_visit['message'] = error_element['message']
             for field, value in error_element['data'].items():
                 error_visit['data'][field] = value

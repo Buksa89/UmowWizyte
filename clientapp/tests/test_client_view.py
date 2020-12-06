@@ -175,6 +175,90 @@ class AddVisitTest(BaseTest):
         self.assertContains(response, f'<li class="red"><div>6<br />Nd</div></li>')
 
 
+    def test_days_access(self):
+        user = self.create_user()
+        client = self.create_client(user)
+        service = self.create_service(user)
+        self.authorize_client(client)
+        date = self.weeks['with_holiday']
+        worktime = WorkTime.objects.get(user=user)
+        self.work_time_save(worktime,'weekend_holidays_free')
+        response = self.client.get(f"/{user}/nowa_wizyta/{service.id}/{date['year']}/{date['week']}/")
+        work_list = [True, False, True, True, True, False, False]
+        for day, work in enumerate(work_list):
+            if work:
+                self.assertContains(response, f'day-{day}><a')
+            else:
+                self.assertContains(response, f'day-{day}><li>&nbsp;')
+
+
+    def test_other_users_services(self):
+        user_1 = self.create_user('active_1')
+        user_2 = self.create_user('active_2')
+        client = self.create_client(user_1)
+        service = self.create_service(user_2)
+        self.authorize_client(client)
+        response = self.client.get(f"/{user_1}/nowa_wizyta/{service.id}/")
+
+        self.assertEqual(response.status_code, 404)
+
+
+    def test_correct_url_to_visit_confirm(self):
+        user = self.create_user()
+        client = self.create_client(user)
+        service = self.create_service(user)
+        self.authorize_client(client)
+        date = self.weeks['no_holiday']
+        worktime = WorkTime.objects.get(user=user)
+        self.work_time_save(worktime,'weekend_holidays_free')
+        response = self.client.get(f"/{user}/nowa_wizyta/{service.id}/{date['year']}/{date['week']}/")
+        work_list = [True, True, True, True, True, False, False]
+
+        days = []
+        days.append(datetime.fromisocalendar(date['year'], date['week'], 1))
+        for i in range(0, 6):
+            days.append(days[-1] + timedelta(days=1))
+
+        for day_nr, work in enumerate(work_list):
+            if work:
+                day = days[day_nr].day
+                month = days[day_nr].month
+                year = days[day_nr].year
+                hour = int(worktime.start_time.split(':')[0])
+                minute = int(worktime.start_time.split(':')[1])
+                self.assertContains(response, f'day-{day_nr}><a href="/{user}/nowa_wizyta/{service.id}/'
+                                              f'{year}/{month}/{day}/{hour}/{minute}"')
+
+
+
+
+    def test_booked_time_not_avaliable(self):
+        user = self.create_user()
+        client = self.create_client(user)
+        service = self.create_service(user)
+        visit = self.create_visit(user, client, 'short_1')
+        self.authorize_client(client)
+        date = self.weeks['no_holiday']
+        worktime = WorkTime.objects.get(user=user)
+        self.work_time_save(worktime,'weekend_holidays_free')
+        response = self.client.get(f"/{user}/nowa_wizyta/{service.id}/{date['year']}/{date['week']}/")
+
+        day = visit.start.day
+        month = visit.start.month
+        year = visit.start.year
+        not_avaliable_time = visit.start
+
+        while True:
+            if not_avaliable_time == visit.end: break;
+            hour = int(not_avaliable_time.strftime('%H'))
+            minute = int(not_avaliable_time.strftime('%M'))
+            self.assertNotContains(response, f'<a href="/{user}/nowa_wizyta/{service.id}/{year}/{month}/{day}/{hour}/{minute}"')
+            not_avaliable_time += timedelta(minutes=15)
+
+
+
+
+
 
 class LoginTests(BaseTest):
 
