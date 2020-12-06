@@ -199,13 +199,14 @@ class DashboardSettingsTests(BaseTest):
     def test_service_form_errors(self):
         user = self.create_user()
         self.authorize_user(user)
-        data = self.work_time
+        data = self.work_time['regular']
         error_visits = []
         error_data = [{'data':{'start_time': '10:00', 'end_time': '8:00', },'message':'Popraw godziny pracy'},
                       {'data':{'earliest_visit': 7, 'latest_visit': 2, },'message':'Popraw możliwość wyboru terminów'},
                       #TODO: Spolszczenie tego błędu
                       {'data':{'earliest_visit': -7, 'latest_visit': -2},'message':'Ensure this value is greater than or equal to 0.'}
                      ]
+
         for error_element in error_data:
             error_visit = {}
             error_visit['data'] = data.copy()

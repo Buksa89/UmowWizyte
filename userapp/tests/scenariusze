@@ -1,4 +1,4 @@
-Testy modelu nie sprawdzają długości wprowadzanych danych w formularza poza services
+Testy modelu klient, worktime nie sprawdzają długości wprowadzanych danych
 Test wizyt
 testy zatwierdzania wizyt
 test blokowania usługi
@@ -8,6 +8,15 @@ Bazowe
     Model
 +        Czy użytkownik tworzy się prawidłowo                                                                            test_models         UserTest        test_user_saving
 +        Czy z użytkownikiem jest tworzony model WorkTime                                                                test_models         UserTest        test_create_work_time_for_user
++        Czy model visit się zapisuje                                                                                   test_model           VisitTest        test_visit_saving
++        Czy model visit jest powiązany z userem i klientem                                                             test_model           VisitTest        test_visit_is_related_to_client_user
++        Czy visit bez jednego z wymaganych pól skutkuje błędem                                                         test_model           VisitTest        test_errors_missing_relate_fields
++        Czy visit bez jednego z wymaganych pól skutkuje błędem                                                         test_model           VisitTest        test_errors_missing_datetime_fields
++        Błędy walidacji                                                                                                test_model           VisitTest        test_validation_errors
++        Czy próba stworzenia wizyty pokrywającej się z inną dla jednego usera skutkuje błędem walidacji                test_model           VisitTest        test_visit_overlaps_error
++        Czy próba stworzenia wizyty stykającej się z inną                                                              test_model           VisitTest        test_visit_not_overlaps_error
++        Czy różni userzy mogą tworzyć wizyty pokrywające się                                                           test_model           VisitTest        test_visit_overlaps_for_different_users
+
 
 Klient
     Login:
@@ -56,18 +65,27 @@ Klient
 
 
 
--   Schedule:
-dodaj czas trwania usługi
- -        Views:
-  -
+Schedule:
 
- -        Templates:
-  -         czy url wskazuje właściwą templatkę
-            czy url z rokiem i tygodniem wskazuje właściwą templatkę
+    Views:
+        # terminarz:
+        Czy nawigacja prawidłowo się wyświetla i wskazuje właściwe urle
+        Czy lista dni się wyświetla
+        Czy miesiące/lata się prawidłowo wyświetlają
+        Czy godziny się wyświetlają prawidłowo, zależnie od ustawień
+        czy bazowy url podświetla dzień dzisiejszy
+        Czy niedziele i święta są podświetlone
 
- -        Forms
-  -
+        # dostepnosc dni
+        czy święta są dostępne/niedostępne - zależnie od ustawień
+        Czy dni są dostępne/niedostępne zależnie od ustawień
 
+        # wizyty
+        urle, podswietlanie wlasciwych godzin
+
+    Templates:
+        czy url wskazuje właściwą templatkę
+        czy url z rokiem i tygodniem wskazuje właściwą templatkę
 
 
 

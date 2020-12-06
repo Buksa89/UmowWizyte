@@ -78,8 +78,6 @@ class Visit(models.Model):
 
     def clean(self):
         errors = []
-        self.start = timezone.make_aware(self.start, timezone.get_default_timezone())
-        self.end = timezone.make_aware(self.end, timezone.get_default_timezone())
         start_d = self.start.date()
         end_d = self.end.date()
 

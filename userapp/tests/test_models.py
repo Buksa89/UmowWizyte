@@ -3,7 +3,7 @@ from django.core.exceptions import ValidationError
 from django.db.utils import IntegrityError
 from django.test import TestCase
 from unittest import skip
-from ..models import Client, Service, WorkTime
+from ..models import Client, Service, Visit, WorkTime
 from .base import BaseTest
 
 class ClientsTests(BaseTest):
@@ -198,6 +198,101 @@ class UserTests(BaseTest):
         user = User.objects.create_user(username=user['username'], password=user['password'])
         work_time = WorkTime.objects.get(user=user)
         self.assertTrue(work_time)
+
+class VisitTests(BaseTest):
+
+    def test_visit_saving(self):
+        user = self.create_user()
+        client = self.create_client(user)
+        visit = self.visits['short_1']
+        visit = Visit.objects.create(user=user, client=client, name=visit['name'], start=visit['start'], end=visit['end'])
+
+        self.assertEqual(visit, Visit.objects.first())
+
+
+    def test_visit_is_related_to_client_user(self):
+        user = self.create_user()
+        client = self.create_client(user)
+        visit = self.visits['short_1']
+        visit = Visit(name=visit['name'], start=visit['start'], end=visit['end'])
+        visit.user = user
+        visit.client = client
+        visit.save()
+
+        self.assertIn(visit, user.visit_set.all())
+        self.assertIn(visit, client.visit_set.all())
+
+    def test_errors_missing_relate_fields(self):
+        user = self.create_user()
+        client = self.create_client(user)
+        visit = self.visits['short_1']
+
+        visits = [Visit(user=user, client=client, name=visit['name'], start=visit['start']),
+                  Visit(user=user, client=client, name=visit['name'], end=visit['end']),]
+
+        for visit in visits:
+            with self.assertRaises(AttributeError):
+                visit.full_clean()
+
+    def test_errors_missing_datetime_fields(self):
+        user = self.create_user()
+        client = self.create_client(user)
+        visit = self.visits['short_1']
+
+        visits = [Visit(user=user, name=visit['name'], start=visit['start'], end=visit['end']),
+                  Visit(client=client, name=visit['name'], start=visit['start'], end=visit['end']),]
+
+        for visit in visits:
+            with self.assertRaises(ValueError):
+                visit.full_clean()
+
+    def test_validation_errors(self):
+        user = self.create_user()
+        client = self.create_client(user)
+        visit = self.visits['short_1']
+        visits = [Visit(user=user, client=client, start=visit['start'], end=visit['end']),
+                  Visit(user=user, name=self.LONG_STRING(61), client=client, start=visit['start'], end=visit['end'])]
+
+        for visit in visits:
+            with self.assertRaises(ValidationError):
+                visit.full_clean()
+
+    def test_visit_overlaps_error(self):
+        user = self.create_user()
+        client = self.create_client(user)
+        visit = self.visits['short_1']
+        overlap_visits = [self.visits['overlap_1'], self.visits['overlap_2']]
+
+        Visit.objects.create(user=user, client=client, name=visit['name'], start=visit['start'], end=visit['end'])
+        for visit in overlap_visits:
+            with self.assertRaises(ValidationError):
+                visit = Visit(user=user, client=client, name=visit['name'], start=visit['start'], end=visit['end'])
+                visit.full_clean()
+
+    def test_visit_not_overlaps_error(self):
+        user = self.create_user()
+        client = self.create_client(user)
+        visit = self.visits['short_1']
+        not_overlap_visits = [self.visits['not_overlap_1'], self.visits['not_overlap_2']]
+
+        Visit.objects.create(user=user, client=client, name=visit['name'], start=visit['start'], end=visit['end'])
+        for visit in not_overlap_visits:
+            #TODO: Jaki rodzaj testu tutaj?
+            visit = Visit(user=user, client=client, name=visit['name'], start=visit['start'], end=visit['end'])
+            visit.full_clean()
+
+    def test_visit_overlaps_for_different_users(self):
+        user_1 = self.create_user('active_1')
+        user_2 = self.create_user('active_2')
+        client_1 = self.create_client(user_1)
+        client_2 = self.create_client(user_2)
+        visit = self.visits['short_1']
+        Visit.objects.create(user=user_1, client=client_1, name=visit['name'], start=visit['start'], end=visit['end'])
+
+        # TODO: Jaki rodzaj testu tutaj?
+        visit = Visit(user=user_2, client=client_2, name=visit['name'], start=visit['start'], end=visit['end'])
+        visit.full_clean()
+
 
 class WorkTimeTests(BaseTest):
 

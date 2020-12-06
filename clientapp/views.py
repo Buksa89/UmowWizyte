@@ -160,8 +160,8 @@ class ClientAppConfirmVisit(View):
         client = get_object_or_404(Client, phone_number=request.session.get('client_authorized')['phone'], user=user)
         service = get_object_or_404(Service, id=service_id, user=user)
         name = service.name
-        start = datetime(year, month, day, hour, minute)
-        end = start + service.duration
+        start = timezone.make_aware(datetime(year, month, day, hour, minute), timezone.get_default_timezone())
+        end = timezone.make_aware(start + service.duration, timezone.get_default_timezone())
         is_available = True
         is_confirmed = False
 

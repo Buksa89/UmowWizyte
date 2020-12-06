@@ -1,7 +1,8 @@
-from datetime import timedelta
+from datetime import datetime, timedelta
 from django.contrib.auth.models import User
 from django.test import TestCase
 from django.test import Client
+from django.utils import timezone
 from ..models import Client as ClientModel
 from ..models import Service
 
@@ -9,6 +10,13 @@ from ..models import Service
 
 
 class BaseTest(TestCase):
+
+    def correct_datetime(start, duration=False):
+        if not duration:
+            return timezone.make_aware(start, timezone.get_default_timezone())
+
+    # (datetime.combine(date.today(), hour) + timedelta(minutes=15)).time()
+
     users = {'active_1': {'username':'Rzesiscie1','password': 'RzesPass12', 'is_active':True},
              'active_2': {'username':'Brodacz','password': 'BarPass12', 'is_active':True},
              'not_active': {'username':'LeniwyLeszek','password': 'Nieaktywny', 'is_active':False},
@@ -31,10 +39,30 @@ class BaseTest(TestCase):
                 'long_2': {'name': 'Lifting', 'duration': timedelta(hours=8), 'is_active': True,},
                 'not_active': {'name': 'Pogaduchy', 'duration': timedelta(hours=1), 'is_active': False,},
                 }
-    work_time = {'start_time': '8:00', 'end_time': '16:00', 'monday': True, 'tuesday': True, 'wednesday': True,
-                 'thursday': True, 'friday': True, 'saturday': False, 'sunday': False, 'holidays': False,
-                 'earliest_visit': 0, 'latest_visit': 14, 'submit': 'set_work_time'
-                 }
+    work_time = {'regular': {'start_time': '8:00', 'end_time': '16:00', 'monday': True, 'tuesday': True, 'wednesday': True,
+                             'thursday': True, 'friday': True, 'saturday': False, 'sunday': False, 'holidays': False,
+                             'earliest_visit': 0, 'latest_visit': 14, 'submit': 'set_work_time'
+                             },
+                 'early_bird': {'start_time': '0:00', 'end_time': '8:00', 'monday': True, 'tuesday': True,'wednesday': True,
+                             'thursday': True, 'friday': True, 'saturday': False, 'sunday': False, 'holidays': False,
+                             'earliest_visit': 0, 'latest_visit': 14, 'submit': 'set_work_time'
+                             },
+                 'weekend_holidays_free': {'start_time': '8:00', 'end_time': '16:00', 'monday': True, 'tuesday': True, 'wednesday': True,
+                                           'thursday': True, 'friday': True, 'saturday': False, 'sunday': False, 'holidays': False,
+                                           'earliest_visit': 0, 'latest_visit': 1000, 'submit': 'set_work_time'
+                                           },
+                 'middle_week_free_eb':{'start_time': '0:00', 'end_time': '8:00', 'monday': False, 'tuesday': False, 'wednesday': False,
+                                        'thursday': False, 'friday': False, 'saturday': True, 'sunday': True, 'holidays': True,
+                                        'earliest_visit': 0, 'latest_visit': 1000, 'submit': 'set_work_time'
+                                       }
+                }
+    visits = {'short_1': {'name': services['short_1']['name'], 'start': correct_datetime(datetime(2022, 1, 1, 12, 0)), 'end': correct_datetime(datetime(2022, 1, 1, 13, 0))},
+              'overlap_1': {'name': services['short_1']['name'], 'start': correct_datetime(datetime(2022, 1, 1, 11, 15)), 'end': correct_datetime(datetime(2022, 1, 1, 12, 15))},
+              'overlap_2': {'name': services['short_1']['name'], 'start': correct_datetime(datetime(2022, 1, 1, 12, 45)), 'end': correct_datetime(datetime(2022, 1, 1, 13, 45))},
+              'not_overlap_1': {'name': services['short_1']['name'], 'start': correct_datetime(datetime(2022, 1, 1, 11, 0)), 'end': correct_datetime(datetime(2022, 1, 1, 12, 0))},
+              'not_overlap_2': {'name': services['short_1']['name'], 'start': correct_datetime(datetime(2022, 1, 1, 13, 0)), 'end': correct_datetime(datetime(2022, 1, 1, 14, 0))},
+
+              }
 
     ANY_PHONE = 999999999
     ANY_PIN = 9999
@@ -76,6 +104,5 @@ class BaseTest(TestCase):
                                           name=self.services[service]['name'],
                                           duration=self.services[service]['duration'],
                                           is_active=self.services[service]['is_active'])
-
 
 
