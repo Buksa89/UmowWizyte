@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from django.contrib.auth.models import User
 from django.test import TestCase
 from django.test import Client
@@ -61,7 +61,10 @@ class BaseTest(TestCase):
               'overlap_2': {'name': services['short_1']['name'], 'start': correct_datetime(datetime(2022, 1, 1, 12, 45)), 'end': correct_datetime(datetime(2022, 1, 1, 13, 45))},
               'not_overlap_1': {'name': services['short_1']['name'], 'start': correct_datetime(datetime(2022, 1, 1, 11, 0)), 'end': correct_datetime(datetime(2022, 1, 1, 12, 0))},
               'not_overlap_2': {'name': services['short_1']['name'], 'start': correct_datetime(datetime(2022, 1, 1, 13, 0)), 'end': correct_datetime(datetime(2022, 1, 1, 14, 0))},
+              }
 
+    weeks = {'with_holiday': {'week': 44, 'year': 2022},
+             'no_holiday': {'week': 43, 'year': 2022},
               }
 
     ANY_PHONE = 999999999

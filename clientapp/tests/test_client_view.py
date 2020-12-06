@@ -1,7 +1,10 @@
+from datetime import date, datetime, timedelta
 from django.test import TestCase
 from unittest import skip
 from ..forms import ClientLoginForm
+from userapp.models import WorkTime
 from userapp.tests.base import BaseTest
+
 
 class DashboardTests(BaseTest):
 
@@ -94,6 +97,82 @@ class DashboardTests(BaseTest):
         response = self.client.get(f'/{user}/panel/')
 
         self.assertContains(response, 'Nie jesteś umówiony na żadną wizytę')
+
+
+class AddVisitTest(BaseTest):
+    def test_schedule_navigation_header(self):
+        user = self.create_user()
+        client = self.create_client(user)
+        service = self.create_service(user)
+        date = self.weeks['no_holiday']
+        self.authorize_client(client)
+        response = self.client.get(f"/{user}/nowa_wizyta/{service.id}/{date['year']}/{date['week']}/")
+
+        self.assertContains(response, f'<li>{service.name}</li>')
+        self.assertContains(response, f'<a href="/{user}/nowa_wizyta/{service.id}/{date["year"]}/{date["week"]-1}/"><li class="prev">&#10094;</li></a>')
+        self.assertContains(response, f'<a href="/{user}/nowa_wizyta/{service.id}/{date["year"]}/{date["week"]+1}/"><li class="next">&#10095;</li><')
+
+    def test_days_header(self):
+        user = self.create_user()
+        client = self.create_client(user)
+        service = self.create_service(user)
+        date = self.weeks['no_holiday']
+        self.authorize_client(client)
+        response = self.client.get(f"/{user}/nowa_wizyta/{service.id}/{date['year']}/{date['week']}/")
+        days = list(range(24,31))
+        day_names = ['Pn','Wt','Śr','Cz','Pt','So','Nd']
+
+        for day, name in zip(days, day_names):
+            self.assertContains(response, f'{day}<br />{name}')
+
+    def test_months_header(self):
+        user = self.create_user()
+        client = self.create_client(user)
+        service = self.create_service(user)
+        date = self.weeks['with_holiday']
+        self.authorize_client(client)
+        response = self.client.get(f"/{user}/nowa_wizyta/{service.id}/{date['year']}/{date['week']}/")
+
+        self.assertContains(response, f'<li style="width:12.5%" class="">2022<br />Październik</li>'
+                                      f'<li style="width:75.0%" class="border-date">2022<br />Listopad</li></ul><ul>')
+
+    def test_hours_display(self):
+        user = self.create_user()
+        client = self.create_client(user)
+        service = self.create_service(user)
+        self.authorize_client(client)
+        response = self.client.get(f"/{user}/nowa_wizyta/{service.id}/")
+        worktime = WorkTime.objects.get(user=user)
+
+        hour = worktime.start_time
+        work_hours = []
+        while hour <= worktime.end_time:
+            work_hours.append(hour.strftime("%H:%M"))
+            hour = (datetime.combine(date.today(), hour) + timedelta(minutes=15)).time()
+        for hour in work_hours:
+            self.assertContains(response, f'<span>{hour}</span>')
+
+
+    def test_highlight_today(self):
+        user = self.create_user()
+        client = self.create_client(user)
+        service = self.create_service(user)
+        self.authorize_client(client)
+        response = self.client.get(f"/{user}/nowa_wizyta/{service.id}/")
+
+        self.assertContains(response, f'today')
+
+
+    def test_highlight_sundays_and_holidays(self):
+        user = self.create_user()
+        client = self.create_client(user)
+        service = self.create_service(user)
+        date = self.weeks['with_holiday']
+        self.authorize_client(client)
+        response = self.client.get(f"/{user}/nowa_wizyta/{service.id}/{date['year']}/{date['week']}/")
+
+        self.assertContains(response, f'<li class="red border-date"><div>1<br />Wt</div></li>')
+        self.assertContains(response, f'<li class="red"><div>6<br />Nd</div></li>')
 
 
 

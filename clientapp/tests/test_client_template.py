@@ -34,3 +34,26 @@ class DashboardTests(BaseTest):
         response = self.client.get(f'/{user}/panel/')
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'client_dashboard.html')
+
+
+class AddVisitTests(BaseTest):
+
+    def test_schedule_template_display(self):
+        user = self.create_user()
+        client = self.create_client(user)
+        service = self.create_service(user)
+        self.authorize_client(client)
+        response = self.client.get(f'/{user}/nowa_wizyta/{service.id}/')
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'client_new_visit.html')
+
+
+    def test_schedule_url_template_display(self):
+        user = self.create_user()
+        client = self.create_client(user)
+        service = self.create_service(user)
+        date = self.weeks['no_holiday']
+        self.authorize_client(client)
+        response = self.client.get(f"/{user}/nowa_wizyta/{service.id}/{date['year']}/{date['week']}/")
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'client_new_visit.html')

@@ -68,24 +68,27 @@ Klient
 Schedule:
 
     Views:
-        # terminarz:
-        Czy nawigacja prawidłowo się wyświetla i wskazuje właściwe urle
-        Czy lista dni się wyświetla
-        Czy miesiące/lata się prawidłowo wyświetlają
-        Czy godziny się wyświetlają prawidłowo, zależnie od ustawień
-        czy bazowy url podświetla dzień dzisiejszy
-        Czy niedziele i święta są podświetlone
+         terminarz:
++        Czy nawigacja prawidłowo się wyświetla i wskazuje właściwe urle                                                 test_view           AddVisitTests       test_schedule_navigation_header
++        Czy lista dni się wyświetla                                                                                     test_view           AddVisitTests       test_days_header
++        Czy miesiące/lata się prawidłowo wyświetlają                                                                    test_view           AddVisitTests       test_months_header
++        Czy godziny się wyświetlają prawidłowo, zależnie od ustawień                                                    test_view           AddVisitTests       test_hours_display
++        czy bazowy url podświetla dzień dzisiejszy                                                                      test_view           AddVisitTests       test_highlight_today
++        Czy niedziele i święta są podświetlone                                                                          test_view           AddVisitTests       test_
 
-        # dostepnosc dni
+         dostepnosc dni
         czy święta są dostępne/niedostępne - zależnie od ustawień
         Czy dni są dostępne/niedostępne zależnie od ustawień
 
         # wizyty
         urle, podswietlanie wlasciwych godzin
 
+- confirm
+
     Templates:
-        czy url wskazuje właściwą templatkę
-        czy url z rokiem i tygodniem wskazuje właściwą templatkę
++        czy url wskazuje właściwą templatkę                                                                             test_template       AddVisitTests       test_schedule_template_display
++        czy url z rokiem i tygodniem wskazuje właściwą templatkę                                                        test_template       AddVisitTests       test_schedule_url_template_display
+- templatki confirm
 
 
 

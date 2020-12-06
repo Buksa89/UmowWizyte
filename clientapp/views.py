@@ -107,7 +107,6 @@ class ClientAppDashboard(View):
 
 
 
-#TODO: !!! Testy widoku
 class ClientAppNewVisit(View):
     template_name = ''
     section = ''
@@ -161,7 +160,7 @@ class ClientAppConfirmVisit(View):
         service = get_object_or_404(Service, id=service_id, user=user)
         name = service.name
         start = timezone.make_aware(datetime(year, month, day, hour, minute), timezone.get_default_timezone())
-        end = timezone.make_aware(start + service.duration, timezone.get_default_timezone())
+        end = start + service.duration
         is_available = True
         is_confirmed = False
 
