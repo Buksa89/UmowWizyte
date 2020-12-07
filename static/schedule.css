@@ -4,8 +4,7 @@ body {font-family: Verdana, sans-serif;}
 div.header {
   padding: 0px;
   background: #555555;
-  text-align: center;
-  height: 65px;
+  text-align: center;z
 }
 
 .header ul {
@@ -19,23 +18,16 @@ div.header {
   font-size: 20px;
   text-transform: uppercase;
   letter-spacing: 3px;
-  height: 63px;
 }
 
 .header .prev {
-  padding: 0;
+  padding: 19px 25px 18px 25px;
   float: left;
-  height: 60px;
-  width:70px;
-  line-height: 55px;
 }
 
 .header .next {
-  padding: 0;
+  padding: 19px 25px 18px 25px;
   float: right;
-  height: 60px;
-  width:70px;
-  line-height: 55px;
 }
 
 .header a li:hover {

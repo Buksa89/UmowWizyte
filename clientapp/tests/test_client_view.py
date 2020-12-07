@@ -134,7 +134,7 @@ class AddVisitTest(BaseTest):
         self.authorize_client(client)
         response = self.client.get(f"/{user}/nowa_wizyta/{service.id}/{date['year']}/{date['week']}/")
 
-        self.assertContains(response, f'<li style="width:12.5%" class="">2022<br />Październik</li>'
+        self.assertContains(response, f'<li style="width:12.5%">2022<br />Październik</li>'
                                       f'<li style="width:75.0%" class="border-date">2022<br />Listopad</li></ul><ul>')
 
     def test_hours_display(self):

@@ -51,14 +51,17 @@ class Schedule:
         self.navigation = None
         self.username = username
 
-        """self.client = client
+
+
+        self.work_time = work_time
         self.start_work_time = work_time.start_time
         self.end_work_time = work_time.end_time
-        self.work_time = work_time
+        self.available_dates = available_dates
+        self.client = client
         self.user = get_object_or_404(User, username__iexact=username)
+        """
         self.service = get_object_or_404(Service, id=service_id, user=self.user)
         self.username = username
-        self.available_dates = available_dates
         self.year = year
         self.week = week
         self.day = """
@@ -66,6 +69,10 @@ class Schedule:
     def display(self, year, week, service, work_time, available_dates, client):
         self.title = service.name
         self.service = service
+
+        #ponizszy do wyrzucenia
+        self.days = self.get_dates_from_week(year, week)
+
         days = self.get_dates_from_week(year, week)
         prev_date = days[0] - timedelta(days=7)
         next_date = days[0] + timedelta(days=7)
@@ -75,6 +82,7 @@ class Schedule:
         html_code = ''
         html_code += self.title_header()
         html_code += self.week_header(days)
+        html_code += self.schedule_content()
 
         return(html_code)
 
@@ -189,7 +197,10 @@ class Schedule:
 
 
 
-
+    def schedule_content(self):
+        html_code = f'<ul class="schedule-content"><li>' \
+                    f'<ul class="hours">'
+        return self.display_week()
 
 
 
@@ -198,9 +209,7 @@ class Schedule:
 
 
     def display_week(self):
-        html_code = self.display_header()
-        html_code += self.display_dates_header()
-        html_code += f'<ul class="schedule-content"><li><ul class="hours">'
+        html_code = f'<ul class="schedule-content"><li><ul class="hours">'
         # Hours column
         hour = self.start_work_time
         work_hours = []
@@ -217,7 +226,7 @@ class Schedule:
         html_code += '</ul></li>'
         simple_duration = int(self.service.duration / timedelta(minutes=15))
 
-        for d, day in enumerate(self.day):
+        for d, day in enumerate(self.days):
             if day.date() not in self.available_dates:
                 html_code += f'<li><ul class=day-{d}>'
                 for hour in work_hours:
