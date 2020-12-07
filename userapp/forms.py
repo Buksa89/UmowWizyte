@@ -3,7 +3,7 @@ from django import forms
 from django.core.exceptions import NON_FIELD_ERRORS, ValidationError
 from random import choice
 from .models import Client, Service, Visit, WorkTime
-from clientapp.views import generate_hours_list
+from userapp.base import generate_hours_list
 
 
 def pin_generate():

@@ -90,6 +90,7 @@ class DashboardTests(BaseTest):
 
         self.assertContains(response, 'Nie jesteś umówiony na żadną wizytę')
 
+    @skip#TODO: Do zrobienia
     def test_visits_lists(self):
         user = self.create_user()
         client = self.create_client(user)
@@ -254,10 +255,6 @@ class AddVisitTest(BaseTest):
             minute = int(not_avaliable_time.strftime('%M'))
             self.assertNotContains(response, f'<a href="/{user}/nowa_wizyta/{service.id}/{year}/{month}/{day}/{hour}/{minute}"')
             not_avaliable_time += timedelta(minutes=15)
-
-
-
-
 
 
 class LoginTests(BaseTest):

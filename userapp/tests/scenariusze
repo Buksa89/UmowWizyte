@@ -44,6 +44,8 @@ Klient
 
 
 Klient
+#TODO: potwierdzenie odwołania wizyty
+
     Dashboard
         Views
 +            Czy klient widzi formularz                                                                                  test_view           DashboardTests      test_form_display
@@ -57,6 +59,12 @@ Klient
             czy lista wizyt się prawidłowo wyświetla                                                                    test_view           DashboardTests      test_visits_lists
             czy klient nie widzi wizyt innych klientów                                                                  test_view           DashboardTests      test_cant_see_other_clients_visit
             Czy klient nie może odwołać cudzej wizyty                                                                   test_view           DashboardTests      test_cant_cancel_other_clients_visit
+            Czy wizyta znika po odwołaniu jeśli była niepotwierdzona
+            Czy klient widzi ze jest potwierdzona
+            Czy wizyta znika po odwolaniu jesli byla potwierdzona
+            Czy zostaje guzik do ponownego odwolania
+            czy mozna odwolac ponownie przez url (404)
+
         Templates
 +            Czy templatka jest prawidłowa                                                                               test_template      DashboardTests      test_dashboard_template_display
         Forms
@@ -102,6 +110,9 @@ templatki post
 
 
 -  Settings:
+#TODO: zmiana maila
+TODO: zmiana pinu
+
  -        Views:
   -
 
@@ -136,6 +147,11 @@ User
 +            Czy formularz prawidłowo waliduje błędnie wprowadzone dane                                                 test_form          LoginTests          test_incorrect_data_errors_display
 
 
+
+#TODO: Potwierdzanie wizyt
+TODO: Dodawanie wizyty
+#TODO: dzisiejszy terminarz
+
 -    Dashboard:
  -        Views:
   -           Czy wyświetla się menu
@@ -160,7 +176,7 @@ User
 
     Clients:
 TODO: Walidacja unique
-
+TODO: Blokowanie klienta
 TODO: Edycja klienta
 TODO: Potwierdzenie usunięcia klienta
 
@@ -203,6 +219,7 @@ TODO: Potwierdzenie usunięcia klienta
 
 
     Settings:
+    #TODO: Blokowanie wizyt
 TODO: Sprawdzenie templatki dla każdego formularza
 TODO: Walidacja duplikatów usług
 TODO: formularz godzin pracy nie przyjmuje godziny 24
@@ -221,6 +238,14 @@ TODO: Zmiana hasła
                 # services remove
 +                Url usuwania usług                                                                                      test_view           DashboardSettingsTests      test_user_remove_service
 +                czy inni użytkownicy nie mogą usunąć moich usług (404)                                                  test_view           DashboardSettingsTests      test_user_cannot_remove_others_services
+                #blokowanie
+-              Czy wyswietla sie przycisk blokowania
+-              Czy dobrze przekierowuje
+-              Czy zmienia nazwe
+-              Czy odblokowuje
+-              Czy mozna manualnie zablokowac cudza usluge
+
+
 
                 # work_time
 +                Czy wyświetla się formularz ustawiania czasu pracy                                                      test_view           DashboardSettingsTests      test_work_time_form_display
@@ -255,6 +280,7 @@ TODO: Zmiana hasła
 +             Czy model service jest powiązany z userem                                                               test_model              ServiceTests                test_service_is_related_to_user
 +             Czy wprowadzenie dwóch usług o tej samej nazwie skutkuje błędem walidacji                               test_model              ServiceTests                test_errors_duplicate_service_name
 +             Czy dwóch różnych userów może wprowadzić usługe o tej samej nazwie                                      test_model              ServiceTests                test_duplicate_services_for_different_users
+
                 # Usuwanie
 +             Czy generuje się prawidłowy adres url do usuwania usługi                                                test_model              ServiceTests                test_get_remove_url
 +             Czy usługa się usuwa                                                                                    test_model              ServiceTests                test_service_remove

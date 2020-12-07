@@ -5,6 +5,7 @@ div.header {
   padding: 0px;
   background: #555555;
   text-align: center;
+  height: 65px;
 }
 
 .header ul {
@@ -18,16 +19,23 @@ div.header {
   font-size: 20px;
   text-transform: uppercase;
   letter-spacing: 3px;
+  height: 63px;
 }
 
 .header .prev {
-  padding: 19px 25px 18px 25px;
+  padding: 0;
   float: left;
+  height: 60px;
+  width:70px;
+  line-height: 55px;
 }
 
 .header .next {
-  padding: 19px 25px 18px 25px;
+  padding: 0;
   float: right;
+  height: 60px;
+  width:70px;
+  line-height: 55px;
 }
 
 .header a li:hover {

@@ -26,12 +26,12 @@ from .models import Client, Service, Visit, WorkTime
 
 class Dashboard(CreateView):
 
-    """ In Dashboard User can see all not-confirmed wisit and confirm or reject them
-    Also he can see schedule for today and tomorrow"""
+    """ In Dashboard User can see all not-confirmed wisit, confirm or reject them
+    Also he can see today schedule and navigate to previous or next day schedule".
+    In this view is form to add new visit by user."""
 
     template_name = 'dashboard.html'
     section = 'dashboard'
-    #TODO: Wyświetlanie dwóch najbliższych dni
     schedule = ''
 
     @method_decorator(login_required)
@@ -54,6 +54,7 @@ class Dashboard(CreateView):
                                 'description':visit.description, 'reject_url':reject_url, 'confirm_url':confirm_url})
 
         return render(request, self.template_name, {'section':self.section, 'visits':visits_list, 'schedule':self.schedule})
+
 
 
 class DashboardVisitReject(CreateView):
@@ -293,198 +294,3 @@ def login_screen(request):
 def welcome_screen(request):
     users = User.objects.filter(~Q(username='admin'))
     return render(request, 'welcome.html', {'users':users})
-
-
-""" Funkcje pomocnicze """
-
-
-
-
-
-
-
-class Calendar(HTMLCalendar):
-    """ Class generate html calendar """
-    def __init__(self, year=None, month=None, work_time=None):
-        self.year = year
-        self.month = month
-        self.work_time = work_time
-        super(Calendar, self).__init__()
-
-    def formatmonthname(self, theyear, themonth):
-        s = f'<li>{self.get_month_name(themonth)}<br /><span class="year">{theyear}</span></li>'
-        return s
-
-    def formatday(self, day):
-        if day != 0:
-            span_class = ''
-            li_class = ''
-            if is_holiday(datetime(self.year, self.month, day).date()): span_class = ' class="red"'
-            elif datetime.today().date() == datetime(self.year, self.month, day).date(): span_class = ' class="active"'
-            if is_free_day(datetime(self.year, self.month, day), self.work_time): li_class = ' class="dark"'
-            day_li = f'<li{li_class}>'
-            day_li += f'<span{span_class}>{day}</span>'
-            day_li += '</li>'
-            return day_li
-        return '<li></li>'
-
-    def formatweekheader(self):
-        s = ''.join(self.formatweekday(i) for i in self.iterweekdays())
-        s = ''.join(f'<li>{self.get_day_name(i+1)}</li>' for i in self.iterweekdays())
-        return s
-
-    def formatweek(self, theweek):
-        week = ''
-        for d, weekday in theweek:
-            week += self.formatday(d)
-        return f'<ul class="days"> {week} </ul>'
-
-    def formatmonth(self):
-        cal = f'<div class="month"><ul>{self.formatmonthname(self.year, self.month)}\n</ul></div>'
-        cal += f'<ul class="weekdays">{self.formatweekheader()}\n</ul>'
-        for week in self.monthdays2calendar(self.year, self.month):
-            cal += f'{self.formatweek(week)}\n</ul>'
-        return cal
-
-    # Funkcje pomocnicze:
-
-    def get_month_name(self, month):
-        """ Method  return polish name of month """
-        months = ['Styczeń', 'Luty', 'Marzec', 'Kwiecień', 'Maj', 'Czerwiec', 'Lipiec', 'Sierpień', 'Wrzesień',
-                  'Październik', 'Listopad', 'Grudzień']
-        return (months[month - 1])
-
-    def get_day_name(self, day):
-        """ Method return name day of week from day number"""
-        days = ('Pn', 'Wt', 'Śr', 'Cz', 'Pt', 'So', 'Nd')
-        return(days[day-1])
-
-
-class ScheduleCalendar(Calendar):
-    """ Class generate calendar for Schedule section """
-
-    def formatday(self, day):
-        if day != 0:
-            span_class = ''
-            li_class = ''
-            if is_holiday(datetime(self.year, self.month, day).date()): span_class = ' class="red"'
-            elif datetime.today().date() == datetime(self.year, self.month, day).date(): span_class = ' class="active"'
-            if is_free_day(datetime(self.year, self.month, day), self.work_time): li_class = ' class="dark"'
-            day_li = f'<a href="{self.get_day_url(day)}"><li{li_class}>'
-            day_li += f'<span{span_class}>{day}</span>'
-            day_li += '</li></a>'
-            return day_li
-        return '<li></li>'
-
-    def formatmonth(self):
-        cal = f'<div class="month"><ul><a href="{self.get_month_url("prev")}"><li class="prev">&#10094;</li></a>' \
-              f'<a href="{self.get_month_url("next")}"><li class="next">&#10095;</li></a>' \
-              f'{self.formatmonthname(self.year, self.month)}\n</ul></div>'
-        cal += f'<ul class="weekdays">{self.formatweekheader()}\n</ul>'
-        for week in self.monthdays2calendar(self.year, self.month):
-            cal += f'{self.formatweek(week)}\n</ul>'
-        return cal
-
-    # Funkcje pomocnicze:
-
-    def get_month_url(self, direction):
-        """ Method return link for next/previous month calendar """
-        month = self.month
-        year = self.year
-        if direction == "next":
-            if month != 12: month += 1
-            else:
-                year += 1
-                month = 1
-        if direction == 'prev':
-            if month != 1: month -= 1
-            else:
-                year -= 1
-                month = 12
-        return reverse('dashboard_schedule', args=[year, month])
-
-    def get_day_url(self, day):
-        """ Method return link for date schedule """
-        return reverse('dashboard_schedule', args=[self.year, self.month, day])
-
-
-class ClientCalendar(Calendar):
-    """ Class generate calendar for choose visit by clients """
-
-    def __init__(self, username, service_id, service_name, visits, year, month):
-        self.service_name = service_name
-        self.username = username
-        self.service_id = service_id
-        self.visits = visits
-        self.year = year
-        self.month = month
-        super(Calendar, self).__init__()
-
-    def formatmonthname(self, theyear, themonth):
-
-        s = f'<li>{self.service_name}<br /><span class="year">{self.get_month_name(themonth)} {theyear}</span></li>'
-        return s
-
-    def formatday(self, day):
-        if day != 0:
-            span_class = ''
-            li_class = ''
-            href_open = ''
-            href_close = ''
-            if is_holiday(datetime(self.year, self.month, day).date()): span_class = ' class="red"'
-            elif datetime.today().date() == datetime(self.year, self.month, day).date(): span_class = ' class="active"'
-            is_available_day = self.is_available_day(datetime(self.year, self.month, day).date(), self.visits)
-            if is_available_day:
-                href_open = f'<a href="{self.get_day_url(day)}">'
-                href_close = '</a>'
-                li_class = ' class="available"'
-            if not is_available_day: li_class = ' class="dark"'
-            day_li = f'{href_open}<li{li_class}>'
-            day_li += f'<span{span_class}>{day}</span>'
-            day_li += f'</li>{href_close}'
-            return day_li
-        return '<li></li>'
-
-    def formatmonth(self):
-
-        cal = f'<div class="month"><ul>'
-        #TODO: Dodaj ograniczenie kalendarza, kiedy już dalej nie ma wolnych terminów
-        #TODO: Zamiast wczytywać wszystkie wolne terminy, można wczytywać tylko te z wyświetlonego miesiąca
-        if True:
-            cal += f'<a href="{self.get_month_url("prev")}"><li class="prev">&#10094;</li></a>'
-        if True:
-            cal += f'<a href="{self.get_month_url("next")}"><li class="next">&#10095;</li></a>'
-        cal += f'{self.formatmonthname(self.year, self.month)}\n</ul></div>'
-        cal += f'<ul class="weekdays">{self.formatweekheader()}\n</ul>'
-        for week in self.monthdays2calendar(self.year, self.month):
-            cal += f'{self.formatweek(week)}\n</ul>'
-        return cal
-
-    # Funkcje pomocnicze:
-
-    def get_month_url(self, direction):
-        """ Method return link for next/previous month calendar """
-        month = self.month
-        year = self.year
-        if direction == "next":
-            if month != 12: month += 1
-            else:
-                year += 1
-                month = 1
-        if direction == 'prev':
-            if month != 1: month -= 1
-            else:
-                year -= 1
-                month = 12
-        return reverse('client_app_new_visit_1', args=[self.username, self.service_id, year, month])
-
-
-    def is_available_day(self, date, visit):
-        if date in visit: return True
-        else: return False
-
-    def get_day_url(self, day):
-        """ Method return link for choose visit by clients """
-        return reverse('client_app_new_visit_1', args=[self.username, self.service_id, self.year, self.month, day])
-
-
