@@ -1,8 +1,10 @@
 {% extends "base.html" %}
 
-{% block title %}Panel | Klienci{% endblock %}
+{% block title %}Klienci{% endblock %}
 
 {% block content %}
+
+<div id="content">
     <p><a href="{% url 'dashboard_clients_add' %}" class="button">Dodaj klienta</a></p>
     {% if clients %}
     <table>
@@ -32,4 +34,5 @@
     {% else %}
         <h3>"Nie masz jeszcze żadnych klientów"</h3>
     {% endif %}
+</div>
 {% endblock %}

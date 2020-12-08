@@ -1,40 +1,14 @@
 from datetime import datetime, timedelta
 from django import forms
+from django.contrib.auth.models import User
 from django.core.exceptions import NON_FIELD_ERRORS, ValidationError
-from random import choice
+from django.shortcuts import get_object_or_404
 from .models import Client, Service, Visit, WorkTime
-from userapp.base import generate_hours_list
-
-
-def pin_generate():
-    """ Generator 4-digits pin number for client """
-    pin = ''
-    for i in range(0,4): pin += choice('0123456789')
-    return(pin)
-
-
-def time_choices(hours=8, sec=False):
-    """ Generating list of times from 0 to hours. Step = 15min"""
-    start = datetime(1, 1, 1, 0, 0, 0)
-    end = start + timedelta(hours=hours)
-    list = generate_hours_list(start, end)
-
-    choices = []
-    for hour in list:
-        if sec == True: value = hour.strftime("%H:%M:%S")
-        else: value = hour.strftime("%H:%M")
-        label = hour.strftime("%H:%M")
-        choices.append([value,label])
-
-    if choices[-1][0] == '00:00:00':
-        choices[-1][1] = '24:00'
-
-    return choices
-
-
+from .base import pin_generate, time_options
 
 
 class only_digits (object):
+    #TODO: Czy ta funkcja jest jeszcze gdziekolwiek uzywana?
     def __init__(self, message_type):
         self.message = ''
         if message_type == 'phone': self.message = 'Podaj prawidłowy numer telefonu'
@@ -101,7 +75,7 @@ class AddServiceForm(forms.ModelForm):
         }
         widgets = {
             'name': forms.fields.TextInput(attrs={'placeholder': 'Nazwa',}),
-            'duration': forms.Select(choices=time_choices(8, True)),
+            'duration': forms.Select(choices=time_options(8, True)),
             'is_active': forms.CheckboxInput()
             }
 
@@ -143,8 +117,8 @@ class WorkTimeForm(forms.ModelForm):
             'latest_visit': 'Terminy wizyt (za ile dni najpóźniej)',
         }
         widgets = {
-            'start_time': forms.Select(choices=time_choices(24, False)),
-            'end_time': forms.Select(choices=time_choices(24, False)),
+            'start_time': forms.Select(choices=time_options(24, False)),
+            'end_time': forms.Select(choices=time_options(24, False)),
             'monday': forms.CheckboxInput(),
             'tuesday': forms.CheckboxInput(),
             'wednesday': forms.CheckboxInput(),
@@ -164,3 +138,28 @@ class WorkTimeForm(forms.ModelForm):
                              'invalid':"Liczba dni nieprawidłowa"},
         }
 
+
+
+
+
+class AddVisitForm(forms.Form):
+    def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop('user')
+        super(AddVisitForm, self).__init__(*args, **kwargs)
+        self.fields['client'] = forms.ChoiceField(label='', choices=self.client_choices())
+        self.fields['service'] = forms.ChoiceField(label='',  choices=self.service_choices())
+        self.fields['duration'] = forms.ChoiceField(label='', choices=time_options(8))
+
+    def client_choices(self):
+        clients = Client.objects.filter(user=self.user)
+        choices = []
+        for client in clients:
+            choices.append([client.id, f'{client.name} {client.surname}'])
+        return choices
+
+    def service_choices(self):
+        services = Service.objects.filter(user=self.user)
+        choices = []
+        for service in services:
+            choices.append([service.id, f'{service.name} {service.display_duration()}'])
+        return choices

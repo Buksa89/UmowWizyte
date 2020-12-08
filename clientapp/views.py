@@ -7,7 +7,7 @@ from django.views import View
 from django.views.generic.edit import CreateView
 from functools import wraps
 from .forms import AddVisit, ClientChooseVisitForm, ClientLoginForm
-from userapp.base import ClientSchedule, get_available_days_for_clients, is_client_authenticated
+from userapp.base import ClientAddVisitSchedule, is_client_authenticated
 from userapp.models import Client, Service, Visit, WorkTime
 
 DAYS_OF_WEEK = ['Poniedziałek', 'Wtorek', 'Środa', 'Czwartek', 'Piątek', 'Sobota', 'Niedziela']
@@ -105,11 +105,11 @@ class ClientAppNewVisit(View):
         client = get_object_or_404(Client, phone_number=request.session.get('client_authorized')['phone'],user=user)
         service = get_object_or_404(Service, id=service_id, user=user, is_active=True)
         work_time = get_object_or_404(WorkTime, user=user)
-        available_dates = get_available_days_for_clients(username)
-        schedule = ClientSchedule(work_time, username, available_dates, client)
+        available_dates = ''
+        schedule = ClientAddVisitSchedule(username)
         return render(request, 'client_new_visit.html',
                       {'section': 'schedule', 'service': service.name,
-                       'schedule': schedule.display(year, week, service, work_time, available_dates, client), 'username': username})
+                       'schedule': schedule.display(year, week, service), 'username': username})
 
 
 #TODO: !!! Testy widoku

@@ -1,3 +1,4 @@
+from datetime import time
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -6,7 +7,6 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.urls import reverse
 from django.utils import timezone
-
 
 class Client(models.Model):
 
@@ -107,8 +107,8 @@ class Visit(models.Model):
 class WorkTime(models.Model):
 
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    start_time = models.TimeField(auto_now=False, auto_now_add=False, default="8:00")
-    end_time = models.TimeField(auto_now=False, auto_now_add=False, default="16:00")
+    start_time = models.TimeField(auto_now=False, auto_now_add=False, default=time(8,0))
+    end_time = models.TimeField(auto_now=False, auto_now_add=False, default=time(16,0))
     monday = models.BooleanField(default=True)
     tuesday = models.BooleanField(default=True)
     wednesday = models.BooleanField(default=True)

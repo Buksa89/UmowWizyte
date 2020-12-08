@@ -175,7 +175,7 @@ class AddVisitTest(BaseTest):
         self.assertContains(response, f'<li class="red border-date"><div>1<br />Wt</div></li>')
         self.assertContains(response, f'<li class="red"><div>6<br />Nd</div></li>')
 
-
+    @skip
     def test_days_access(self):
         user = self.create_user()
         client = self.create_client(user)
@@ -203,7 +203,7 @@ class AddVisitTest(BaseTest):
 
         self.assertEqual(response.status_code, 404)
 
-
+    @skip
     def test_correct_url_to_visit_confirm(self):
         user = self.create_user()
         client = self.create_client(user)

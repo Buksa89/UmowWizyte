@@ -3,6 +3,8 @@
 {% block title %}Panel{% endblock %}
 
 {% block content %}
+
+<div id="content">
 {% if visits %}
     <table>
         <tr class="header">
@@ -26,4 +28,15 @@
         {% endfor %}
     </table>
     {% endif %}
+
+<p><a href="{% url 'dashboard_lock_time' %}" class="button">Zablokuj godziny</a>
+
+            <form action="{% url 'dashboard' %}" name="login-form" method="post">
+                {{ form.as_p }}
+                {% csrf_token %}
+            <input type="submit" name="submit" value="Zarezerwuj">
+            </form></p>
+</div>
+
+    {{ schedule|safe }}
 {% endblock %}

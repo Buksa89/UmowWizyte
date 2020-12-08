@@ -7,6 +7,7 @@ from django.utils import timezone
 
 import holidays
 import portion as interval
+from random import choice
 
 from userapp.models import Service, Visit, WorkTime
 
@@ -33,6 +34,32 @@ def get_available_days_for_clients(username):
         available_date.append(date.date())
     return available_date
 
+#TODO REFA, szczegolnie dla userow
+def get_available_hours_in_day(self, user, date):
+    visits = Visit.objects.filter(Q(user=self.user, client=self.client, start__year=date.year, start__month=date.month, start__day=date.day) |
+                                  Q(user=self.user, client=self.client, end__year=date.year, end__month=date.month, end__day=date.day))
+
+    start_work = timezone.make_aware(datetime.combine(date,self.work_time.start_time), timezone.get_default_timezone())
+    end_work = timezone.make_aware(datetime.combine(date,self.work_time.end_time), timezone.get_default_timezone())
+
+    avaliable_intervals = interval.closedopen(start_work, end_work)
+
+    for visit in visits:
+        visit = interval.closedopen(visit.start, visit.end)
+        avaliable_intervals -= visit
+
+    return_dict = {}
+    list_of_hours = list_of_times_generate(start_work, end_work)
+
+    for hour in list_of_hours:
+        key = hour.strftime("%H:%M")
+        if hour in avaliable_intervals:
+            return_dict[key] = True
+        else:
+            return_dict[key] = False
+
+    return return_dict
+
 def is_holiday(date):
     """ Function get date and return True if it is holiday """
     if date in holidays.Poland(): return True
@@ -41,47 +68,68 @@ def is_free_day(date, work_time):
     """ Function get date and return True if it is not working day """
     if not work_time.__dict__[date.strftime("%A").lower()]: return True
 
+def pin_generate():
+    """ Generator 4-digits pin number for client """
+    pin = ''
+    for i in range(0,4): pin += choice('0123456789')
+    return(pin)
+
+def list_of_times_generate(start, end=False, step=15):
+    """ Generate list of datetime time objects from start to end with default step = 15 min. """
+
+    list = []
+    flag_time = start
+    while flag_time <= end:
+        list.append(flag_time)
+        flag_time += timedelta(minutes=step)
+    return list
+
+def time_options(hours=8, sec=False):
+    """ Generating list of times from 0 to hours (max:24). Step = 15min"""
+    start = datetime(1, 1, 1, 0, 0, 0)
+    end = start + timedelta(hours=hours)
+    list = list_of_times_generate(start, end)
+
+    choices = []
+    for hour in list:
+        if hour != datetime(1, 1, 2, 0, 0):
+            label = hour.strftime("%H:%M")
+        else:
+            label = "24:00"
+            hour = datetime(1, 1, 1, 23, 59, 59)
+
+        if sec == True:
+            value = hour.time()
+        else:
+            value = hour.strftime("%H:%M")
+
+        choices.append([value, label])
+
+    return choices
+
 
 
 
 class Schedule:
 
-    def __init__(self, work_time, username, available_dates, client):
+    def __init__(self, username):
         self.title = None
         self.navigation = None
         self.username = username
-
-
-
-        self.work_time = work_time
-        self.start_work_time = work_time.start_time
-        self.end_work_time = work_time.end_time
-        self.available_dates = available_dates
-        self.client = client
         self.user = get_object_or_404(User, username__iexact=username)
-        """
-        self.service = get_object_or_404(Service, id=service_id, user=self.user)
-        self.username = username
-        self.year = year
-        self.week = week
-        self.day = """
+        self.work_time = get_object_or_404(WorkTime, user=self.user)
 
-    def display(self, year, week, service, work_time, available_dates, client):
-        self.title = service.name
-        self.service = service
 
-        #ponizszy do wyrzucenia
+    def display(self, year, week):
+        self.title = "Title"
         self.days = self.get_dates_from_week(year, week)
-
-        days = self.get_dates_from_week(year, week)
-        prev_date = days[0] - timedelta(days=7)
-        next_date = days[0] + timedelta(days=7)
+        prev_date = self.days[0] - timedelta(days=7)
+        next_date = self.days[0] + timedelta(days=7)
         self.navigation = self.generate_navigation(prev_date, next_date)
-
 
         html_code = ''
         html_code += self.title_header()
-        html_code += self.week_header(days)
+        html_code += self.main_header()
         html_code += self.schedule_content()
 
         return(html_code)
@@ -104,7 +152,7 @@ class Schedule:
         return html_code
 
 
-    def week_header(self, days):
+    def main_header(self):
         """ Method generates header of schedule with days, months and years for current week """
 
         html_code = '<div class="dates-header">'
@@ -112,7 +160,7 @@ class Schedule:
 
         # Year and month display
         # get numbers of month appearance in days of current week
-        years_and_months_to_display_dict = self.get_years_and_months(days)
+        years_and_months_to_display_dict = self.get_years_and_months(self.days)
 
         for n, data in enumerate(years_and_months_to_display_dict):
             extra_class = ''
@@ -132,7 +180,7 @@ class Schedule:
         # Days display
 
         html_code += f'<ul><li class="empty"></li>'
-        for n, day in enumerate(days):
+        for n, day in enumerate(self.days):
             css_class = []
             if is_holiday(day) or n == 6: css_class.append('red')
             if datetime.today().date() == day.date(): css_class.append('today')
@@ -189,74 +237,97 @@ class Schedule:
         return dicts
 
 
-    #ZMIENNE:
     def get_navigation_url(self, date):
-        year = date.year
-        week = date.isocalendar()[1]
-        return reverse('client_app_new_visit', args=[self.username, self.service.id, year, week])
+        # Place to create url with date
+        return reverse('dashboard')
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
     def schedule_content(self):
-        html_code = f'<ul class="schedule-content"><li>' \
-                    f'<ul class="hours">'
-        return self.display_week()
 
+        # Prepare variables for generate time column
+        start = (datetime.combine(date(1,1,1), self.work_time.start_time))
+        if self.work_time.end_time != time(23,59,00): end = (datetime.combine(date(1,1,1), self.work_time.end_time))
+        else: end = datetime(1,1,2,0,0,0)
+        time_list = list_of_times_generate(start, end)
 
+        # Html_code
+        html_code = f'<ul class="schedule-content"><li>'
+        html_code += f'<ul class="hours">'
+        html_code += self.generate_time_column(time_list)
+        html_code += f'</ul></li>'
 
+        for d, day in enumerate(self.days):
+            html_code += f'<li><ul class=day-{d}>'
+            html_code += self.generate_day_column(day, time_list)
+            html_code += f'</ul></li>'
+
+        html_code += f'</ul>'
+        return html_code
+
+    def generate_time_column(self, time_list):
+        """ Generate html for time column """
+        html_code = ''
+        for hour in time_list:
+            if hour != datetime(1,1,2,0,0,0):
+                hour_display = hour.strftime("%H:%M")
+            else:
+                hour_display = "24:00"
+
+            html_code += f'<li><span>{hour_display}</span></li>'
+        return html_code
+
+    def generate_day_column(self, day, time_list):
+        """ Generate html for day column """
+        html_code = ''
+        if day.date() not in self.available_dates:
+            for hour in time_list:
+                html_code += f'<li>&nbsp;</li>'
+        else:
+            pass
+        return html_code
 
 
 
 
     def display_week(self):
-        html_code = f'<ul class="schedule-content"><li><ul class="hours">'
-        # Hours column
-        hour = self.start_work_time
-        work_hours = []
-
-        while hour <= self.end_work_time:
-            work_hours.append(hour)
-            html_code += f'<li><span>{hour.strftime("%H:%M")}</span></li>'
-
-            hour = (datetime.combine(date.today(), hour) + timedelta(minutes=15)).time()
-
-            #TODO problemy z godziną 24:00
-            if hour == time(0,0,0) : break;
-
-        html_code += '</ul></li>'
+        html_code =''
         simple_duration = int(self.service.duration / timedelta(minutes=15))
 
-        for d, day in enumerate(self.days):
-            if day.date() not in self.available_dates:
-                html_code += f'<li><ul class=day-{d}>'
-                for hour in work_hours:
-                    html_code += f'<li>&nbsp;</li>'
-                html_code += '</ul></li>'
+
+
+        av_time = self.get_available_hours_in_day(day.date())
+        for i, hour in enumerate(work_hours):
+            if not av_time[hour.strftime("%H:%M")]:
+                html_code += f'<li>&nbsp;</li>'
             else:
-                html_code += f'<li><ul class=day-{d}>'
+                id = d*100 + i
+                full_term = datetime.combine(day, hour)
+                flag = True
+                for n in range(simple_duration):
+                    try:
+                        if av_time[work_hours[i+n].strftime("%H:%M")]:
+                            continue
+                    except: pass
+                    flag = False
+                if flag:
+                    html_code += f'<a href="{self.get_term_url(full_term)}" onmouseover="on_hover({id}, {simple_duration})" onmouseout="out_hover({id}, {simple_duration})"><li class="avaliable" id="{id}">&nbsp;</li></a>'
+                else:
+                    html_code += f'<li class="avaliable" id="{id}">&nbsp;</li>'
+            #html_code += f'<a href="{self.get_term_url(full_term)}"><li>{hour.strftime("%H:%M")}</li></a>'
 
-                av_time = self.get_available_hours_in_day(day.date())
-                for i, hour in enumerate(work_hours):
-                    if not av_time[hour.strftime("%H:%M")]:
-                        html_code += f'<li>&nbsp;</li>'
-                    else:
-                        id = d*100 + i
-                        full_term = datetime.combine(day, hour)
-                        flag = True
-                        for n in range(simple_duration):
-                            try:
-                                if av_time[work_hours[i+n].strftime("%H:%M")]:
-                                    continue
-                            except: pass
-                            flag = False
-                        if flag:
-                            html_code += f'<a href="{self.get_term_url(full_term)}" onmouseover="on_hover({id}, {simple_duration})" onmouseout="out_hover({id}, {simple_duration})"><li class="avaliable" id="{id}">&nbsp;</li></a>'
-                        else:
-                            html_code += f'<li class="avaliable" id="{id}">&nbsp;</li>'
-                    #html_code += f'<a href="{self.get_term_url(full_term)}"><li>{hour.strftime("%H:%M")}</li></a>'
-                html_code += '</ul></li>'
-
-        html_code += f'</ul>'
 
 
 
@@ -273,41 +344,131 @@ class Schedule:
         return reverse('client_app_confirm_visit', args=[self.username, self.service.id,
                                                          term.year, term.month, term.day, term.hour, term.minute])
 
-    def get_available_hours_in_day(self, date):
-        visits = Visit.objects.filter(Q(user=self.user, client=self.client, start__year=date.year, start__month=date.month, start__day=date.day) |
-                                      Q(user=self.user, client=self.client, end__year=date.year, end__month=date.month, end__day=date.day))
-
-        start_work = timezone.make_aware(datetime.combine(date,self.work_time.start_time), timezone.get_default_timezone())
-        end_work = timezone.make_aware(datetime.combine(date,self.work_time.end_time), timezone.get_default_timezone())
-
-        avaliable_intervals = interval.closedopen(start_work, end_work)
-
-        for visit in visits:
-            visit = interval.closedopen(visit.start, visit.end)
-            avaliable_intervals -= visit
-
-        return_dict = {}
-        list_of_hours = generate_hours_list(start_work, end_work, 15)
-
-        for hour in list_of_hours:
-            key = hour.strftime("%H:%M")
-            if hour in avaliable_intervals:
-                return_dict[key] = True
-            else:
-                return_dict[key] = False
-
-        return return_dict
-
-def generate_hours_list(start, end, step=15):
-    list = []
-    flag_time = start
-    while flag_time <= end:
-        list.append(flag_time)
-        flag_time += timedelta(minutes=step)
-
-    return list
 
 
 
-class ClientSchedule(Schedule):
-    pass
+
+
+
+class ClientAddVisitSchedule(Schedule):
+
+    def display(self, year, week, service):
+        self.title = service.name
+        self.service = service
+        self.days = self.get_dates_from_week(year, week)
+        prev_date = self.days[0] - timedelta(days=7)
+        next_date = self.days[0] + timedelta(days=7)
+        self.navigation = self.generate_navigation(prev_date, next_date)
+        self.available_dates = get_available_days_for_clients(self.username)
+
+
+        html_code = ''
+        html_code += self.title_header()
+        html_code += self.main_header()
+        html_code += self.schedule_content()
+
+        return(html_code)
+
+    def get_navigation_url(self, date):
+        year = date.year
+        week = date.isocalendar()[1]
+        return reverse('client_app_new_visit', args=[self.username, self.service.id, year, week])
+
+class UserAddVisitSchedule(Schedule):
+    def display(self, client, service, year, week, duration):
+        self.client = client
+        self.service = service
+        self.duration = duration
+        self.title = f'{client.name} {client.surname} - {service.name}'
+        self.days = self.get_dates_from_week(year, week)
+        prev_date = self.days[0] - timedelta(days=7)
+        next_date = self.days[0] + timedelta(days=7)
+        self.navigation = self.generate_navigation(prev_date, next_date)
+        self.available_dates = get_available_days_for_clients(self.username)
+
+        html_code = ''
+        html_code += self.title_header()
+        html_code += self.main_header()
+        html_code += self.schedule_content()
+        return html_code
+
+    def get_navigation_url(self, date):
+        year = date.year
+        week = date.isocalendar()[1]
+        hours = self.duration.seconds//3600
+        minutes = (self.duration.seconds//60)%60
+        return reverse('dashboard_new_visit', args=[self.client.id, self.service.id, hours, minutes, year, week])
+
+
+class UserLockTimeSchedule(Schedule):
+    def display(self, year, week):
+        self.title = "Wybierz wolne godziny"
+        self.days = self.get_dates_from_week(year, week)
+        prev_date = self.days[0] - timedelta(days=7)
+        next_date = self.days[0] + timedelta(days=7)
+        self.navigation = self.generate_navigation(prev_date, next_date)
+        self.available_dates = get_available_days_for_clients(self.username)
+
+        html_code = ''
+        html_code += self.title_header()
+        html_code += self.main_header()
+        html_code += self.schedule_content()
+        return (html_code)
+
+    def get_navigation_url(self, date):
+        year = date.year
+        week = date.isocalendar()[1]
+        return reverse('dashboard_lock_time', args=[year, week])
+
+
+class UserSchedule(Schedule):
+    def display(self, year, week):
+        self.title = "Terminarz"
+        self.days = self.get_dates_from_week(year, week)
+        prev_date = self.days[0] - timedelta(days=7)
+        next_date = self.days[0] + timedelta(days=7)
+        self.navigation = self.generate_navigation(prev_date, next_date)
+        self.available_dates = get_available_days_for_clients(self.username)
+
+        html_code = ''
+        html_code += self.title_header()
+        html_code += self.main_header()
+        html_code += self.schedule_content()
+        html_code += f'<a href="{reverse("dashboard_schedule", args=[datetime.today().year, datetime.today().month, datetime.today().day])}">aa</a>'
+        return (html_code)
+
+    def get_navigation_url(self, date):
+        year = date.year
+        week = date.isocalendar()[1]
+        return reverse('dashboard_schedule', args=[year, week])
+
+
+class UserTwoDaysSchedule(Schedule):
+
+    def display(self):
+        self.title = "Terminarz"
+        self.available_dates = get_available_days_for_clients(self.username)
+
+        html_code = ''
+        html_code += self.title_header()
+        #html_code += self.main_header()
+        #html_code += self.schedule_content()
+        return (html_code)
+
+
+class UserOneDaySchedule(Schedule):
+    def display(self, year, month, day):
+        self.title = "Dzien" #Data, nazwa dnia, czy dziś, czy święto
+        prev_date = datetime(year, month, day) - timedelta(days=1)
+        next_date = datetime(year, month, day) + timedelta(days=1)
+
+        self.navigation = self.generate_navigation(prev_date, next_date)
+
+        html_code = ''
+        html_code += self.title_header()
+        #html_code += self.main_header()
+        #html_code += self.schedule_content()
+        return (html_code)
+
+    def get_navigation_url(self, date):
+        return reverse('dashboard_schedule', args=[date.year, date.month, date.day])

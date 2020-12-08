@@ -1,8 +1,10 @@
 {% extends "base.html" %}
 
-{% block title %}Panel | Klienci | Nowy{% endblock %}
+{% block title %}Klienci | Nowy{% endblock %}
 
 {% block content %}
+
+<div id="content">
     <h3>Dodawanie klienta</h3>
     {% if created_client_name %}<p>{{created_client_name}} dodany.</p> <a href="{% url 'dashboard_clients' %}">Kliknij tutaj</a> aby powrócić do listy klientów</p>{%endif%}
     {% if form.errors %}
@@ -17,4 +19,5 @@
             <p><input type="submit" value="Dodaj" name="submit"></p>
         </form>
     </div>
+</div>
 {% endblock %}

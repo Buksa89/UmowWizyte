@@ -1,22 +1,17 @@
-from calendar import HTMLCalendar
-from datetime import date, datetime, timedelta
+from datetime import datetime, timedelta
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
 from django.contrib.auth.models import User
 from django.db import transaction
-from django.db.models import Q
 from django.db.utils import IntegrityError
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
-from django.utils import timezone
 from django.utils.decorators import method_decorator
-from django.utils.safestring import mark_safe
 from django.views import View
 from django.views.generic.edit import CreateView
-from functools import wraps
-import holidays
-from .forms import AddClientForm, AddServiceForm, LoginForm, WorkTimeForm
+from .base import UserAddVisitSchedule, UserLockTimeSchedule, UserOneDaySchedule, UserSchedule, UserTwoDaysSchedule
+from .forms import AddClientForm, AddServiceForm, AddVisitForm, LoginForm, WorkTimeForm
 from .models import Client, Service, Visit, WorkTime
 
 
@@ -26,19 +21,19 @@ from .models import Client, Service, Visit, WorkTime
 
 class Dashboard(CreateView):
 
-    """ In Dashboard User can see all not-confirmed wisit, confirm or reject them
+    """ In Dashboard User can see all not-confirmed visit, confirm or reject them
     Also he can see today schedule and navigate to previous or next day schedule".
     In this view is form to add new visit by user."""
 
     template_name = 'dashboard.html'
     section = 'dashboard'
-    schedule = ''
 
     @method_decorator(login_required)
     def get(self, request):
         visits_list = []
         user = User.objects.get(username=request.user)
         visits = Visit.objects.filter(user=user, is_confirmed=False)
+        form = AddVisitForm(user=user)
 
         for visit in visits:
             client = [visit.client.name, visit.client.surname, visit.client.phone_number]
@@ -46,15 +41,56 @@ class Dashboard(CreateView):
             datetime_ = visit.start.strftime('%y-%m-%d<br />%H:%M')
             reject_url = visit.get_reject_url()
             confirm_url = visit.get_confirm_url()
-
             if visit.is_available: status = "Nowa"
             else: status = "<b>Odwołana</b>"
 
             visits_list.append({'id':visit.id, 'client':client, 'name':visit.name, 'status':status, 'date':datetime_,
                                 'description':visit.description, 'reject_url':reject_url, 'confirm_url':confirm_url})
 
-        return render(request, self.template_name, {'section':self.section, 'visits':visits_list, 'schedule':self.schedule})
+        schedule = UserTwoDaysSchedule(request.user)
 
+        return render(request, self.template_name, {'section':self.section, 'visits':visits_list,
+                                                    'schedule': schedule.display(), 'form':form})
+
+    @method_decorator(login_required)
+    def post(self, request):
+        hours = int(request.POST['duration'][:2])
+        minutes = int(request.POST['duration'][-2:])
+
+        return redirect(reverse('dashboard_new_visit', args=[request.POST['client'], request.POST['service'], hours, minutes]))
+
+
+class DashboardLockTime(CreateView):
+
+    template_name = 'schedule.html'
+    section = 'dashboard'
+
+    @method_decorator(login_required)
+    def get(self, request, year=datetime.now().year, week=None):
+        if not week:
+            week = datetime.now().isocalendar()[1]
+        schedule = UserLockTimeSchedule(request.user)
+
+        return render(request, self.template_name, {'section': self.section, 'schedule': schedule.display(year, week)})
+
+
+class DashboardNewVisit(CreateView):
+
+    template_name = 'schedule.html'
+    section = 'dashboard'
+
+    @method_decorator(login_required)
+    def get(self, request, client_id, service_id, hours, minutes, year=datetime.now().year, week=False):
+        if not week:
+            week = datetime.now().isocalendar()[1]
+        schedule = UserAddVisitSchedule(request.user)
+        user = User.objects.get(username=request.user)
+        client = get_object_or_404(Client, user=user, id=client_id)
+        service = get_object_or_404(Service, user=user, id=service_id)
+        duration = timedelta(hours=hours, minutes=minutes)
+
+        return render(request, self.template_name, {'section': self.section,
+                                                    'schedule': schedule.display(client, service, year, week, duration)})
 
 
 class DashboardVisitReject(CreateView):
@@ -68,7 +104,6 @@ class DashboardVisitReject(CreateView):
             visit.is_available = True
             visit.is_confirmed = True
             visit.save()
-
 
         return redirect('dashboard')
 
@@ -131,19 +166,23 @@ def dashboard_clients_remove(request, client_id):
 
 class DashboardSchedule(View):
     template_schedule_name = 'schedule.html'
-    template_calendar_name = 'schedule_calendar.html'
     section = 'dashboard_schedule'
 
     @method_decorator(login_required)
-    def get(self, request, year=datetime.now().year, month=datetime.now().month, day=False):
-        work_time = get_object_or_404(WorkTime, user=request.user)
-        if day:
-            schedule = ScheduleCalendar(year, month, day ,work_time=work_time)
-            return render(request,self.template_schedule_name, {'section':self.section, 'schedule':schedule.display})
+    def get(self, request, year=datetime.now().year, week=False, month=False, day=False):
+        user = User.objects.get(username=request.user)
+        form = AddVisitForm(user=user)
+        if not week: week = datetime.now().isocalendar()[1]
 
-        calendar = ScheduleCalendar(year, month, work_time=work_time).formatmonth()
+        if not day:
+            schedule = UserSchedule(request.user)
+            return render(request, self.template_schedule_name,
+                          {'section': self.section, 'schedule': schedule.display(year, week), 'form':form})
+        else:
+            schedule = UserOneDaySchedule(request.user)
+            return render(request, self.template_schedule_name,
+                          {'section': self.section, 'schedule': schedule.display(year, month, day), 'form':form})
 
-        return render(request, self.template_calendar_name, {'section':self.section, 'calendar':'tu bedzie terminarz'})
 
 
 class DashboardSettings(CreateView):
@@ -292,5 +331,5 @@ def login_screen(request):
 """ Other Views """
 
 def welcome_screen(request):
-    users = User.objects.filter(~Q(username='admin'))
+    users = User.objects.filter(is_superuser=False)
     return render(request, 'welcome.html', {'users':users})

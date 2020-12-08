@@ -152,6 +152,11 @@ User
 TODO: Dodawanie wizyty
 #TODO: dzisiejszy terminarz
 
+# TODO: Testy dwudniowego terminarza
+# TODO: Ttesty prziskow dodaj dzien wolny, dodawj wizyte
+# TODO: Ttesty potwierdzania  i odrzucania wizyt
+# TODO: Ttesty testy wyswietlania listy i testy wyswietlania terminaRZA
+
 -    Dashboard:
  -        Views:
   -           Czy wyświetla się menu
@@ -164,6 +169,7 @@ TODO: Dodawanie wizyty
   -
 
 
+# TODO: Testy terminarza
 -    Schedule:
  -        Views:
   -
