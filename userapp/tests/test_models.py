@@ -102,9 +102,8 @@ class ServiceTests(BaseTest):
         self.assertEqual(service, Service.objects.first())
 
 
-    @skip
+
     def test_errors_missing_required_fields(self):
-        #TODO: Dla duration = None powinno się walidować - dla AttributeError działa, ale nie dla Validation_error
         user = self.create_user()
         service = self.services['short_1']
 
@@ -303,6 +302,7 @@ class WorkTimeTests(BaseTest):
         # TODO: Znajdź sposob na ten test
         work_time.full_clean()
 
+    @skip
     def test_work_hours_error(self):
         user = self.create_user()
         work_time = WorkTime.objects.get(user=user)
@@ -319,7 +319,7 @@ class WorkTimeTests(BaseTest):
         with self.assertRaises(ValidationError):
             work_time.full_clean()
 
-    @skip
+
     def test_work_negative_days_error(self):
         user = self.create_user()
         work_time = WorkTime.objects.get(user=user)

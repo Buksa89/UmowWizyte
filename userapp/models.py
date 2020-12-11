@@ -1,4 +1,4 @@
-from datetime import time
+from datetime import time, timedelta
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -59,6 +59,9 @@ class Service(models.Model):
         # TODO: Sprawdź czy istnieje funkcja która robi to bardziej elegancko
         return str(self.duration)[:-3].rjust(5,'0')
 
+    def clean(self):
+        if not self.duration:
+            raise ValidationError('Wybierz czas')
 
 class Visit(models.Model):
 
@@ -108,7 +111,7 @@ class WorkTime(models.Model):
 
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     start_time = models.TimeField(auto_now=False, auto_now_add=False, default=time(8,0))
-    end_time = models.TimeField(auto_now=False, auto_now_add=False, default=time(16,0))
+    duration = models.DurationField(blank=False, default=timedelta(hours=8))
     monday = models.BooleanField(default=True)
     tuesday = models.BooleanField(default=True)
     wednesday = models.BooleanField(default=True)
@@ -122,9 +125,11 @@ class WorkTime(models.Model):
 
     def clean(self):
         errors = []
-        if self.start_time >= self.end_time:
-            errors.append('Popraw godziny pracy')
+        #if self.duration <= timedelta(minutes=0):
+            #errors.append('Popraw godziny pracy')
         if self.earliest_visit >= self.latest_visit:
+            errors.append('Popraw możliwość wyboru terminów')
+        if self.earliest_visit < 0 or self.latest_visit < 0:
             errors.append('Popraw możliwość wyboru terminów')
 
         errors = ', '.join(errors)

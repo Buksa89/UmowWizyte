@@ -106,10 +106,10 @@ class ClientAppNewVisit(View):
         service = get_object_or_404(Service, id=service_id, user=user, is_active=True)
         work_time = get_object_or_404(WorkTime, user=user)
         available_dates = ''
-        schedule = ClientAddVisitSchedule(username)
+        schedule = ClientAddVisitSchedule(user, year, week, service)
         return render(request, 'client_new_visit.html',
                       {'section': 'schedule', 'service': service.name,
-                       'schedule': schedule.display(year, week, service), 'username': username})
+                       'schedule': schedule.display(), 'username': username})
 
 
 #TODO: !!! Testy widoku

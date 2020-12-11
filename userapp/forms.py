@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from django import forms
 from django.contrib.auth.models import User
 from django.core.exceptions import NON_FIELD_ERRORS, ValidationError
@@ -75,7 +75,7 @@ class AddServiceForm(forms.ModelForm):
         }
         widgets = {
             'name': forms.fields.TextInput(attrs={'placeholder': 'Nazwa',}),
-            'duration': forms.Select(choices=time_options(8, True)),
+            'duration': forms.Select(choices=time_options(timedelta(hours=8), True)),
             'is_active': forms.CheckboxInput()
             }
 
@@ -97,6 +97,7 @@ class AddServiceForm(forms.ModelForm):
 
 class WorkTimeForm(forms.ModelForm):
 
+    end_time = forms.ChoiceField(label='Do godziny', choices=time_options(timedelta(hours=24), False))
 
     class Meta:
         model = WorkTime
@@ -113,12 +114,11 @@ class WorkTimeForm(forms.ModelForm):
             'saturday': 'Soboty',
             'sunday': 'Niedziele',
             'holidays': 'Święta',
-            'earliest_visit': 'Terminy wizyt (za ile dni najwcześniej)',
-            'latest_visit': 'Terminy wizyt (za ile dni najpóźniej)',
+            'earliest_visit': 'Terminy wizyt (min)',
+            'latest_visit': 'Terminy wizyt (max)',
         }
         widgets = {
-            'start_time': forms.Select(choices=time_options(24, False)),
-            'end_time': forms.Select(choices=time_options(24, False)),
+            'start_time': forms.Select(choices=time_options(timedelta(hours=24), False)),
             'monday': forms.CheckboxInput(),
             'tuesday': forms.CheckboxInput(),
             'wednesday': forms.CheckboxInput(),
@@ -138,9 +138,9 @@ class WorkTimeForm(forms.ModelForm):
                              'invalid':"Liczba dni nieprawidłowa"},
         }
 
-
-
-
+    def save(self, duration):
+        self.instance.duration = duration
+        return super().save()
 
 class AddVisitForm(forms.Form):
     def __init__(self, *args, **kwargs):
@@ -148,7 +148,7 @@ class AddVisitForm(forms.Form):
         super(AddVisitForm, self).__init__(*args, **kwargs)
         self.fields['client'] = forms.ChoiceField(label='', choices=self.client_choices())
         self.fields['service'] = forms.ChoiceField(label='',  choices=self.service_choices())
-        self.fields['duration'] = forms.ChoiceField(label='', choices=time_options(8))
+        self.fields['duration'] = forms.ChoiceField(label='', choices=time_options(timedelta(hours=8)))
 
     def client_choices(self):
         clients = Client.objects.filter(user=self.user)

@@ -1,6 +1,13 @@
 ul {list-style-type: none;}
 body {font-family: Verdana, sans-serif;}
 
+div.schedule{
+padding:0;
+margin:0;
+background-color:#ddd;
+}
+
+
 div.header {
   padding: 0px;
   background: #555555;
@@ -34,7 +41,18 @@ div.header {
 background:#333333;
 }
 
+.dates-header{
+  padding: 0;
+  margin: 0;
+  background-color:#ddd;
+}
+
 .dates-header ul {
+  padding: 0;
+  margin: 0;
+  background-color:#ddd;
+}
+.dates-header ul.days {
   padding: 0;
   margin: 0;
   background-color:#ddd;
@@ -49,6 +67,11 @@ background:#333333;
 }
 .dates-header ul li.empty {
   background-color:#ddd;
+}
+.dates-header ul.days li{
+
+  box-shadow: 0px 1px 0px 0px #d0d0d0;
+
 }
 
 .dates-header .border-date {
@@ -69,8 +92,9 @@ background:#333333;
 ul.schedule-content {
   margin: 0;
   padding: 0;
-  background-color:#ddd;
   color: #555;
+  position:relative;
+  top:-13px;
 }
 
 
@@ -78,26 +102,32 @@ ul.schedule-content li {
   list-style-type: none;
   display: inline-block;
   width: 12.5%;
-  postion:relative;
+  position:relative;
   text-align: center;
   font-size:14px;
+  margin:0;
+  padding:0;
 }
 
 ul.schedule-content li ul{
   margin: 0;
   padding: 0;
+  position:relative;
+  background: #ddd;
 }
 
 ul.schedule-content li ul.hours {
-  background: #ddd;
+  top:14px;
 }
 
 ul.schedule-content li ul li {
   width:100%;
   text-align: center;
-  padding: 10px 0px;
+  height:40px;
   font-size:12px;
-  box-shadow: 0px -1px 0px 0px #d0d0d0;
+  box-shadow: 0px 1px 0px 0px #d0d0d0;
+  margin: 0;
+  padding: 0;
 }
 
 ul.schedule-content li ul.hours li {
@@ -105,8 +135,13 @@ ul.schedule-content li ul.hours li {
 }
 ul.schedule-content li ul.hours li span {
   position:relative;
-  top:-18px;
   background-color:#ddd;
+  top:-7px;
+  padding:0px 5px;
+}
+ul.schedule-content li ul.hours li span.last{
+position:relative;
+top:20px;
 }
 
 ul.schedule-content li ul li.avaliable {

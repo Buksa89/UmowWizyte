@@ -229,6 +229,8 @@ TODO: Potwierdzenie usunięcia klienta
 TODO: Sprawdzenie templatki dla każdego formularza
 TODO: Walidacja duplikatów usług
 TODO: formularz godzin pracy nie przyjmuje godziny 24
+TODO: Godziny pracy niewalidowane
+TODO: walidacja duration
 
 TODO: Potwierdzenie usuwania usługi
 TODO: Formularz wysyłania maila do mnie

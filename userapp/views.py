@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import date, datetime, time, timedelta
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
@@ -175,9 +175,9 @@ class DashboardSchedule(View):
         if not week: week = datetime.now().isocalendar()[1]
 
         if not day:
-            schedule = UserSchedule(request.user)
+            schedule = UserSchedule(request.user, year, week)
             return render(request, self.template_schedule_name,
-                          {'section': self.section, 'schedule': schedule.display(year, week), 'form':form})
+                          {'section': self.section, 'schedule': schedule.display(), 'form':form})
         else:
             schedule = UserOneDaySchedule(request.user)
             return render(request, self.template_schedule_name,
@@ -232,8 +232,14 @@ class DashboardSettings(CreateView):
         user = User.objects.get(username=request.user)
         service_form = AddServiceForm()
         work_time = WorkTime.objects.get(user=user)
+
+
+        end = datetime.combine(date.min, work_time.__dict__['start_time']) + work_time.__dict__['duration']
+        if end >= datetime(1,1,2,0,0,0): work_time.__dict__['end_time'] = '24:00'
+        else: work_time.__dict__['end_time'] = end.time().strftime("%H:%M")
         work_time.__dict__['start_time'] = work_time.__dict__['start_time'].strftime("%H:%M")
-        work_time.__dict__['end_time'] = work_time.__dict__['end_time'].strftime("%H:%M")
+
+
         work_time_form = WorkTimeForm(initial=work_time.__dict__, instance=work_time)
         return user, service_form, work_time_form
 
@@ -243,9 +249,7 @@ class DashboardSettings(CreateView):
             dict = {}
             dict['name'] = service.name
             dict['display_duration'] = service.display_duration
-            dict['is_active'] = service.is_active
-            if service.is_active: dict['status'] = 'Aktywna'
-            else: dict['status'] = 'Zablokowana'
+            dict['status'] = service.is_active
             dict['get_remove_url'] = service.get_remove_url
             dict['get_lock_url'] = service.get_lock_url
             service_list.append(dict)
@@ -271,9 +275,25 @@ class DashboardSettings(CreateView):
 
     def dashboard_settings_work_time(self, request, user):
         work_time = WorkTime.objects.get(user=user)
+
+        hours, minutes = request.POST['end_time'].split(':')
+        hours = int(hours)
+        minutes = int(minutes)
+        if hours < 24:
+            days = 1
+            hours = hours
+        else:
+            days = hours // 24 + 1
+            hours = hours % 24
+        end_time = datetime(1,1, days, hours, minutes)
+
+        hours, minutes = request.POST['start_time'].split(':')
+        start_time = datetime(1,1, 1, int(hours), int(minutes))
+        duration = end_time - start_time
+
         form = WorkTimeForm(data=request.POST, instance=work_time)
         if form.is_valid():
-            form.save()
+            form.save(duration)
             return form, True
         return form, False
 

@@ -34,15 +34,8 @@
                 <tr>
                     <td>{{ service.name }}</td>
                     <td>{{ service.display_duration }}</td>
-                    <td>{{ service.status }}</td>
-                    <td><a href="{{ service.get_remove_url }}">Usuń</a> |
-                        <a href="{{ service.get_lock_url }}">
-                            {% if service.is_active is True %}
-                                Zablokuj
-                            {% else %}
-                                Odblokuj
-                            {% endif %}
-                        </a>
+                    <td class="icon"><a href="{{ service.get_lock_url }}">{% if service.status is True %}&#9745;{% else %}&#9746;{% endif %}</a></td>
+                    <td class="icon"><a href="{{ service.get_remove_url }}">&#9986</a>
                 </tr>
             {% endfor %}
         </table>
@@ -53,7 +46,6 @@
 </div>
 <div>
     <h2>Czas pracy</h2>
-    <p>Ustaw standardowy czas pracy (Klienci będą mogli wybierać tylko te dni/godziny. Ty będziesz mógł wybrać dowolne</p>
     {% if work_time_changed %}<p>Czas pracy zmieniony</p>{%endif%}
     <div>
         <form name="work-time-form" method="POST" action="{% url 'dashboard_settings' %}">

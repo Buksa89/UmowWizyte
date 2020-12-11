@@ -11,19 +11,19 @@
         <div id="header">
               <ul class="menu">
                     <li>
-                        <a href="{% url 'logout_screen' %}">Wyloguj</a>
+                        <a href="{% url 'logout_screen' %}">&#9746;</a>
                     </li>
                     <li {% if section == 'dashboard_settings' %}class="selected"{% endif %}>
-                        <a href="{% url 'dashboard_settings' %}">Ustawienia</a>
+                        <a href="{% url 'dashboard_settings' %}">&#9881;</a>
                     </li>
                     <li {% if section == 'dashboard_clients' %}class="selected"{% endif %}>
-                        <a href="{% url 'dashboard_clients' %}">Klienci</a>
+                        <a href="{% url 'dashboard_clients' %}">&#8278;</a>
                     </li>
                     <li {% if section == 'dashboard_schedule' %}class="selected"{% endif %}>
-                        <a href="{% url 'dashboard_schedule' %}">Terminarz</a>
+                        <a href="{% url 'dashboard_schedule' %}">&#9782;</a>
                     </li>
                     <li {% if section == 'dashboard' %}class="selected"{% endif %}>
-                        <a href="{% url 'dashboard' %}">Panel</a>
+                        <a href="{% url 'dashboard' %}">&#9776;</a>
                     </li>
               </ul>
         </div>
