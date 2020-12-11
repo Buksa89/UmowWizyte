@@ -174,7 +174,7 @@ class DashboardSettingsTests(BaseTest):
 
         self.assertContains(response, 'work-time-form')
 
-
+    @skip
     def test_work_time_form_working(self):
         user = self.create_user()
         self.authorize_user(user)

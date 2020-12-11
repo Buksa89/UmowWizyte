@@ -97,35 +97,41 @@ class AddServiceForm(forms.ModelForm):
 
 class WorkTimeForm(forms.ModelForm):
 
-    end_time = forms.ChoiceField(label='Do godziny', choices=time_options(timedelta(hours=24), False))
+    end_monday = forms.ChoiceField(label='do', choices=time_options(timedelta(hours=24), False))
+    end_tuesday = forms.ChoiceField(label='do', choices=time_options(timedelta(hours=24), False))
+    end_wednesday = forms.ChoiceField(label='do', choices=time_options(timedelta(hours=24), False))
+    end_thursday = forms.ChoiceField(label='do', choices=time_options(timedelta(hours=24), False))
+    end_friday = forms.ChoiceField(label='do', choices=time_options(timedelta(hours=24), False))
+    end_saturday = forms.ChoiceField(label='do', choices=time_options(timedelta(hours=24), False))
+    end_sunday = forms.ChoiceField(label='do', choices=time_options(timedelta(hours=24), False))
 
     class Meta:
         model = WorkTime
-        fields = ['start_time', 'end_time', 'monday', 'tuesday', 'wednesday', 'thursday',
-                  'friday', 'saturday', 'sunday', 'holidays', 'earliest_visit', 'latest_visit']
+        fields = ['start_monday', 'end_monday', 'start_tuesday', 'end_tuesday', 'start_wednesday',
+                  'end_wednesday', 'start_thursday', 'end_thursday', 'start_friday', 'end_friday',
+                  'start_saturday', 'end_saturday', 'start_sunday', 'end_sunday', 'holidays',
+                  'earliest_visit', 'latest_visit']
+
         labels = {
-            'start_time': 'Od godziny',
-            'end_time': 'Do godziny',
-            'monday': 'Poniedziałki',
-            'tuesday': 'Wtorki',
-            'wednesday': 'Środy',
-            'thursday': 'Czwartki',
-            'friday': 'Piątki',
-            'saturday': 'Soboty',
-            'sunday': 'Niedziele',
+            'start_monday': 'Poniedziałek: od',
+            'start_tuesday': 'Wtorek: od',
+            'start_wednesday': 'Środa: od',
+            'start_thursday': 'Czwartek: od',
+            'start_friday': 'Piątek: od',
+            'start_saturday': 'Sobota: od',
+            'start_sunday': 'Niedziela: od',
             'holidays': 'Święta',
             'earliest_visit': 'Terminy wizyt (min)',
             'latest_visit': 'Terminy wizyt (max)',
         }
         widgets = {
-            'start_time': forms.Select(choices=time_options(timedelta(hours=24), False)),
-            'monday': forms.CheckboxInput(),
-            'tuesday': forms.CheckboxInput(),
-            'wednesday': forms.CheckboxInput(),
-            'thursday': forms.CheckboxInput(),
-            'friday': forms.CheckboxInput(),
-            'saturday': forms.CheckboxInput(),
-            'sunday': forms.CheckboxInput(),
+            'start_monday': forms.Select(choices=time_options(timedelta(hours=24), False)),
+            'start_tuesday': forms.Select(choices=time_options(timedelta(hours=24), False)),
+            'start_wednesday': forms.Select(choices=time_options(timedelta(hours=24), False)),
+            'start_thursday': forms.Select(choices=time_options(timedelta(hours=24), False)),
+            'start_friday': forms.Select(choices=time_options(timedelta(hours=24), False)),
+            'start_saturday': forms.Select(choices=time_options(timedelta(hours=24), False)),
+            'start_sunday': forms.Select(choices=time_options(timedelta(hours=24), False)),
             'holidays': forms.CheckboxInput(),
             'earliest_visit': forms.NumberInput(),
             'latest_visit': forms.NumberInput(),
@@ -138,8 +144,14 @@ class WorkTimeForm(forms.ModelForm):
                              'invalid':"Liczba dni nieprawidłowa"},
         }
 
-    def save(self, duration):
-        self.instance.duration = duration
+    def save(self, durations):
+        self.instance.duration_monday = durations[0]
+        self.instance.duration_tuesday = durations[1]
+        self.instance.duration_wednesday = durations[2]
+        self.instance.duration_thursday = durations[3]
+        self.instance.duration_friday = durations[4]
+        self.instance.duration_saturday = durations[5]
+        self.instance.duration_sunday = durations[6]
         return super().save()
 
 class AddVisitForm(forms.Form):

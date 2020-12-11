@@ -123,55 +123,50 @@ ul.schedule-content li ul.hours {
 ul.schedule-content li ul li {
   width:100%;
   text-align: center;
-  height:40px;
+  height:30px;
   font-size:12px;
-  box-shadow: 0px 1px 0px 0px #d0d0d0;
+  border-bottom: 1px solid #d0d0d0;
   margin: 0;
   padding: 0;
+  position:relative;
 }
 
-ul.schedule-content li ul.hours li {
-  color: #777;
+ul.schedule-content li ul li.hour-off {
+  background: #e0e0e0;
+  border-bottom: 1px solid #d4d4d4;
 }
+ul.schedule-content li ul li.avaliable {
+  background-color:#82B861;
+  border-bottom: 1px solid #b0b0b0;
+}
+ul.schedule-content li ul li.not-avaliable {
+  background-color:#c0c0c0;
+  border-bottom: 1px solid #b0b0b0;
+}
+
 ul.schedule-content li ul.hours li span {
   position:relative;
   background-color:#ddd;
   top:-7px;
   padding:0px 5px;
+  color: #777;
 }
 ul.schedule-content li ul.hours li span.last{
 position:relative;
 top:20px;
 }
 
-ul.schedule-content li ul li.avaliable {
-  width:100%;
-  margin:0;
-  padding:10px 0px;
-  text-align: center;
-  background-color:#82B861;
-  font-size:12px;
-  color: #ffffff;
-}
-
 ul.schedule-content li ul a li.avaliable{
-  width:100%;
-  margin:0;
-  padding:10px 0px;
-  text-align: center;
   background-color:#82ff61;
-  font-size:12px;
   color: #ffffff;
 }
 
 ul.schedule-content li ul a li.hover {
   background-color: #82EB61;
-  box-shadow: 0px -1px 0px 0px #333;
 }
 
 ul.schedule-content li ul li.hover {
   background-color: #82EB61;
-  box-shadow: 0px -1px 0px 0px #333;
 }
 
 

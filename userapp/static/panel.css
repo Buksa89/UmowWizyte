@@ -16,9 +16,15 @@ min-height: 100%;
 padding:5px 20px;
 }
 
+
+
 form li {
   list-style-type: none;
 }
+form li label{
+  padding-right:40px;
+}
+
 
 .errorlist {
   list-style-type: none;
@@ -35,7 +41,6 @@ ul.menu {
 
 ul.menu li {
   float: right;
-  font-family: 'Unifont';
 }
 
 ul.menu li.selected{
@@ -43,11 +48,10 @@ ul.menu li.selected{
 }
 
 ul.menu li a {
-  font-size:30px;
   display: block;
   color: white;
   text-align: center;
-  padding: 7px 16px;
+    padding: 16px;
   text-decoration: none;
 }
 

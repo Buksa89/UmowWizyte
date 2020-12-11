@@ -10,7 +10,7 @@ from django.urls import reverse
 from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.generic.edit import CreateView
-from .base import UserAddVisitSchedule, UserLockTimeSchedule, UserOneDaySchedule, UserSchedule, UserTwoDaysSchedule
+from .base import DAYS_FOR_CODE, UserAddVisitSchedule, UserLockTimeSchedule, UserOneDaySchedule, UserSchedule, UserTwoDaysSchedule
 from .forms import AddClientForm, AddServiceForm, AddVisitForm, LoginForm, WorkTimeForm
 from .models import Client, Service, Visit, WorkTime
 
@@ -234,10 +234,12 @@ class DashboardSettings(CreateView):
         work_time = WorkTime.objects.get(user=user)
 
 
-        end = datetime.combine(date.min, work_time.__dict__['start_time']) + work_time.__dict__['duration']
-        if end >= datetime(1,1,2,0,0,0): work_time.__dict__['end_time'] = '24:00'
-        else: work_time.__dict__['end_time'] = end.time().strftime("%H:%M")
-        work_time.__dict__['start_time'] = work_time.__dict__['start_time'].strftime("%H:%M")
+
+        for day in DAYS_FOR_CODE:
+            end = datetime.combine(date.min, work_time.__dict__['start_'+day]) + work_time.__dict__['duration_'+day]
+            if end >= datetime(1,1,2,0,0,0): work_time.__dict__['end_'+day] = '24:00'
+            else: work_time.__dict__['end_'+day] = end.time().strftime("%H:%M")
+            work_time.__dict__['start_'+day] = work_time.__dict__['start_'+day].strftime("%H:%M")
 
 
         work_time_form = WorkTimeForm(initial=work_time.__dict__, instance=work_time)
@@ -275,25 +277,26 @@ class DashboardSettings(CreateView):
 
     def dashboard_settings_work_time(self, request, user):
         work_time = WorkTime.objects.get(user=user)
+        duration_for_days = []
+        for day in DAYS_FOR_CODE:
+            hours, minutes = request.POST['end_'+day].split(':')
+            hours = int(hours)
+            minutes = int(minutes)
+            if hours < 24:
+                days = 1
+                hours = hours
+            else:
+                days = hours // 24 + 1
+                hours = hours % 24
+            end_time = datetime(1,1, days, hours, minutes)
 
-        hours, minutes = request.POST['end_time'].split(':')
-        hours = int(hours)
-        minutes = int(minutes)
-        if hours < 24:
-            days = 1
-            hours = hours
-        else:
-            days = hours // 24 + 1
-            hours = hours % 24
-        end_time = datetime(1,1, days, hours, minutes)
-
-        hours, minutes = request.POST['start_time'].split(':')
-        start_time = datetime(1,1, 1, int(hours), int(minutes))
-        duration = end_time - start_time
+            hours, minutes = request.POST['start_'+day].split(':')
+            start_time = datetime(1,1, 1, int(hours), int(minutes))
+            duration_for_days.append(end_time - start_time)
 
         form = WorkTimeForm(data=request.POST, instance=work_time)
         if form.is_valid():
-            form.save(duration)
+            form.save(duration_for_days)
             return form, True
         return form, False
 
