@@ -9,6 +9,7 @@ urlpatterns = [
     path('logout/', auth_views.LogoutView.as_view(), name='logout_screen'),
 
     path('panel/', views.Dashboard.as_view(), name='dashboard'),
+    path('panel/<int:year>/<int:month>/<int:day>/', views.Dashboard.as_view(), name='dashboard'),
     path('panel/odrzuc_wizyte/<int:visit_id>/', views.DashboardVisitReject.as_view(), name='dashboard_visit_reject'),
     path('panel/potwierdz_wizyte/<int:visit_id>/', views.DashboardVisitConfirm.as_view(), name='dashboard_visit_confirm'),
     path('panel/zablokuj_terminy/', views.DashboardLockTime.as_view(), name='dashboard_lock_time'),

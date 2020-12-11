@@ -2,7 +2,8 @@ Testy modelu klient, worktime nie sprawdzają długości wprowadzanych danych
 Test wizyt
 testy zatwierdzania wizyt
 test blokowania usługi
-
+swieta i odleglosc dni dla klienta
+walidacja formularza godzin pracy
 
 Bazowe
     Model

@@ -29,7 +29,7 @@ class Dashboard(CreateView):
     section = 'dashboard'
 
     @method_decorator(login_required)
-    def get(self, request):
+    def get(self, request, year=datetime.now().year, month=datetime.now().month, day=datetime.now().day):
         visits_list = []
         user = User.objects.get(username=request.user)
         visits = Visit.objects.filter(user=user, is_confirmed=False)
@@ -47,7 +47,7 @@ class Dashboard(CreateView):
             visits_list.append({'id':visit.id, 'client':client, 'name':visit.name, 'status':status, 'date':datetime_,
                                 'description':visit.description, 'reject_url':reject_url, 'confirm_url':confirm_url})
 
-        schedule = UserTwoDaysSchedule(request.user)
+        schedule = UserTwoDaysSchedule(request.user, year, month, day)
 
         return render(request, self.template_name, {'section':self.section, 'visits':visits_list,
                                                     'schedule': schedule.display(), 'form':form})

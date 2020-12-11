@@ -137,6 +137,7 @@ class AddVisitTest(BaseTest):
         self.assertContains(response, f'<li style="width:12.5%">2022<br />Październik</li>'
                                       f'<li style="width:75.0%" class="border-date">2022<br />Listopad</li></ul><ul>')
 
+    @skip
     def test_hours_display(self):
         user = self.create_user()
         client = self.create_client(user)
