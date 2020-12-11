@@ -96,14 +96,13 @@ class DashboardSettingsTests(BaseTest):
         self.assertContains(response, 'add-service-form')
 
 
-    #todo: Ustaw czas do poprawy
     def test_service_form_display_errors(self):
         user = self.create_user()
         self.authorize_user(user)
         self.create_service(user, 'short_1')
         service = self.services['short_1']
         data_results = [{'data': {'duration': service['duration'], 'name': self.EMPTY, 'submit': 'add_service'}, 'message': 'Pole nie może być puste'},
-                       # {'data': {'duration': self.DURATION_MIN, 'name': service['name'], 'submit': 'add_service'}, 'message': 'Ustaw czas'},
+                        {'data': {'duration': self.DURATION_MIN, 'name': service['name'], 'submit': 'add_service'}, 'message': 'Wybierz czas'},
                         {'data': {'duration': service['duration'], 'name': self.LONG_STRING(61), 'submit': 'add_service'}, 'message': "Nazwa jest za długa"},
                         {'data': {'duration': service['duration'], 'name': service['name'], 'submit': 'add_service'}, 'message': 'Usługa o tej nazwie już istnieje'}]
         for data_result in data_results:
@@ -196,7 +195,7 @@ class DashboardSettingsTests(BaseTest):
         self.assertContains(response, 'latest_visit" value="7"')
 
     @skip
-    def test_service_form_errors(self):
+    def test_worktime_form_errors(self):
         user = self.create_user()
         self.authorize_user(user)
         data = self.work_time['regular']

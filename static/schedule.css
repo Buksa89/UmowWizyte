@@ -132,17 +132,29 @@ ul.schedule-content li ul li {
 }
 
 ul.schedule-content li ul li.hour-off {
-  background: #e0e0e0;
-  border-bottom: 1px solid #d4d4d4;
+  background: #999;
+  border-bottom: 1px solid #999;
 }
 ul.schedule-content li ul li.avaliable {
-  background-color:#82B861;
-  border-bottom: 1px solid #b0b0b0;
+  background-color:#ddd;
+  border-bottom: 1px solid #d0d0d0;
 }
 ul.schedule-content li ul li.not-avaliable {
   background-color:#c0c0c0;
   border-bottom: 1px solid #b0b0b0;
 }
+ul.schedule-content li ul li.visit{
+  background-color:#d7f6fa;
+  color: #0a0a0a;
+  border-top:1px solid blue;
+  border-bottom: 1px solid blue;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis
+  }
 
 ul.schedule-content li ul.hours li span {
   position:relative;
@@ -151,23 +163,26 @@ ul.schedule-content li ul.hours li span {
   padding:0px 5px;
   color: #777;
 }
+
 ul.schedule-content li ul.hours li span.last{
 position:relative;
-top:20px;
+top:10px;
 }
 
 ul.schedule-content li ul a li.avaliable{
-  background-color:#82ff61;
+  background-color:#ddd;
   color: #ffffff;
 }
 
+
+
+
 ul.schedule-content li ul a li.hover {
-  background-color: #82EB61;
+border-top: none;
+  background-color: #d7f6fa;
 }
 
 ul.schedule-content li ul li.hover {
-  background-color: #82EB61;
+border-top: none;
+  background-color: #d7f6fa;
 }
-
-
-

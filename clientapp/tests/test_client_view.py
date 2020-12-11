@@ -1,3 +1,4 @@
+from bs4 import BeautifulSoup as bs
 from datetime import date, datetime, timedelta
 from django.test import TestCase
 from unittest import skip
@@ -13,8 +14,10 @@ class DashboardTests(BaseTest):
         client = self.create_client(user)
         self.authorize_client(client)
         response = self.client.get(f'/{user}/panel/')
+        soup = bs(response.content.decode(), features="html.parser")
+        form = soup.find("form", {"name":"choose-visit-form"})
 
-        self.assertContains(response, 'choose-visit-form')
+        self.assertTrue(form)
 
     def test_dashboard_POST_redirect(self):
         user = self.create_user()
@@ -34,9 +37,11 @@ class DashboardTests(BaseTest):
         for service in services_types:
             services.append(self.create_service(user, service))
         response = self.client.get(f'/{user}/panel/')
-
+        soup = bs(response.content.decode(), features="html.parser")
         for service in services:
-           self.assertContains(response, f'<option value="{service.id}">{service.name}</option>')
+            options = soup.find("option", {"value": {service.id}})
+
+            self.assertEqual(options.get_text(), service.name)
 
 
     def test_only_active_services_in_form(self):
@@ -134,8 +139,14 @@ class AddVisitTest(BaseTest):
         self.authorize_client(client)
         response = self.client.get(f"/{user}/nowa_wizyta/{service.id}/{date['year']}/{date['week']}/")
 
-        self.assertContains(response, f'<li style="width:12.5%">2022<br />Październik</li>'
-                                      f'<li style="width:75.0%" class="border-date">2022<br />Listopad</li></ul><ul>')
+
+        soup = bs(response.content.decode(), features="html.parser")
+        li1 = soup.find("li", {'style': 'width:12.5%'})
+        li2 = soup.find("li", {'style': 'width:75.0%'})
+
+        self.assertEqual(li1.get_text(), '2022Październik')
+        self.assertEqual(li2.get_text(), '2022Listopad')
+        self.assertIn('border-date', li2["class"])
 
     @skip
     def test_hours_display(self):

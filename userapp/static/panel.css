@@ -55,7 +55,7 @@ ul.menu li a {
   text-decoration: none;
 }
 
-li a:hover {
+ul.menu li a:hover {
   background-color: #121212;
 }
 

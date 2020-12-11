@@ -46,6 +46,7 @@ Klient
 
 Klient
 #TODO: potwierdzenie odwołania wizyty
+# TODO user/klient - potwierdzenie/odwolanie wizyty
 
     Dashboard
         Views
@@ -149,22 +150,21 @@ User
 
 
 
-#TODO: Potwierdzanie wizyt
-TODO: Dodawanie wizyty
-#TODO: dzisiejszy terminarz
 
-# TODO: Testy dwudniowego terminarza
-# TODO: Ttesty prziskow dodaj dzien wolny, dodawj wizyte
-# TODO: Ttesty potwierdzania  i odrzucania wizyt
-# TODO: Ttesty testy wyswietlania listy i testy wyswietlania terminaRZA
+
 
 -    Dashboard:
  -        Views:
-  -           Czy wyświetla się menu
+  -           # TODO: Czy wyświetla się menu
+  -           # TODO: Czy lista wizyt się prawidłowo wyświetla (rez/npotw, rez/pot, rez/odw/, rez/potw/odw/nptw, rez/potw/odw/ptw
+  -           # TODO:## Potwierdzanie wizyt
+  -           # TODO:## odrzucanie wizyt
+  -           # TODO:## formularz rezerwacji
+  -           # TODO:## dodaj wolne
+  -           # TODO:## Terminarz
 
  +        Templates:
   +            Czy url dashboard wczytuje właściwą templatkę (dashboard.html)                                                      test_template      DashboardTests          test_dashboard_template_display
--inne?
 
  -        Forms
   -
@@ -182,7 +182,6 @@ TODO: Dodawanie wizyty
   -
 
     Clients:
-TODO: Walidacja unique
 TODO: Blokowanie klienta
 TODO: Edycja klienta
 TODO: Potwierdzenie usunięcia klienta
@@ -210,7 +209,7 @@ TODO: Potwierdzenie usunięcia klienta
 +             Walidacja pustych pól                                                                                   test_form               DashboardClientsTests       test_add_client_errors_for_blank_fields
 +             Walidacja zbyt długich pól                                                                              test_form               DashboardClientsTests       test_add_client_errors_for_long_fields
 +             Walidacja niepoprawnych pól                                                                             test_form               DashboardClientsTests       test_add_client_errors_for_incorrect_fields
--             Walidacja zduplikowanych numerów telefonu                                                               test_form               DashboardClientsTests       test_add_client_error_for_duplicate
+- #TODO:      Walidacja zduplikowanych numerów telefonu                                                               test_form               DashboardClientsTests       test_add_client_error_for_duplicate
 
          Model:
 +             Czy model Client się zapisuje                                                                           test_model              ClientsTests                test_client_model_save
@@ -226,13 +225,6 @@ TODO: Potwierdzenie usunięcia klienta
 
 
     Settings:
-    #TODO: Blokowanie wizyt
-TODO: Sprawdzenie templatki dla każdego formularza
-TODO: Walidacja duplikatów usług
-TODO: formularz godzin pracy nie przyjmuje godziny 24
-TODO: Godziny pracy niewalidowane
-TODO: walidacja duration
-
 TODO: Potwierdzenie usuwania usługi
 TODO: Formularz wysyłania maila do mnie
 TODO: Zmiana hasła
@@ -240,7 +232,7 @@ TODO: Zmiana hasła
          Views:
                 #services
 +                Czy wyświetla się formularz dodawania usługi                                                            test_view           DashboardSettingsTests      test_service_form_display
--                Czy błędy formularza usługi prawidłowo się wyświetlają                                                  test_view           DashboardSettingsTests      test_service_form_display_errors
+-     TODO: duplikaty     Czy błędy formularza usługi prawidłowo się wyświetlają                                                  test_view           DashboardSettingsTests      test_service_form_display_errors
 +                Czy pusta lista usług prawidłowo się wyświetla                                                          test_view           DashboardSettingsTests      test_service_empty_list_not_display
 +                Czy pełna lista usług prawidłowo się wyświetla                                                          test_view           DashboardSettingsTests      test_service_list_display
 +                Czy inni użytkownicy nie widzą moich usług                                                              test_view           DashboardSettingsTests      test_other_user_see_my_service
@@ -248,23 +240,23 @@ TODO: Zmiana hasła
 +                Url usuwania usług                                                                                      test_view           DashboardSettingsTests      test_user_remove_service
 +                czy inni użytkownicy nie mogą usunąć moich usług (404)                                                  test_view           DashboardSettingsTests      test_user_cannot_remove_others_services
                 #blokowanie
--              Czy wyswietla sie przycisk blokowania
--              Czy dobrze przekierowuje
--              Czy zmienia nazwe
--              Czy odblokowuje
--              Czy mozna manualnie zablokowac cudza usluge
+-   todo:      Czy wyswietla sie przycisk blokowania
+-   todo:         Czy dobrze przekierowuje
+-   todo           Czy zmienia nazwe
+-   todo           Czy odblokowuje
+-   todo           Czy mozna manualnie zablokowac cudza usluge
 
 
 
                 # work_time
 +                Czy wyświetla się formularz ustawiania czasu pracy                                                      test_view           DashboardSettingsTests      test_work_time_form_display
-+                Czy formularz działa                                                                                    test_view           DashboardSettingsTests      test_work_time_form_working
-+-               Czy błędy formularza prawidłowo się wyświetlają                                                         test_view           DashboardSettingsTests      test_service_form_errors
+-   todo             Czy formularz działa                                                                                    test_view           DashboardSettingsTests      test_work_time_form_working
+-   TODO            Czy błędy formularza prawidłowo się wyświetlają                                                         test_view           DashboardSettingsTests      test_service_form_errors
 
 
         Templates:
 +           Czy templatka dla url wyświetla się prawidłowo?                                                             test_template           DashboardSettingsTests      test_dashboard_settings_template
--           Czy templatka po wysłaniu POST wyświetla się prawidłowo? (3 rozne formularze - dla kazdego powinna dzialac  test_template           DashboardSettingsTests      test_dashboard_settings_template_POST
+todo           Czy templatka po wysłaniu POST wyświetla się prawidłowo? (3 rozne formularze - dla kazdego powinna dzialac  test_template           DashboardSettingsTests      test_dashboard_settings_template_POST
 
         Forms
                 #add service
@@ -273,12 +265,12 @@ TODO: Zmiana hasła
 +             Walidacja nieprawidłowego czasu                                                                         test_form               DashboardSettingsTests       test_add_service_form_validation_for_wrong_duration
 +             Walidacja zbyt krótkiego/długiego czasu                                                                 test_form               DashboardSettingsTests       test_add_service_errors_for_incorrect_fields
 +             Walidacja zbyt dlugiej nazwy                                                                            test_form               DashboardSettingsTests       test_add_service_form_validation_for_long_names
--             Walidacja zduplikowanych usług                                                                          test_form               DashboardSettingsTests       test_add_service_error_for_duplicate
+todo             Walidacja zduplikowanych usług                                                                          test_form               DashboardSettingsTests       test_add_service_error_for_duplicate
                 #worktime
 +             Czy wczytuje się prawidłowy formularz edycji czasu pracy                                                test_form               DashboardSettingsTests       test_service_uses_work_time_form
-+             Walidacja pustych pól                                                                                   test_form               DashboardSettingsTests       test_work_time_form_validation_for_blank_fields
-+             Walidacja nieprawidłowych pól                                                                           test_form               DashboardSettingsTests       test_work_time_form_validation_for_wrong_fields
-+-            Walidacja ujemnych dni                                                                                  test_form               DashboardSettingsTests       test_work_time_form_validation_for_negative_days
+todo             Walidacja pustych pól                                                                                   test_form               DashboardSettingsTests       test_work_time_form_validation_for_blank_fields
+todo             Walidacja nieprawidłowych pól                                                                           test_form               DashboardSettingsTests       test_work_time_form_validation_for_wrong_fields
+todo            Walidacja ujemnych dni                                                                                  test_form               DashboardSettingsTests       test_work_time_form_validation_for_negative_days
 
 
         Model:
@@ -295,8 +287,8 @@ TODO: Zmiana hasła
 +             Czy usługa się usuwa                                                                                    test_model              ServiceTests                test_service_remove
                 #worktime
 +             Czy WorkTime się edytuje                                                                                  test_model             WorkTimeTests            test_worktime_edit
--             Czy można dodać ujemny czas pracy                                                                         test_model             WorkTimeTests            test_work_negative_days_error
-+             Czy można dodać koniec czasu pracy przed jego początkiem                                                  test_model             WorkTimeTests            test_work_hours_error
+todo             Czy można dodać ujemny czas pracy                                                                         test_model             WorkTimeTests            test_work_negative_days_error
+todo             Czy można dodać koniec czasu pracy przed jego początkiem                                                  test_model             WorkTimeTests            test_work_hours_error
 +             Czy można dodać koniec możliwości dodawania wizyt przed początkiem?                                       test_model             WorkTimeTests            test_work_avaible_days_error
 
 
