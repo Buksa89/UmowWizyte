@@ -39,30 +39,82 @@ class BaseTest(TestCase):
                 'long_2': {'name': 'Lifting', 'duration': timedelta(hours=8), 'is_active': True,},
                 'not_active': {'name': 'Pogaduchy', 'duration': timedelta(hours=1), 'is_active': False,},
                 }
-    work_time = {'regular': {'start_time': '8:00', 'end_time': '16:00', 'monday': True, 'tuesday': True, 'wednesday': True,
-                             'thursday': True, 'friday': True, 'saturday': False, 'sunday': False, 'holidays': False,
-                             'earliest_visit': 0, 'latest_visit': 14,
+    work_time = {'regular': {'start_monday': '8:00', 'end_monday': '16:00', 'duration_monday': timedelta(hours=8),
+                             'start_tuesday': '8:00', 'end_tuesday': '16:00', 'duration_tuesday': timedelta(hours=8),
+                             'start_wednesday': '8:00', 'end_wednesday': '16:00', 'duration_wednesday': timedelta(hours=8),
+                             'start_thursday': '8:00', 'end_thursday': '16:00', 'duration_thursday': timedelta(hours=8),
+                             'start_friday': '8:00', 'end_friday': '16:00', 'duration_friday': timedelta(hours=8),
+                             'start_saturday': '8:00', 'end_saturday': '16:00', 'duration_saturday': timedelta(hours=8),
+                             'start_sunday': '8:00', 'end_sunday': '16:00', 'duration_sunday': timedelta(hours=8),
+                             'holidays': False, 'earliest_visit': 0, 'latest_visit': 14,
                              },
-                 'early_bird': {'start_time': '0:00', 'end_time': '8:00', 'monday': True, 'tuesday': True,'wednesday': True,
-                             'thursday': True, 'friday': True, 'saturday': False, 'sunday': False, 'holidays': False,
-                             'earliest_visit': 0, 'latest_visit': 14,
-                             },
-                 'weekend_holidays_free': {'start_time': '8:00', 'end_time': '16:00', 'monday': True, 'tuesday': True, 'wednesday': True,
-                                           'thursday': True, 'friday': True, 'saturday': False, 'sunday': False, 'holidays': False,
-                                           'earliest_visit': 0, 'latest_visit': 1000,
+                 'early_bird': {'start_monday': '0:00', 'end_monday': '8:00', 'duration_monday': timedelta(hours=8),
+                                'start_tuesday': '0:00', 'end_tuesday': '8:00', 'duration_tuesday': timedelta(hours=8),
+                                'start_wednesday': '0:00', 'end_wednesday': '8:00', 'duration_wednesday': timedelta(hours=8),
+                                'start_thursday': '0:00', 'end_thursday': '8:00', 'duration_thursday': timedelta(hours=8),
+                                'start_friday': '0:00', 'end_friday': '8:00', 'duration_friday': timedelta(hours=8),
+                                'start_saturday': '0:00', 'end_saturday': '8:00', 'duration_saturday': timedelta(hours=8),
+                                'start_sunday': '0:00', 'end_sunday': '8:00', 'duration_sunday': timedelta(hours=8),
+                                'holidays': False, 'earliest_visit': 0, 'latest_visit': 14,
+                                },
+
+                 'weekend_holidays_free': {'start_monday': '8:00', 'end_monday': '16:00', 'duration_monday': timedelta(hours=8),
+                                           'start_tuesday': '8:00', 'end_tuesday': '16:00', 'duration_tuesday': timedelta(hours=8),
+                                           'start_wednesday': '8:00', 'end_wednesday': '16:00', 'duration_wednesday': timedelta(hours=8),
+                                           'start_thursday': '8:00', 'end_thursday': '16:00', 'duration_thursday': timedelta(hours=8),
+                                           'start_friday': '8:00', 'end_friday': '16:00', 'duration_friday': timedelta(hours=8),
+                                           'start_saturday': '0:00', 'end_saturday': '0:00', 'duration_saturday': timedelta(hours=0),
+                                           'start_sunday': '0:00', 'end_sunday': '0:00', 'duration_sunday': timedelta(hours=0),
+                                           'holidays': False, 'earliest_visit': 0, 'latest_visit': 1000,
                                            },
-                 'middle_week_free_eb':{'start_time': '0:00', 'end_time': '8:00', 'monday': False, 'tuesday': False, 'wednesday': False,
-                                        'thursday': False, 'friday': False, 'saturday': True, 'sunday': True, 'holidays': True,
-                                        'earliest_visit': 0, 'latest_visit': 1000,
-                                       }
+
+                 'middle_week_free_eb':{'start_monday': '0:00', 'end_monday': '0:00', 'duration_monday': timedelta(hours=0),
+                                        'start_tuesday': '0:00', 'end_tuesday': '0:00', 'duration_tuesday': timedelta(hours=0),
+                                        'start_wednesday': '0:00', 'end_wednesday': '0:00', 'duration_wednesday': timedelta(hours=0),
+                                        'start_thursday': '0:00', 'end_thursday': '0:00', 'duration_thursday': timedelta(hours=0),
+                                        'start_friday': '0:00', 'end_friday': '0:00', 'duration_friday': timedelta(hours=0),
+                                        'start_saturday': '8:00', 'end_saturday': '16:00', 'duration_saturday': timedelta(hours=8),
+                                        'start_sunday': '8:00', 'end_sunday': '16:00', 'duration_sunday': timedelta(hours=8),
+                                        'holidays': True, 'earliest_visit': 0, 'latest_visit': 1000,
+                                       },
+
+                 'lazy_joe': {'start_monday': '12:00', 'end_monday': '14:00',
+                                         'duration_monday': timedelta(hours=2),
+                                         'start_tuesday': '12:00', 'end_tuesday': '14:00',
+                                         'duration_tuesday': timedelta(hours=2),
+                                         'start_wednesday': '12:00', 'end_wednesday': '14:00',
+                                         'duration_wednesday': timedelta(hours=2),
+                                         'start_thursday': '12:00', 'end_thursday': '14:00',
+                                         'duration_thursday': timedelta(hours=2),
+                                         'start_friday': '12:00', 'end_friday': '14:00',
+                                         'duration_friday': timedelta(hours=2),
+                                         'start_saturday': '12:00', 'end_saturday': '14:00',
+                                         'duration_saturday': timedelta(hours=2),
+                                         'start_sunday': '12:00', 'end_sunday': '14:00',
+                                         'duration_sunday': timedelta(hours=2),
+                                         'holidays': True, 'earliest_visit': 0, 'latest_visit': 1000,
+                                         }
                 }
-    visits = {'short_1': {'name': services['short_1']['name'], 'start': correct_datetime(datetime(2022, 10, 24, 12, 0)), 'end': correct_datetime(datetime(2022, 10, 24, 13, 0))},
-              'overlap_1': {'name': services['short_1']['name'], 'start': correct_datetime(datetime(2022, 10, 24, 11, 15)), 'end': correct_datetime(datetime(2022, 10, 24, 12, 15))},
-              'overlap_2': {'name': services['short_1']['name'], 'start': correct_datetime(datetime(2022, 10, 24, 12, 45)), 'end': correct_datetime(datetime(2022, 10, 24, 13, 45))},
-              'not_overlap_1': {'name': services['short_1']['name'], 'start': correct_datetime(datetime(2022, 10, 24, 11, 0)), 'end': correct_datetime(datetime(2022, 10, 24, 12, 0))},
-              'not_overlap_2': {'name': services['short_1']['name'], 'start': correct_datetime(datetime(2022, 10, 24, 13, 0)), 'end': correct_datetime(datetime(2022, 10, 24, 14, 0))},
+
+
+    visits = {'short_1': {'name': 'vis_1', 'start': correct_datetime(datetime(2022, 10, 24, 12, 0)), 'end': correct_datetime(datetime(2022, 10, 24, 13, 0)), 'is_available':True, 'is_confirmed':True},
+              'overlap_1': {'name': 'vis_2', 'start': correct_datetime(datetime(2022, 10, 24, 11, 15)), 'end': correct_datetime(datetime(2022, 10, 24, 12, 15)), 'is_available':True, 'is_confirmed':True},
+              'overlap_2': {'name': 'vis_3', 'start': correct_datetime(datetime(2022, 10, 24, 12, 45)), 'end': correct_datetime(datetime(2022, 10, 24, 13, 45)), 'is_available':True, 'is_confirmed':True},
+              'not_overlap_1': {'name': 'vis_4', 'start': correct_datetime(datetime(2022, 10, 24, 11, 0)), 'end': correct_datetime(datetime(2022, 10, 24, 12, 0)), 'is_available':True, 'is_confirmed':True},
+              'not_overlap_2': {'name': 'vis_5', 'start': correct_datetime(datetime(2022, 10, 24, 13, 0)), 'end': correct_datetime(datetime(2022, 10, 24, 14, 0)), 'is_available':True, 'is_confirmed':True},
+
+              'later': {'name': 'vis_5', 'start': correct_datetime(datetime(2022, 10, 31, 13, 0)), 'end': correct_datetime(datetime(2022, 10, 31, 17, 0)), 'is_available':True, 'is_confirmed':True},
+              'old': {'name': 'old', 'start': correct_datetime(datetime(2011, 10, 24, 12, 0)), 'end': correct_datetime(datetime(2011, 10, 24, 13, 0)), 'is_available':True, 'is_confirmed':True},
+              'confirmed_1': {'name': 'vis_7', 'start': correct_datetime(datetime(2022, 10, 24, 13, 0)), 'end': correct_datetime(datetime(2022, 10, 24, 14, 0)), 'is_available':True, 'is_confirmed':True},
+              'confirmed_2': {'name': 'vis_8', 'start': correct_datetime(datetime(2022, 10, 24, 14, 0)), 'end': correct_datetime(datetime(2022, 10, 24, 15, 0)), 'is_available':True, 'is_confirmed':True},
+              'not_confirmed': {'name': 'not_confirmed', 'start': correct_datetime(datetime(2022, 10, 24, 15, 0)), 'end': correct_datetime(datetime(2022, 10, 24, 16, 0)), 'is_available':True, 'is_confirmed':False},
+              'cancelled_confirmed': {'name': 'cancelled_confirmed', 'start': correct_datetime(datetime(2022, 10, 24, 16, 0)), 'end': correct_datetime(datetime(2022, 10, 24, 17, 0)), 'is_available':False, 'is_confirmed':True},
+              'cancelled_not_confirmed': {'name': 'cancelled_not_confirmed', 'start': correct_datetime(datetime(2022, 10, 24, 17, 0)), 'end': correct_datetime(datetime(2022, 10, 24, 18, 0)), 'is_available':False, 'is_confirmed':False},
 
               }
+
+    date_time = {'regular': datetime(2022, 10, 10, 8, 0, 0),
+                }
 
     weeks = {'with_holiday': {'week': 44, 'year': 2022},
              'no_holiday': {'week': 43, 'year': 2022},
@@ -99,15 +151,20 @@ class BaseTest(TestCase):
                                           is_active=self.clients_full_data[client]['is_active'])
 
     def work_time_save(self, worktime, data):
-        worktime.start_time = self.work_time[data]['start_time']
-        worktime.end_time = self.work_time[data]['end_time']
-        worktime.monday = self.work_time[data]['monday']
-        worktime.tuesday = self.work_time[data]['tuesday']
-        worktime.wednesday = self.work_time[data]['wednesday']
-        worktime.thursday = self.work_time[data]['thursday']
-        worktime.friday = self.work_time[data]['friday']
-        worktime.saturday = self.work_time[data]['saturday']
-        worktime.sunday = self.work_time[data]['sunday']
+        worktime.start_monday = self.work_time[data]['start_monday']
+        worktime.duration_monday = self.work_time[data]['duration_monday']
+        worktime.start_tuesday = self.work_time[data]['start_tuesday']
+        worktime.duration_tuesday = self.work_time[data]['duration_tuesday']
+        worktime.start_wednesday = self.work_time[data]['start_wednesday']
+        worktime.duration_wednesday = self.work_time[data]['duration_wednesday']
+        worktime.start_thursday = self.work_time[data]['start_thursday']
+        worktime.duration_thursday = self.work_time[data]['duration_thursday']
+        worktime.start_friday = self.work_time[data]['start_friday']
+        worktime.duration_friday = self.work_time[data]['duration_friday']
+        worktime.start_saturday = self.work_time[data]['start_saturday']
+        worktime.duration_saturday = self.work_time[data]['duration_saturday']
+        worktime.start_sunday = self.work_time[data]['start_sunday']
+        worktime.duration_sunday = self.work_time[data]['duration_sunday']
         worktime.holidays = self.work_time[data]['holidays']
         worktime.earliest_visit = self.work_time[data]['earliest_visit']
         worktime.latest_visit = self.work_time[data]['latest_visit']
@@ -131,5 +188,7 @@ class BaseTest(TestCase):
                                     name = self.visits[visit]['name'],
                                     start = self.visits[visit]['start'],
                                     end = self.visits[visit]['end'],
-                                    description = '')
+                                    description = '',
+                                    is_available = self.visits[visit]['is_available'],
+                                    is_confirmed = self.visits[visit]['is_confirmed'])
 

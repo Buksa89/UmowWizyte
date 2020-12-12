@@ -70,7 +70,7 @@ background:#333333;
 }
 .dates-header ul.days li{
 
-  box-shadow: 0px 1px 0px 0px #d0d0d0;
+  border-bottom: 1px solid #d0d0d0;
 
 }
 
@@ -133,7 +133,7 @@ ul.schedule-content li ul li {
 
 ul.schedule-content li ul li.hour-off {
   background: #999;
-  border-bottom: 1px solid #999;
+  border-bottom: 1px solid #909090;
 }
 ul.schedule-content li ul li.avaliable {
   background-color:#ddd;
@@ -173,9 +173,6 @@ ul.schedule-content li ul a li.avaliable{
   background-color:#ddd;
   color: #ffffff;
 }
-
-
-
 
 ul.schedule-content li ul a li.hover {
 border-top: none;

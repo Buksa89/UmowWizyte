@@ -1,0 +1,81 @@
+Settings:
+TODO: Zmiana pinu
+TODO: Ustawienie maila
+
+Login
+    Views
+        Czy błędy w formularzu logowania prawidłowo się wyświetlają
+        Czy klient pozostaje niezalogowany, jeśli jest nieaktywny?
+        Czy klient zostaje zalogowany, jeśli loguje się z prawidłowymi danymi?
+        Czy po wylogowaniu klient zostaje usunięty z sesji
+
+        Redirects tests
+        Czy niezalogowany klient zostaje przekierowany z podstron do strony logowania?
+        Czy zalogowany klient zostaje przekierowany ze strony logowania do pulpitu?
+        Czy klient, który się właśnie zalogował, zostaje przekierowany do pulpitu?
+        Czy klient zostaje przekierowany do strony logowania po wylogowaniu?
+
+    Template
+        Czy templatka na stronie logowania prawidłowo się wczytuje?
+        Czy formularz logownia wysyła POST na stronę logowania?
+        Jeśli użytkownik nie jest aktywny, to jego terminarz jest zablokowany?
+
+    Form
+        Czy formularz logowania wczytuje prawidłową instancję?
+        Czy formularz logowania prawidłowo wyświetla błędy?
+
+Dashboard
+    Views
+        Czy formularz dodawania wizyty się wyświetla?
+        Czy klient widzi prawidłowe usługi (swojego użytkownika, niezablokowane)
+        Czy wyświetla się powiadomienie o braku nadchodzących wizyt
+        Czy lista wizyt prawidłowo się wyświetla (wizyty d,np d,p o,n, o,p, brak wizyt przedawnionych i wizyt innych klientów)
+        Czy klient może ręcznie odwołać cudzą, minioną, odwołaną wizytę (404)
+
+        Redirects
+        Czy dashboard prawidłowo przekierowuje po otrzymaniu POST
+
+    Template
+        Url dahsboard wczytuje prawidłową templatkę
+        Czy formularz dodawania wizyty wysyła post do pulpitu?
+    Form
+        Czy formularz dodawania wizyty wczytuje prawidłową instancję?
+
+
+AddVisit
+    Views
+TODO:        Czy klient dostaje błąd 404 jeśli próbuje wybrać manualnie cudzą lub zablokowaną usługę - rożne formy urla
+TODO:        Czy wyświetla się tytuł
+TODO:        Czy wyświetla się prawidłowa nawigacja
+TODO:        Czy wyświetla się data
+TODO:        Czy na przełomie miesięcy wyświetla się linia pionowa
+TODO:        Czy wyświetlają się dni
+TODO:        Czy godziny się prawidłowo wyświetlają
+TODO:        Czy podświetlają się święta
+TODO:        Czy podświetla się dzisiejszy dzień
+TODO:        Czy dostępne godziny mają prawidłową klasę - wez pod uwage: stare pola, godziny pracy, święta, wizyty, d,np d,p d,n,o d,p,o,n, d,p,o,p,
+TODO:        Czy niedostępne godziny mają prawidłową klasę i nie mają urla
+TODO:        Czy dostępne godziny mają prawidłowy url
+
+        Confirm
+TODO:        Czy klient dostaje błąd 404 jeśli próbuje wybrać manualnie cudzą lub zablokowaną usługę
+TODO:        Czy klient dostaje informację, jeśli dana godzina jest już zajęta
+TODO:        Czy klientowi wyświetla się nazwa usługi, data, dzień tygodnia, godzina, czas trwania
+TODO:        Czy klientowi wyświetla się formularz
+TODO:        Czy url potwierdzania wizyty wysyła POST do siebie?
+TODO:        Czy klient po wysłaniu POST dostaje informację, jeśli godzina jest już zajęta
+
+    Template
+        Czy url dodawania wizyty wyświetla prawidłową templatkę?
+        Czy url rozszerzony url dodawania wizyty wyświetla prawidłową templatkę?
+
+        Conmfirm
+        Czy url potwierdzania wizyty wyświetla prawidłową templatkę?
+
+    Form
+
+        Confirm
+        Czy formularz potwierdzania wizyty wczytuje prawidłową instancję?
+TODO:        Czy formularz potwierdzania wizyty prawidłowo wyświetla błędy? - za długa informacja, godzina zajęta
+
+

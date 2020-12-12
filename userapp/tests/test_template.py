@@ -3,8 +3,29 @@ from unittest import skip
 from ..forms import LoginForm
 from .base import BaseTest
 
+class ScheduleTest(BaseTest):
 
-class LoginTests(TestCase):
+    def test_url_schedule_template_display(self):
+        user = self.create_user()
+        self.authorize_user(user)
+        response = self.client.get('/terminarz/')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'schedule.html')
+
+    def test_extended_url_schedule_template_display(self):
+        user = self.create_user()
+        self.authorize_user(user)
+        date_ = self.weeks['no_holiday']
+        response = self.client.get(f'/terminarz/{date_["year"]}/{date_["week"]}/')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'schedule.html')
+
+
+
+
+'''class LoginTests(TestCase):
 
     def test_login_template_display(self):
         response = self.client.get('/login/')
@@ -78,3 +99,4 @@ class DashboardSettingsTests(BaseTest):
 
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'settings.html')
+'''

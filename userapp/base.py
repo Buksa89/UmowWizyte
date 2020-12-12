@@ -159,7 +159,7 @@ class Schedule:
 
         for d, day in enumerate(self.days):
             html_code += f'<li><ul class="visit" id="day-{d}">'
-            html_code += self.prepare_day_column(day, self.visits[d], self.time_range)
+            html_code += self.prepare_day_column(d, day, self.visits[d], self.time_range)
             html_code += f'</ul></li>'
 
         html_code += f'</ul></div>'
@@ -214,7 +214,6 @@ class Schedule:
 
         return dicts
 
-    #TODO: Sprawdz czy wizyty są w zakresie 00:00, 24:00
     def load_visits(self, days):
         """ Method load visits for days from database. If one visit is in two days, is cutted
         in tim 00:00 and exist in both days"""
@@ -284,6 +283,7 @@ class Schedule:
 
         for n, day in enumerate(self.days):
             name = day.strftime("%A").lower()
+
             start = self.work_time.__dict__['start_'+name]
             end = datetime.combine(date.min, start) + self.work_time.__dict__['duration_'+name]
             if end != datetime(1,1,2,0,0,0):
@@ -291,8 +291,9 @@ class Schedule:
             else:
                 end = time.max
 
-            times.append(start)
-            times.append(end)
+            if start < end:
+                times.append(start)
+                times.append(end)
 
             for visit in self.visits[n]:
                 start = visit.start.time()
@@ -300,17 +301,20 @@ class Schedule:
                 times.append(start)
                 times.append(end)
 
-        start = min(times)
-        if max(times) != time.max:
-            duration = datetime.combine(date.min, max(times)) - datetime.combine(date.min, start)
-        else:
-            duration = datetime(1,1,2,0,0,0) - datetime.combine(date.min, start)
+        if times:
+            start = min(times)
+            if max(times) != time.max:
+                duration = datetime.combine(date.min, max(times)) - datetime.combine(date.min, start)
+            else:
+                duration = datetime(1,1,2,0,0,0) - datetime.combine(date.min, start)
 
-        time_range = list_of_times_generate(start, duration)
+            time_range = list_of_times_generate(start, duration)
+        else:
+            time_range = []
 
         return time_range
 
-    def prepare_day_column(self, day, visits, time_range):
+    def prepare_day_column(self, column_number, day, visits, time_range):
         """ Method prepare variables for generating day colums and call mothod to do it. """
         html_code = ''
 
@@ -335,28 +339,31 @@ class Schedule:
                         time_status.append('off')
                         break
                 else:
-                    #TODO dodaj walidacje czy godzina juz minela i czy dzien jest wolny. Potem usun ją z klient.add.visit
-                    # This time is free to book
-                    time_status.append('av')
+                    if hour < not_naive(datetime.now()):
+                        time_status.append('off')
+                    else:
+                        # This time is free to book
+                        time_status.append('av')
                     continue
 
-        html_code += self.generate_day_column(day, hours, time_status)
+        html_code += self.generate_day_column(column_number, day, hours, time_status)
 
         return html_code
 
-    def generate_day_column(self, day, hours, statuses):
+    def generate_day_column(self, column_number, day, hours, statuses):
         html_code = ''
         visit_duration_counter = 0
         for n, status in enumerate(statuses):
+            hour_class = hours[n].strftime("%H-%M")
             if not visit_duration_counter:
                 if status == 'av':
-                    html_code += f'<li>&nbsp;</li>'
+                    html_code += f'<li class="{hour_class} {column_number}">&nbsp;</li>'
                 elif status == 'off':
-                    html_code += f'<li class="hour-off">&nbsp;</li>'
+                    html_code += f'<li class="{hour_class} {column_number} hour-off">&nbsp;</li>'
                 else:
                     visit = Visit.objects.get(user=self.user, id=status)
                     visit_duration_counter = int((visit.end - visit.start) / timedelta(minutes=15))-1
-                    html_code += f'<li style="height:{31 * visit_duration_counter + 29}px" class="visit">'
+                    html_code += f'<li style="height:{31 * visit_duration_counter + 29}px" class="{hour_class} {column_number} visit">'
                     html_code += self.generate_visit_content(visit)
                     html_code += f'</li>'
             else:
@@ -396,17 +403,21 @@ class ClientAddVisitSchedule(Schedule):
             name = day.strftime("%A").lower()
             start = datetime.combine(date.min, self.work_time.__dict__['start_' + name])
             end = start + self.work_time.__dict__['duration_' + name]
-            times.append(start)
-            times.append(end)
+            if start < end:
+                times.append(start)
+                times.append(end)
 
-        start = min(times)
-        duration = (max(times) - start)
-
-        time_range = list_of_times_generate(start.time(), duration)
+        if times:
+            start = min(times)
+            duration = (max(times) - start)
+            time_range = list_of_times_generate(start.time(), duration)
+        else:
+            time_range = []
 
         return time_range
 
-    def generate_day_column(self, day, hours, statuses):
+
+    def generate_day_column(self, column_number, day, hours, statuses):
         html_code = ''
         simple_duration = int(self.service.duration / timedelta(minutes=15))
         display_day = True
@@ -414,6 +425,7 @@ class ClientAddVisitSchedule(Schedule):
         if day > (date.today() + timedelta(self.work_time.latest_visit)) : display_day = False
         if is_holiday(day) and not self.work_time.holidays: display_day = False
         for n, status in enumerate(statuses):
+            hour_class = hours[n].strftime("%H-%M")
             if status == 'av' and display_day and hours[n] > not_naive(datetime.now()):
                 flag = True
                 # Check if next time quarters are free to put there new visitx
@@ -429,12 +441,12 @@ class ClientAddVisitSchedule(Schedule):
                     html_code += f'<a href="{self.get_visit_url(hours[n])}" ' \
                                  f'onmouseover="on_hover({self.id}, {simple_duration})" ' \
                                  f'onmouseout="out_hover({self.id}, {simple_duration})">' \
-                                 f'<li class="avaliable" id="{self.id}">&nbsp;</li></a>'
+                                 f'<li class="{hour_class} {column_number} avaliable" id="{self.id}">&nbsp;</li></a>'
                 else:
-                    html_code += f'<li class="avaliable" id="{self.id}">&nbsp;</li>'
+                    html_code += f'<li class="{hour_class} {column_number} avaliable" id="{self.id}">&nbsp;</li>'
                 self.id += 1
             else:
-                html_code += f'<li class="not-avaliable">&nbsp;</li>'
+                html_code += f'<li class="{hour_class} {column_number} not-avaliable">&nbsp;</li>'
                 self.id += 1
 
         return html_code
@@ -555,7 +567,7 @@ class UserTwoDaysSchedule(Schedule):
             if d==0: width = 62.5
             else: width = 25
             html_code += f'<li style="width:{width}%"><ul class="visit" id="day-{d}">'
-            html_code += self.prepare_day_column(day, self.visits[d], self.time_range)
+            html_code += self.prepare_day_column(d, day, self.visits[d], self.time_range)
             html_code += f'</ul></li>'
 
         html_code += f'</ul></div>'

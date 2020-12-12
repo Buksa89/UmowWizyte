@@ -6,8 +6,8 @@ from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.generic.edit import CreateView
 from functools import wraps
-from .forms import AddVisit, ClientChooseVisitForm, ClientLoginForm
-from userapp.base import ClientAddVisitSchedule, is_client_authenticated
+from .forms import AddVisitForm, ClientChooseVisitForm, ClientLoginForm
+from userapp.base import ClientAddVisitSchedule, is_client_authenticated, not_naive
 from userapp.models import Client, Service, Visit, WorkTime
 
 DAYS_OF_WEEK = ['Poniedziałek', 'Wtorek', 'Środa', 'Czwartek', 'Piątek', 'Sobota', 'Niedziela']
@@ -23,6 +23,13 @@ def client_login_required(function):
 
 
 class ClientAppLogin(CreateView):
+    """If user is not active, login form is locked
+    If client is authorized, he is redirected to dashboard
+    If client give correct data, he start to be authorized in session:
+    request.session['client_authorized'] = {'phone': phone_of_client, 'user': username
+    This authorization is necessary to display dashboard
+    When client is authorized, he is redirected to dashboard
+    """
     template = 'client_login.html'
     template_not_active = 'client_login_not_active.html'
 
@@ -47,40 +54,30 @@ class ClientAppLogin(CreateView):
             elif client[0].pin != cd['pin']:
                 form.add_error(None, 'Dane nieprawidłowe')
             elif not client[0].is_active:
-                # TODO: Przetestuj czy ta funkcja działa, kiedy już będzie możliwość blokowania klienta
                 form.clean()
                 form.add_error(None, 'Konto zablokowane')
             else:
-                # TODO: SPRAWDZ CZY USER JEST AKTYWNY
                 request.session['client_authorized'] = {'phone': cd['phone_number'], 'user': user.username}
                 return redirect('client_app_dashboard', username)
         return render(request, self.template, {'form':form, 'user':user.username})
 
 
-
 class ClientAppDashboard(View):
+    """In dashboard client see:
+    Main menu (visits, settings, logout)
+    Form to add new visit
+    His future visits. He can cancel them
+    Cancelled and confirmed visit are not display
+    Old visit too"""
+
     template = 'client_dashboard.html'
 
     @method_decorator(client_login_required)
     def get(self, request, username):
         user = get_object_or_404(User, username__iexact=username)
         client = get_object_or_404(Client, phone_number=request.session.get('client_authorized')['phone'],user=user)
-        visits_query = Visit.objects.filter(user=user, client=client)
-        visits = []
-        for visit in visits_query:
-            dict = {}
-            dict['name'] = visit.name
-            dict['date'] = visit.start.strftime("%Y-%m-%d")
-            dict['day'] = DAYS_OF_WEEK[visit.start.weekday()]
-            dict['time'] = visit.start.strftime("%H:%M")
-            dict['duration'] = str(visit.end - visit.start)[:-3].rjust(5,'0')
-            if visit.is_available: dict['status'] = 'Zarezerwowana'
-            else: dict['status'] = 'Odwołana'
-            if visit.is_confirmed: dict['status'] += ' (Potwierdzona)'
-            else: dict['status'] += ' (Niepotwierdzona)'
-            dict['is_avaliable'] = visit.is_available
-            dict['cancel_url'] = visit.get_cancel_url()
-            visits.append(dict)
+        visits = Visit.objects.filter(user=user, client=client, end__gt=not_naive(datetime.now())).exclude(is_available=False, is_confirmed=True)
+        visits = self.prepare_visits_list(visits)
 
         form = ClientChooseVisitForm(user)
         return render(request, self.template, {'form':form,
@@ -94,7 +91,22 @@ class ClientAppDashboard(View):
         if 'service' in request.POST.keys(): return redirect('client_app_new_visit', username, request.POST['service'])
         return redirect('client_app_dashboard', username)
 
-
+    def prepare_visits_list(self, visits):
+        visits_list = []
+        for visit in visits:
+            dict = {}
+            dict['name'] = visit.name
+            dict['date'] = visit.start.strftime("%Y-%m-%d")
+            dict['day'] = DAYS_OF_WEEK[visit.start.weekday()]
+            dict['time'] = visit.start.strftime("%H:%M")
+            dict['duration'] = str(visit.end - visit.start)[:-3].rjust(5,'0')
+            if visit.is_available: dict['status'] = 'Aktualna'
+            else: dict['status'] = 'Odwołana'
+            if not visit.is_confirmed: dict['status'] += ' (Niepotwierdzona)'
+            dict['is_avaliable'] = visit.is_available
+            dict['cancel_url'] = visit.get_cancel_url()
+            visits_list.append(dict)
+        return visits_list
 
 
 class ClientAppNewVisit(View):
@@ -116,13 +128,11 @@ class ClientAppNewVisit(View):
 class ClientAppConfirmVisit(View):
     template_name = ''
     section = ''
-    form = AddVisit()
-
+    form = AddVisitForm()
 
     def get(self, request, username, service_id, year, month, day, hour, minute):
         #TODO: Walidacja czy na pewno data i godzina wolne
-        user = get_object_or_404(User, username__iexact=username)
-        service = get_object_or_404(Service, id=service_id, user=user)
+        user, service = self.prepare_data(request, username, service_id)
         day_number = datetime(year, month, day).weekday()
         day_name = DAYS_OF_WEEK[day_number]
         day_str = str(day).rjust(2,'0')
@@ -143,11 +153,9 @@ class ClientAppConfirmVisit(View):
         # jeśli tak, redirect do strony glownej
         # jesli nie, render jeszcze raz
         # Potwierdzenie na głównej
-
-        form = AddVisit(data=self.request.POST)
-        user = get_object_or_404(User, username__iexact=username)
+        user, service = self.prepare_data(request, username, service_id)
+        form = AddVisitForm(data=self.request.POST)
         client = get_object_or_404(Client, phone_number=request.session.get('client_authorized')['phone'], user=user)
-        service = get_object_or_404(Service, id=service_id, user=user)
         name = service.name
         start = timezone.make_aware(datetime(year, month, day, hour, minute), timezone.get_default_timezone())
         end = start + service.duration
@@ -158,13 +166,16 @@ class ClientAppConfirmVisit(View):
 
         return redirect('client_app_dashboard', username)
 
+    def prepare_data(self, request, username, service_id):
+        user = get_object_or_404(User, username__iexact=username)
+        service = get_object_or_404(Service, id=service_id, user=user)
+        return user, service
 
 class ClientAppCancelVisit(View):
-
     def get(self, request, username, visit_id):
         user = get_object_or_404(User, username__iexact=username)
         client = get_object_or_404(Client, phone_number=request.session['client_authorized']['phone'], user=user)
-        visit = get_object_or_404(Visit, user=user, client=client, id=visit_id)
+        visit = get_object_or_404(Visit.objects.filter(user=user, client=client, end__gt=not_naive(datetime.now())).exclude(is_available=False, is_confirmed=True))
         if visit.is_confirmed:
             visit.is_available = False
             visit.is_confirmed = False

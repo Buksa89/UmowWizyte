@@ -1,9 +1,106 @@
+from bs4 import BeautifulSoup as Bs
+from datetime import date, datetime, timedelta
 from django.test import TestCase
 from unittest import skip
 from ..models import Client, Service, WorkTime
 from .base import BaseTest
 
-class DashboardClientsTests(BaseTest):
+class ScheduleTest(BaseTest):
+
+
+    """Week schedule"""
+    def test_simple_url_display_today(self):
+        user = self.create_user()
+        self.authorize_user(user)
+        response = self.client.get('/terminarz/')
+        soup = Bs(response.content.decode(), features="html.parser")
+        today_highlight = soup.find("li", {"class":"today"})
+
+        self.assertTrue(today_highlight)
+        self.assertIn(str(datetime.now().month), today_highlight.getText())
+
+
+    def test_title_display(self):
+        user = self.create_user()
+        self.authorize_user(user)
+        response = self.client.get('/terminarz/')
+        soup = Bs(response.content.decode(), features="html.parser")
+        header = soup.find("div", {"class":"header"})
+
+        self.assertTrue(header)
+        self.assertIn('Terminarz', str(header))
+
+    def test_navigation_display(self):
+        user = self.create_user()
+        self.authorize_user(user)
+        date_ = self.weeks['no_holiday']
+        response = self.client.get(f'/terminarz/{date_["year"]}/{date_["week"]}/')
+        prev_url = f'/terminarz/{date_["year"]}/{date_["week"]-1}/'
+        next_url = f'/terminarz/{date_["year"]}/{date_["week"]+1}/'
+        soup = Bs(response.content.decode(), features="html.parser")
+        hrefs = soup.find("div", {"class":"header"}).findAll('a')
+
+        self.assertTrue(hrefs)
+        self.assertIn(prev_url, hrefs[0]["href"])
+        self.assertIn(next_url, hrefs[1]["href"])
+
+    def test_dates_header_month_and_year(self):
+        user = self.create_user()
+        date = self.weeks['with_holiday']
+        self.authorize_user(user)
+        response = self.client.get(f"/terminarz/{date['year']}/{date['week']}/")
+
+        soup = Bs(response.content.decode(), features="html.parser")
+        li1 = soup.find("li", {'style': 'width:12.5%'})
+        li2 = soup.find("li", {'style': 'width:75.0%'})
+
+        self.assertEqual(li1.get_text(), '2022Październik')
+        self.assertEqual(li2.get_text(), '2022Listopad')
+        self.assertIn('border-date', li2["class"])
+
+    def test_dates_header_days(self):
+        user = self.create_user()
+        date_ = self.weeks['with_holiday']
+        self.authorize_user(user)
+        response = self.client.get(f"/terminarz/{date_['year']}/{date_['week']}/")
+        soup = Bs(response.content.decode(), features="html.parser")
+
+        border_month = soup.find("ul", {"class": "days"}).find("li", {"class": "border-date"})
+        days_header = soup.find("ul", {"class": "days"}).findAll('div')
+
+        for n, div in enumerate(days_header):
+            day = str(date.fromisocalendar(date_['year'], date_['week'], n+1).day)
+
+            self.assertIn(day, div.getText())
+        self.assertTrue(border_month)
+
+    def test_hours_display(self):
+        user = self.create_user()
+        self.authorize_user(user)
+        self.work_time_save(user.worktime, 'lazy_joe')
+        date_ = self.weeks['with_holiday']
+        client = self.create_client(user)
+        response = self.client.get(f"/terminarz/{date_['year']}/{date_['week']}/")
+        soup = Bs(response.content.decode(), features="html.parser")
+        hours = soup.find("ul", {"class": "hours"}).findAll('li')
+        number_of_quarters = int(user.worktime.duration_monday / timedelta(minutes=15))
+        self.assertEqual(len(hours), number_of_quarters)
+
+        print(date.fromisocalendar(date_['year'], date_['week'],1))
+
+        visit = self.create_visit(user, client, 'later')
+
+        work_day = visit.end - user.worktime.start_monday
+        response = self.client.get(f"/terminarz/{date_['year']}/{date_['week']}/")
+        soup = Bs(response.content.decode(), features="html.parser")
+        hours = soup.find("ul", {"class": "hours"}).findAll('li')
+        number_of_quarters = int(work_day / timedelta(minutes=15))
+        self.assertEqual(len(hours), number_of_quarters)
+
+
+
+
+'''class DashboardClientsTests(BaseTest):
 
     """ Clients list"""
 
@@ -307,3 +404,4 @@ class LoginTests(BaseTest):
         response = self.client.get('/logout/')
 
         self.assertRedirects(response, f'/login/')
+'''

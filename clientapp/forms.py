@@ -35,7 +35,7 @@ class ClientChooseVisitForm(forms.Form):
         return service_list
 
 
-class AddVisit(forms.ModelForm):
+class AddVisitForm(forms.ModelForm):
     def save(self, user, client, name, start, end, is_available, is_confirmed):
         self.instance.user = user
         self.instance.client = client

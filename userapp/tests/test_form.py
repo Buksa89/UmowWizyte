@@ -4,7 +4,9 @@ from ..forms import AddClientForm, AddServiceForm, LoginForm, WorkTimeForm
 from .base import BaseTest
 
 
-class DashboardClientsTests(BaseTest):
+
+
+'''class DashboardClientsTests(BaseTest):
 
     """ Add Clients """
 
@@ -164,3 +166,4 @@ class LoginTests(BaseTest):
             form = LoginForm(data=data_result['data'])
             self.assertFalse(form.is_valid())
             self.assertEqual(form.errors[data_result['field']], [data_result['message']])
+'''

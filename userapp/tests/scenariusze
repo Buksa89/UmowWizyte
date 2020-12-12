@@ -1,9 +1,60 @@
+Bazowe
+    Model
+
+Login
+
+
+Dashboard
+
+
+Schedule
+    Views
+        Views
+            Tygodniowy:
+       Czy zwykły URL zaciąga dzień dzisiejszy - czy today jest podświetlone
+       Czy wyświetla się tytuł
+       Czy wyświetla się prawidłowa nawigacja
+       Czy wyświetla się miesiąc i rok (linia pionowa oddzielajaca miesiace tez)
+       Czy wyświetlają się dni          (-||-)
+       Czy godziny się prawidłowo wyświetlają
+TODO:       Czy podświetlają się święta
+TODO:       Czy pola mają prawidłową klasę - wez pod uwage: stare pola, godziny pracy, święta, wizyty, d,np d,p d,n,o d,p,o,n, d,p,o,p,
+TODO:       Czy wizyty mają url
+
+        Template
+        Czy zwykły URL zaciąga prawidłową templatkę
+        Czy specjalny url zaciąga prawidłową templatkę
+
+Settings
+
+
+Clients
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 Testy modelu klient, worktime nie sprawdzają długości wprowadzanych danych
 Test wizyt
 testy zatwierdzania wizyt
 test blokowania usługi
 swieta i odleglosc dni dla klienta
 walidacja formularza godzin pracy
+###TODO!!!!!!!!!!!!!!! TESTY WYSWIETLANIA WIZYT W TERMINARZACH ZALEZNIE OD ICH STATUSU
 
 Bazowe
     Model
@@ -18,111 +69,6 @@ Bazowe
 +        Czy próba stworzenia wizyty stykającej się z inną                                                              test_model           VisitTest        test_visit_not_overlaps_error
 +        Czy różni userzy mogą tworzyć wizyty pokrywające się                                                           test_model           VisitTest        test_visit_overlaps_for_different_users
 
-
-Klient
-    Login:
-
-        Views:
-+            Czy przy błędnym logowaniu wyświetlają się wszystkie errory                                                test_view        LoginTests     test_incorrect_data_errors_display
-+            Czy przy logowaniu ze złym loginem/pinem klient pozostaje niezalogowany w sesji                            test_view        LoginTests     test_incorrect_data_not_authorize
-+            Czy przy logowaniu jako nieaktywny, klient pozostaje niezalogowany w sesji                                 test_view        LoginTests     test_not_active_client_not_auhorize
-+            Czy przy prawidłowym logowaniu pojawia się w sesji                                                         test_view        LoginTests     test_correct_client_auhorized
-+            Czy po wylogowaniu klient usuwany jest z sesji                                                             test_view        LoginTests     test_remove_client_from_session_after_logout
-             # Redirects
-+            Przekierowywanie z podstron do strony logowania jeśli w sesji nie ma klienta dla danego usera              test.views       LoginTests     test_redirect_to_login_url_when_client_not_authorized_for_this_user
-+            Przekierowanie z url loginu do url dashboard jesli klient jest w sesji                                     test.views       LoginTests     test_redirect_from_login_to_dashboard_url_when_client_authorized_for_this_user
-+            Przekierowanie z url loginu do url dashboard po wprowadzeniu prawidłowych danych                           test.views       LoginTests     test_redirect_to_dashboard_after_POST_login
-+            Przekierowanie do url login po wylogowaniu                                                                 test.views       LoginTests     test_redirect_after_logout
-
-        Templates
-+            Czy url login wczytuje właściwą templatkę (login.html)                                                      test_template      LoginTests          test_login_template_display
-+            Czy url login po wysłaniu POSTA wczytuje właściwą templatkę (login.html)                                    test_template      LoginTests          test_login_template_POST
-+            Czy url login wczytuje właściwą templatk dla nieaktywnego uzytkownika (login_not_active.html)               test_template      LoginTests          test_login_template_not_active
-
-        Forms
-+            Czy url login wyświetla prawidłowy formularz (ClientLoginForm)                                             test_form          LoginTests          test_form_display
-+            Czy formularz prawidłowo waliduje błędnie wprowadzone dane                                                 test_form          LoginTests          test_incorrect_data_errors_display
-
-
-Klient
-#TODO: potwierdzenie odwołania wizyty
-# TODO user/klient - potwierdzenie/odwolanie wizyty
-
-    Dashboard
-        Views
-+            Czy klient widzi formularz                                                                                  test_view           DashboardTests      test_form_display
-+            Czy po otrzymaniu POST prawidłowo przekierowuje                                                             test_view           DashboardTests      test_dashboard_POST_redirect
-+            Czy klient widzi swoje usługi                                                                               test_view           DashboardTests      test_correct_services_in_form
-+            klient nie widzi zablokowanych usług                                                                        test_view           DashboardTests      test_only_active_services_in_form
-+            Czy klient nie widzi usług innych użytkowników                                                              test_view           DashboardTests      test_incorrect_services_in_form
-+            czy klient nie może wybrać cudzej usługi przez manualny url (404)                                           test_view           DashboardTests      test_cant_get_other_users_service
-+            czy klient nie może wybrać zablokowanej usługi przez manualny url (404)                                     test_view           DashboardTests      test_cant_get_not_active_service
-            czy pusta lista wizyt się prawidłowo wyświetla                                                              test_view           DashboardTests      test_empty_visits_lists
-            czy lista wizyt się prawidłowo wyświetla                                                                    test_view           DashboardTests      test_visits_lists
-            czy klient nie widzi wizyt innych klientów                                                                  test_view           DashboardTests      test_cant_see_other_clients_visit
-            Czy klient nie może odwołać cudzej wizyty                                                                   test_view           DashboardTests      test_cant_cancel_other_clients_visit
-            Czy wizyta znika po odwołaniu jeśli była niepotwierdzona
-            Czy klient widzi ze jest potwierdzona
-            Czy wizyta znika po odwolaniu jesli byla potwierdzona
-            Czy zostaje guzik do ponownego odwolania
-            czy mozna odwolac ponownie przez url (404)
-
-        Templates
-+            Czy templatka jest prawidłowa                                                                               test_template      DashboardTests      test_dashboard_template_display
-        Forms
-+            Czy wyświetla się formularz wyboru usługi                                                                   test_form          DashboardTests      test_form_display
-
-
-
-
-Schedule:
-
-    Views:
-         terminarz:
-+        Czy nawigacja prawidłowo się wyświetla i wskazuje właściwe urle                                                 test_view           AddVisitTests       test_schedule_navigation_header
-+        Czy lista dni się wyświetla                                                                                     test_view           AddVisitTests       test_days_header
-+        Czy miesiące/lata się prawidłowo wyświetlają                                                                    test_view           AddVisitTests       test_months_header
-+        Czy godziny się wyświetlają prawidłowo, zależnie od ustawień                                                    test_view           AddVisitTests       test_hours_display
-+        czy bazowy url podświetla dzień dzisiejszy                                                                      test_view           AddVisitTests       test_highlight_today
-+        Czy niedziele i święta są podświetlone                                                                          test_view           AddVisitTests       test_test_highlight_sundays_and_holidays
-+        Czy dni są dostępne/niedostępne zależnie od ustawień                                                            test_view           AddVisitTests       test_days_access
-+         czy cudza wizyta wyswietla blad 404                                                                             test_view           AddVisitTests       test_other_users_services
-
-        # wizyty
-+        czy wolne godziny generują prawidłowe urle                                                                      test_view           AddVisitTests       test_correct_url_to_visit_confirm
-+        czy zarezerwowane wizyty blokują linki                                                                          test_view           AddVisitTests       test_booked_time_not_avaliable
-
-- confirm
-        czy zarezerwowana godzina wyswietla blad
-        czy cudza wizyta wyswietla blad 404
-        czy wyswietla sie data, godzina, czas trwania, nazwa wizyty
-
-
-    Templates:
-+        czy url wskazuje właściwą templatkę                                                                             test_template       AddVisitTests       test_schedule_template_display
-+        czy url z rokiem i tygodniem wskazuje właściwą templatkę                                                        test_template       AddVisitTests       test_schedule_url_template_display
-- templatki confirm
-templatki post
-
-    Forms
-        instancja
-        walidacje
-
-
-
-
--  Settings:
-#TODO: zmiana maila
-TODO: zmiana pinu
-
- -        Views:
-  -
-
- -        Templates:
-  -
-
- -        Forms
-  -
 
 
 User

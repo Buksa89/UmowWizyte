@@ -1,20 +1,22 @@
 from django.test import TestCase
 from unittest import skip
-from ..forms import ClientChooseVisitForm, ClientLoginForm
+from ..forms import AddVisitForm, ClientChooseVisitForm, ClientLoginForm
 from userapp.tests.base import BaseTest
 
 class LoginTests(BaseTest):
 
+    def test_form_instance(self):
+        """Czy formularz logowania wczytuje prawidłową instancję?"""
 
-    def test_form_display(self):
-         user = self.create_user()
-         response = self.client.get(f'/{user}/')
+        user = self.create_user()
+        response = self.client.get(f'/{user}/')
 
-         self.assertEqual(response.status_code, 200)
-         self.assertIsInstance(response.context['form'], ClientLoginForm)
+        self.assertEqual(response.status_code, 200)
+        self.assertIsInstance(response.context['form'], ClientLoginForm)
 
 
-    def test_incorrect_data_errors_display(self):
+    def test_form_errors_display(self):
+        """Czy formularz logowania prawidłowo wyświetla błędy?"""
 
         client = self.clients['active_1']
         client_full_data = self.clients_full_data['active_1']
@@ -31,10 +33,10 @@ class LoginTests(BaseTest):
             self.assertEqual(form.errors[data_result['field']], [data_result['message']])
 
 
-
 class DashboardTests(BaseTest):
 
-    def test_form_display(self):
+    def test_form_instance(self):
+        """Czy formularz dodawania wizyty wczytuje prawidłową instancję?"""
         user = self.create_user()
         client = self.create_client(user)
         self.authorize_client(client)
@@ -42,3 +44,23 @@ class DashboardTests(BaseTest):
 
         self.assertEqual(response.status_code, 200)
         self.assertIsInstance(response.context['form'], ClientChooseVisitForm)
+
+
+class AddVisitTests(BaseTest):
+
+    def test_form_instance(self):
+        """Czy formularz potwierdzania wizyty wczytuje prawidłową instancję?"""
+        user = self.create_user()
+        client = self.create_client(user)
+        service = self.create_service(user)
+        date = self.weeks['no_holiday']
+        self.authorize_client(client)
+        date_time = self.date_time['regular']
+        response = self.client.get(f"/{user}/nowa_wizyta/{service.id}/{date_time.year}/{date_time.month}/{date_time.day}/{date_time.hour}/{date_time.minute}/")
+        self.assertEqual(response.status_code, 200)
+        self.assertIsInstance(response.context['form'], AddVisitForm)
+
+    @skip
+    def test_form_errors_display(self):
+        """Czy formularz potwierdzania wizyty prawidłowo wyświetla błędy?"""
+        pass
