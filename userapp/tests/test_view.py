@@ -4,6 +4,7 @@ from django.test import TestCase
 from unittest import skip
 from ..models import Client, Service, WorkTime
 from .base import BaseTest
+from userapp.base import not_naive
 
 class ScheduleTest(BaseTest):
 
@@ -17,7 +18,7 @@ class ScheduleTest(BaseTest):
         today_highlight = soup.find("li", {"class":"today"})
 
         self.assertTrue(today_highlight)
-        self.assertIn(str(datetime.now().month), today_highlight.getText())
+        self.assertIn(str(datetime.now().day), today_highlight.getText())
 
 
     def test_title_display(self):
@@ -84,20 +85,29 @@ class ScheduleTest(BaseTest):
         soup = Bs(response.content.decode(), features="html.parser")
         hours = soup.find("ul", {"class": "hours"}).findAll('li')
         number_of_quarters = int(user.worktime.duration_monday / timedelta(minutes=15))
+
         self.assertEqual(len(hours), number_of_quarters)
 
-        print(date.fromisocalendar(date_['year'], date_['week'],1))
-
         visit = self.create_visit(user, client, 'later')
-
-        work_day = visit.end - user.worktime.start_monday
+        worktime = WorkTime.objects.get(user=user)
+        start = not_naive(datetime.combine(date(visit.end.year, visit.end.month, visit.end.day), worktime.start_monday))
+        work_day = visit.end - start
         response = self.client.get(f"/terminarz/{date_['year']}/{date_['week']}/")
         soup = Bs(response.content.decode(), features="html.parser")
         hours = soup.find("ul", {"class": "hours"}).findAll('li')
         number_of_quarters = int(work_day / timedelta(minutes=15))
+
         self.assertEqual(len(hours), number_of_quarters)
 
+    def test_holidays_highlight(self):
+        user = self.create_user()
+        self.authorize_user(user)
+        date_ = self.weeks['with_holiday']
+        response = self.client.get(f"/terminarz/{date_['year']}/{date_['week']}/")
+        soup = Bs(response.content.decode(), features="html.parser")
+        holiday = soup.find("ul", {"class": "days"}).find("li", {"class": "red"})
 
+        self.assertTrue(holiday)
 
 
 '''class DashboardClientsTests(BaseTest):

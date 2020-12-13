@@ -17,8 +17,8 @@ Schedule
        Czy wyświetla się miesiąc i rok (linia pionowa oddzielajaca miesiace tez)
        Czy wyświetlają się dni          (-||-)
        Czy godziny się prawidłowo wyświetlają
-TODO:       Czy podświetlają się święta
-TODO:       Czy pola mają prawidłową klasę - wez pod uwage: stare pola, godziny pracy, święta, wizyty, d,np d,p d,n,o d,p,o,n, d,p,o,p,
+       Czy podświetlają się święta
+TODO:       Czy pola mają prawidłową klasę - wez pod uwage: stare pola, godziny pracy, święta, wizyty, d,np d,p d,n,o d, p,o,n, d,p,o,p,
 TODO:       Czy wizyty mają url
 
         Template
