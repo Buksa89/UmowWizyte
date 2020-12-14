@@ -1,21 +1,22 @@
 
 body {
-    background-color:#ffffff;
-font-family: Helvetica;
+    background-color:#c2cbdc;
+    font-family: Helvetica;
 }
-#container {
-  margin: auto;
-  max-width: 400px;
-  padding: 10px;
-   background-color:#333333;
-   color:white;
-   text-align:center;
-}
+
+
 label {
-padding-right:20px;
+    padding-right:20px;
 }
 
 .errorlist {
+font-size:1em;
+  position:relative;
+  border-radius:0.5em;
+  background-color: #fff;
   list-style-type: none;
-  padding:0px;
+  padding:10px;
+  margin:0px;
+  display:inline-block;
+  box-shadow: 0px 0px 3px #a6acc1;
 }

@@ -1,20 +1,74 @@
 body{
   font-family: Helvetica;
-  background-color:#efefef;
+  background-color:#c2cbdc;
   padding:0px;
   margin: 0px;
 }
+/** Login  **/
 
+#login-container {
+   margin: 5px auto;
+   max-width: 400px;
+   padding: 10px;
+   background-color:#fff;
+   color:black;
+   text-align:center;
+   box-shadow: 0px 0px 40px #a6acc1;
+}
+
+/** Login  **/
+.schedule-container {
+background-color: #f3f7fa
+}
 
 #container {
+  box-shadow: 0px 0px 40px #a6acc1;
   margin: 0px auto;
   max-width:800px;
   background-color:#ffffff;
-min-height: 100%;
+  min-height: 100%;
+  background-color:#f3f7fa;
 }
+
 #content {
 padding:5px 20px;
 }
+
+/** Menu  **/
+
+ul.menu {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background-color: #fff;
+  box-shadow: 0px 0px 15px #a6acc1;
+}
+
+ul.menu li {
+  float: right;
+}
+
+ul.menu li.selected{
+  background-color: #f3f7fa;
+  box-shadow: 0px 0px 15px #a6acc1;
+  z-index: 1;
+}
+
+ul.menu li a {
+  color: #5e6d89;
+  display: block;
+  text-align: center;
+  padding: 16px;
+  text-decoration: none;
+}
+
+ul.menu li a:hover {
+  background-color: #f3f7fa;
+  box-shadow: 0px 0px 15px #a6acc1;
+  z-index: 400;
+}
+
 
 
 
@@ -31,46 +85,27 @@ form li label{
   padding:0px;
 }
 
-ul.menu {
-  list-style-type: none;
-  margin: 0;
-  padding: 0;
-  overflow: hidden;
-  background-color: #333333;
-}
-
-ul.menu li {
-  float: right;
-}
-
-ul.menu li.selected{
-  background-color: #111111;
-}
-
-ul.menu li a {
-  display: block;
-  color: white;
-  text-align: center;
-    padding: 16px;
-  text-decoration: none;
-}
-
-ul.menu li a:hover {
-  background-color: #121212;
-}
-
-a.button {
-  background-color: #333333;
-  border: none;
-  color: white;
-  padding:10px;
-  text-decoration: none;
-}
 
 
-a.button:hover {
-  background-color: #111111;
+.button {
+  background-color: #312788;
+  display:inline-block;
+  padding:0.4em 1.4em;
+  margin:0 0.3em 0.3em 0;
+  border-radius:0.2em;
+  box-sizing: border-box;
+  text-decoration:none;
+  font-weight:400;
+  color:#FFFFFF;
+  box-shadow:inset 0 -0.6em 1em -0.35em rgba(0,0,0,0.17),inset 0 0.6em 2em -0.3em rgba(255,255,255,0.15),inset 0 0 0em 0.05em rgba(255,255,255,0.12);
+  text-align:center;
+  position:relative;
+  border:none;
 }
+.button:active{
+ box-shadow:inset 0 0.6em 2em -0.3em rgba(0,0,0,0.15),inset 0 0 0em 0.05em rgba(255,255,255,0.12);
+}
+
 
 table {
     border-collapse: collapse;

@@ -16,7 +16,7 @@
         <form name="add-client-form" method="POST" action="{% url 'dashboard_clients_add' %}">
             {{ form.as_p }}
             {% csrf_token %}
-            <p><input type="submit" value="Dodaj" name="submit"></p>
+            <p><input class="button" type="submit" value="Dodaj" name="submit"></p>
         </form>
     </div>
 </div>

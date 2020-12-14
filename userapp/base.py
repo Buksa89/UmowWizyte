@@ -85,12 +85,13 @@ class Schedule:
         self.navigation = self.generate_navigation()
         self.id = 0
 
-        html_code = self.title_header()
+        html_code = '<div class="schedule-container">'
+        html_code += self.title_header()
         html_code += '<div class="schedule" aria-labelledby="schedule-heading">'
         html_code += self.main_header()
         html_code += self.get_time_column_html(self.time_range)
         html_code += self.schedule_content()
-        html_code += '</div>'
+        html_code += '</div></div>'
 
         return (html_code)
 
@@ -114,6 +115,11 @@ class Schedule:
         # get numbers of month appearance in days of current week
         years_and_months_to_display_dict = self.get_years_and_months(self.days)
 
+        html_code += f'<span class="month-slot" aria-hidden="true" style="grid-column: times; grid-row: months;"></span>'
+        html_code += f'<span class="day-slot" aria-hidden="true" style="grid-column: times; grid-row: days;"></span>'
+        html_code += f'<span class="day-number-slot" aria-hidden="true" style="grid-column: times; grid-row: day-number;"></span>'
+        html_code += f'<span class="day-slot menu-line-strong" aria-hidden="true" style="grid-column: times / day-7; grid-row: days;"></span>'
+
         end = 0
         for n, data in enumerate(years_and_months_to_display_dict):
             start = end + 1
@@ -125,7 +131,6 @@ class Schedule:
         for n, day in enumerate(self.days):
             html_code += f'<span class="day-number-slot" aria-hidden="true" style="grid-column: day-{n+1}; grid-row: day-number;">{day.day}</span>'
             html_code += f'<span class="day-slot" aria-hidden="true" style="grid-column: day-{n+1}; grid-row: days;">{DAYS_OF_WEEK_SHORT[n]}</span>'
-
 
         return html_code
 

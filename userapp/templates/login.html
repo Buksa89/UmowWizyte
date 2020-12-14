@@ -4,19 +4,20 @@
     <head>
         <title>Logowanie</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link href="{% static 'panel.css' %}" rel="stylesheet">
         <link href="{% static 'login.css' %}" rel="stylesheet">
     </head>
     <body>
-        <div id="container">
-        {% if form.errors %}
-            <div class="form-group has-error">
-                <span class="help-block">{{ form.text.errors }}</span>
-            </div>
-        {% endif %}
+        <div id="login-container">
             <form action="." name="login-form" method="post">
                 {{ form.as_p }}
                 {% csrf_token %}
-            <p><input type="submit" name="submit" value="Zaloguj"></p>
+            <p><input class="button" type="submit" name="submit" value="Zaloguj"></p>
+                {% if form.errors %}
+                    <div class="form-group has-error">
+                        <span class="help-block">{{ form.text.errors }}</span>
+                    </div>
+                {% endif %}
             </form>
         </div>
     </body>
