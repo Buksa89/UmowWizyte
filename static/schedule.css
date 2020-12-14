@@ -1,13 +1,272 @@
-ul {list-style-type: none;}
-body {font-family: Verdana, sans-serif;}
+/*************************
+ * GRID SCHEDULE LAYOUT
+ *************************/
+@media screen and (min-width:700px) {
+	.schedule {
+		display: grid;
+		grid-template-rows:
+			[months] auto
+			[day-number] auto
+			[days] auto
+            [time-0000] auto
+            [time-0015] auto
+            [time-0030] auto
+            [time-0045] auto
+            [time-0100] auto
+            [time-0115] auto
+            [time-0130] auto
+            [time-0145] auto
+            [time-0200] auto
+            [time-0215] auto
+            [time-0230] auto
+            [time-0245] auto
+            [time-0300] auto
+            [time-0315] auto
+            [time-0330] auto
+            [time-0345] auto
+            [time-0400] auto
+            [time-0415] auto
+            [time-0430] auto
+            [time-0445] auto
+            [time-0500] auto
+            [time-0515] auto
+            [time-0530] auto
+            [time-0545] auto
+            [time-0600] auto
+            [time-0615] auto
+            [time-0630] auto
+            [time-0645] auto
+            [time-0700] auto
+            [time-0715] auto
+            [time-0730] auto
+            [time-0745] auto
+            [time-0800] auto
+            [time-0815] auto
+            [time-0830] auto
+            [time-0845] auto
+            [time-0900] auto
+            [time-0915] auto
+            [time-0930] auto
+            [time-0945] auto
+            [time-1000] auto
+            [time-1015] auto
+            [time-1030] auto
+            [time-1045] auto
+            [time-1100] auto
+            [time-1115] auto
+            [time-1130] auto
+            [time-1145] auto
+            [time-1200] auto
+            [time-1215] auto
+            [time-1230] auto
+            [time-1245] auto
+            [time-1300] auto
+            [time-1315] auto
+            [time-1330] auto
+            [time-1345] auto
+            [time-1400] auto
+            [time-1415] auto
+            [time-1430] auto
+            [time-1445] auto
+            [time-1500] auto
+            [time-1515] auto
+            [time-1530] auto
+            [time-1545] auto
+            [time-1600] auto
+            [time-1615] auto
+            [time-1630] auto
+            [time-1645] auto
+            [time-1700] auto
+            [time-1715] auto
+            [time-1730] auto
+            [time-1745] auto
+            [time-1800] auto
+            [time-1815] auto
+            [time-1830] auto
+            [time-1845] auto
+            [time-1900] auto
+            [time-1915] auto
+            [time-1930] auto
+            [time-1945] auto
+            [time-2000] auto
+            [time-2015] auto
+            [time-2030] auto
+            [time-2045] auto
+            [time-2100] auto
+            [time-2115] auto
+            [time-2130] auto
+            [time-2145] auto
+            [time-2200] auto
+            [time-2215] auto
+            [time-2230] auto
+            [time-2245] auto
+            [time-2300] auto
+            [time-2315] auto
+            [time-2330] auto
+            [time-2345] auto
+            [time-2400] auto;
 
-div.schedule{
-padding:0;
-margin:0;
-background-color:#ddd;
+		grid-template-columns:
+			[times] 4em
+			[day-1-start] auto
+			[day-1-end day-2-start] auto
+			[day-2-end day-3-start] auto
+			[day-3-end day-4-start] auto
+			[day-4-end day-5-start] auto
+			[day-5-end day-6-start] auto
+			[day-6-end day-7-start] auto
+			[day-7-end];
+	}
 }
 
+.time-slot {
+	grid-column: times;
+    height:20px;
+    position:relative;
+    top:-6px;
+}
 
+.day-slot {
+	display: none; /* hidden on small screens and browsers without grid support */
+}
+
+@supports( display:grid ) {
+	@media screen and (min-width:700px) {
+		.day-slot {
+			display: block;
+			padding: 10px 5px 5px;
+			position: sticky;
+			top: 0;
+			z-index: 1000;
+			background-color: rgba(255,255,255,.9);
+
+
+		}
+	}
+}
+
+/* Small-screen & fallback styles */
+.session {
+	margin-bottom:  1em;
+}
+
+@supports( display:grid ) {
+	@media screen and (min-width: 700px) {
+		.time-off {
+			margin: 0;
+		}
+		.session {
+			margin: 0;
+		}
+	}
+}
+
+/*************************
+ * VISUAL STYLES
+ * Design-y stuff ot particularly important to the demo
+ *************************/
+
+.time-off {
+	background-color:#ddd;
+	border-radius: 5px;
+	margin:2px;
+      opacity: 0.5;
+      filter: alpha(opacity=50);
+}
+
+.session {
+	padding: .5em;
+	border-radius: 5px;
+	font-size: 14px;
+	background-color:#B3E5FC;
+	margin:2px;
+}
+
+.session-title,
+.session-time,
+.session-day,
+.session-presenter {
+	display: block;
+}
+
+.session-title,
+.time-slot {
+	margin: 0;
+	font-size: 1em;
+	color:#ddd;
+}
+.time-slot span {
+	background-color:#fff
+}
+.time-slot.strong {
+    top:-8px;
+	font-size: 0.85em;
+	color: black;
+
+}
+
+.session-title a {
+	color: #000;
+	text-decoration-style: dotted;
+
+	&:hover {
+		font-style: italic;
+	}
+
+	&:focus {
+		outline: 2px dotted rgba(255,255,255,.8);
+	}
+}
+
+.month-slot {
+	text-align:center;
+}
+
+.day-number-slot,
+.day-slot,
+.time-slot {
+	font-weight: bold;
+	font-size:.75em;
+	text-align:center;
+}
+.time-slot-big {
+	font-weight: bold;
+	font-size:.150em;
+	text-align:center;
+}
+
+.day-all {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	background: #ccc;
+	color: #000;
+	box-shadow: none;
+}
+
+.meta {
+	color: #555;
+	font-style: italic;
+}
+
+.meta a {
+	color: #555;
+}
+
+hr {
+	margin: 40px 0;
+}
+
+.time-line{
+	border-top: 1px dashed #eee;
+}
+.time-line-strong {
+	border-top: 1px solid #ddd;
+}
+
+/*************************
+ * HEADER
+ *************************/
 div.header {
   padding: 0px;
   background: #555555;
@@ -17,6 +276,7 @@ div.header {
 .header ul {
   margin: 0;
   padding: 0;
+  list-style-type: none;
 }
 
 .header ul li {
@@ -39,150 +299,4 @@ div.header {
 
 .header a li:hover {
 background:#333333;
-}
-
-.dates-header{
-  padding: 0;
-  margin: 0;
-  background-color:#ddd;
-}
-
-.dates-header ul {
-  padding: 0;
-  margin: 0;
-  background-color:#ddd;
-}
-.dates-header ul.days {
-  padding: 0;
-  margin: 0;
-  background-color:#ddd;
-}
-.dates-header ul li {
-  background-color:#ddd;
-  display: inline-block;
-  width: 12.5%;
-  color: #666;
-  text-align: center;
-  padding: 5px 0;
-}
-.dates-header ul li.empty {
-  background-color:#ddd;
-}
-.dates-header ul.days li{
-
-  box-shadow: 0px 1px 0px 0px #d0d0d0;
-
-}
-
-.dates-header .border-date {
-  box-shadow: -1px 0px 0px 0px #ffffff;
-}
-.dates-header .red {
-  background-color: #7f0000;
-  color:#fff;
-}
-.dates-header div {
-  margin: 0px 5px;
-}
-.dates-header .today div {
-  background-color: #333;
-  color:#fff;
-}
-
-ul.schedule-content {
-  margin: 0;
-  padding: 0;
-  color: #555;
-  position:relative;
-  top:-13px;
-}
-
-
-ul.schedule-content li {
-  list-style-type: none;
-  display: inline-block;
-  width: 12.5%;
-  position:relative;
-  text-align: center;
-  font-size:14px;
-  margin:0;
-  padding:0;
-}
-
-ul.schedule-content li ul{
-  margin: 0;
-  padding: 0;
-  position:relative;
-  background: #ddd;
-}
-
-ul.schedule-content li ul.hours {
-  top:14px;
-}
-
-ul.schedule-content li ul li {
-  width:100%;
-  text-align: center;
-  height:30px;
-  font-size:12px;
-  border-bottom: 1px solid #d0d0d0;
-  margin: 0;
-  padding: 0;
-  position:relative;
-}
-
-ul.schedule-content li ul li.hour-off {
-  background: #999;
-  border-bottom: 1px solid #999;
-}
-ul.schedule-content li ul li.avaliable {
-  background-color:#ddd;
-  border-bottom: 1px solid #d0d0d0;
-}
-ul.schedule-content li ul li.not-avaliable {
-  background-color:#c0c0c0;
-  border-bottom: 1px solid #b0b0b0;
-}
-ul.schedule-content li ul li.visit{
-  background-color:#d7f6fa;
-  color: #0a0a0a;
-  border-top:1px solid blue;
-  border-bottom: 1px solid blue;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis
-  }
-
-ul.schedule-content li ul.hours li span {
-  position:relative;
-  background-color:#ddd;
-  top:-7px;
-  padding:0px 5px;
-  color: #777;
-}
-
-ul.schedule-content li ul.hours li span.last{
-position:relative;
-top:10px;
-}
-
-ul.schedule-content li ul a li.avaliable{
-  background-color:#ddd;
-  color: #ffffff;
-}
-
-
-
-
-ul.schedule-content li ul a li.hover {
-border-top: none;
-  background-color: #d7f6fa;
-}
-
-ul.schedule-content li ul li.hover {
-border-top: none;
-  background-color: #d7f6fa;
 }

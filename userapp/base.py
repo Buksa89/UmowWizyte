@@ -85,9 +85,10 @@ class Schedule:
         self.navigation = self.generate_navigation()
         self.id = 0
 
-        html_code = '<div class="schedule">'
-        html_code += self.title_header()
+        html_code = self.title_header()
+        html_code += '<div class="schedule" aria-labelledby="schedule-heading">'
         html_code += self.main_header()
+        html_code += self.get_time_column_html(self.time_range)
         html_code += self.schedule_content()
         html_code += '</div>'
 
@@ -108,78 +109,46 @@ class Schedule:
 
     def main_header(self):
         """ Method generates header of schedule with days, months and years for current week """
+        html_code = ''
 
-        html_code = '<div class="dates-header">'
-        html_code += '<ul><li class="empty">&nbsp;</li>'
-
-        # Year and month display
         # get numbers of month appearance in days of current week
         years_and_months_to_display_dict = self.get_years_and_months(self.days)
 
+        end = 0
         for n, data in enumerate(years_and_months_to_display_dict):
-            extra_class = ''
+            start = end + 1
+            html_code += f'<span class="month-slot" aria-hidden="true" style="grid-column: day-{start}-start / '
+            end = start + data['count'] - 1
+            html_code += f'day-{end}-end; grid-row: months;">{data["year"]}<br/>{MONTHS[data["month"]-1]}</span>'
 
-            # when is more than one month in current week, first day of next month should get extra css_style
-            if len(years_and_months_to_display_dict) > 1 and n == len(years_and_months_to_display_dict)-1:
-                extra_class = ' class="border-date"'
 
-            # header is divided in 8 parts. First is empty. So every part is related to one day. If we have some days in
-            # one month, and rest in second month, every month should get width: appearances * 12,5% of header
-            html_code += f"<li style=\"width:{12.5*data['count']}%\"{extra_class}>" \
-                         f"{data['year']}<br />" \
-                         f"{MONTHS[data['month']-1]}" \
-                         f"</li>"
-        html_code += '</ul>'
-
-        # Days display
-
-        html_code += f'<ul class="days"><li class="empty">&nbsp;</li>'
         for n, day in enumerate(self.days):
-            css_class = []
-            if is_holiday(day) or n == 6: css_class.append('red')
-            if datetime.today().date() == day: css_class.append('today')
-            if n == years_and_months_to_display_dict[0]['count']: css_class.append('border-date')
-            css_class = ' '.join(css_class)
-            if css_class: css_class = f' class="{css_class}"'
-
-            html_code += f'<li{css_class}><div>{day.day}' \
-                         f'<br />{DAYS_OF_WEEK_SHORT[n]}</div></li>'
-        html_code += f'</ul></div>'
-
-        return html_code
-
-    def schedule_content(self):
-
-        html_code = f'<div>'
-        html_code += f'<ul class="schedule-content"><li>'
-        html_code += f'<ul class="hours">'
-        html_code += self.get_time_column_html(self.time_range)
-        html_code += f'</ul></li>'
+            html_code += f'<span class="day-number-slot" aria-hidden="true" style="grid-column: day-{n+1}; grid-row: day-number;">{day.day}</span>'
+            html_code += f'<span class="day-slot" aria-hidden="true" style="grid-column: day-{n+1}; grid-row: days;">{DAYS_OF_WEEK_SHORT[n]}</span>'
 
 
-        for d, day in enumerate(self.days):
-            html_code += f'<li><ul class="visit" id="day-{d}">'
-            html_code += self.prepare_day_column(d, day, self.visits[d], self.time_range)
-            html_code += f'</ul></li>'
-
-        html_code += f'</ul></div>'
         return html_code
 
     def get_time_column_html(self, working_hours):
         """ Generate html for time column """
-
         html_code = ''
         for n, hour in enumerate(working_hours):
-            if hour != datetime(1,1,2,0,0,0):
-                hour_display = hour.strftime("%H:%M")
+            line_class = 'time-line'
+            time_class = ''
+            hour_css = hour.strftime('%H%M')
+            if hour.minute == 15 or hour.minute==45:
+                hour_display = ''
             else:
-                hour_display = "24:00"
-            if n != len(working_hours) - 2:
-                html_code += f'<li><span>{hour_display}</span></li>'
-            else:
-                html_code += f'<li><span>{hour_display}</span><br/><span class="last">{working_hours[-1].strftime("%H:%M")}</span></li>'
-                break
+                hour_display = hour.strftime('%H:%M')
+                if hour.minute == 00:
+                    time_class = ' strong'
+                    line_class = 'time-line-strong'
+                    if hour == time(0,0,0):
+                        hour_css = '2400'
+                        hour_display = '24:00'
 
+            html_code += f'<div class="{line_class}" style="grid-column: times / day-{len(self.days)}; grid-row: time-{hour_css}"></div>'
+            html_code += f'<h2 class="time-slot{time_class}" style="grid-row: time-{hour_css};"><span>{hour_display}</span></h2>'
 
         return html_code
 
@@ -242,25 +211,30 @@ class Schedule:
             navigation[key] = self.get_navigation_url(date)
         return navigation
 
-    def visit_intervals(self, visits):
-        visits_list = []
+    def get_visit_intervals(self):
         intervals = []
-        for visit in visits:
-            visit_interval = interval.closedopen(visit.start, visit.end)
-            visits_list.append(visit)
-            intervals.append(visit_interval)
-        return visits_list, intervals
+        for d, day in enumerate(self.days):
+            day_intervals = interval.empty()
+            for visit in self.visits[d]:
+                day_intervals |= interval.closedopen(visit.start, visit.end)
 
-    def hours_off_intervals(self, day):
-        name = day.strftime("%A").lower()
-        start_work = not_naive(datetime.combine(day, self.work_time.__dict__['start_'+name]))
-        duration = self.work_time.__dict__['duration_'+name]
-        end_work = start_work + duration
+            intervals.append(day_intervals)
+        return intervals
 
+    def get_off_intervals(self, visit_intervals):
         off_intervals = []
+        for d, day in enumerate(self.days):
+            name = day.strftime("%A").lower()
+            start_work = not_naive(datetime.combine(day, self.work_time.__dict__['start_'+name]))
+            duration = self.work_time.__dict__['duration_'+name]
+            end_work = start_work + duration
+            interval_1 = interval.closedopen(not_naive(datetime.combine(day, time.min)), start_work)
+            interval_2 = interval.closedopen(end_work, not_naive(datetime.combine(day, time.max)))
 
-        off_intervals.append(interval.closedopen(not_naive(datetime.combine(day, time.min)), start_work))
-        off_intervals.append(interval.closedopen(end_work, not_naive(datetime.combine(day, time.max))))
+            intervals = interval_1 | interval_2
+            intervals -= visit_intervals[d]
+
+            off_intervals.append(intervals)
 
         return off_intervals
 
@@ -314,12 +288,38 @@ class Schedule:
 
         return time_range
 
+    def schedule_content(self):
+        html_code = ''
+        visit_intervals = self.get_visit_intervals()
+        time_off_intervals = self.get_off_intervals(visit_intervals)
+
+        visit_number = 1
+        for d, day in enumerate(self.days):
+
+            for times_off in time_off_intervals[d]:
+                start_row = times_off.lower.strftime("%H%M")
+                end_row = times_off.upper.strftime("%H%M")
+                html_code += f'<div class="time-off day-{d + 1}" style="grid-column: day-{d + 1}; grid-row: time-{start_row} / time-{end_row};">' \
+                             f'</div>'
+
+            for visit in self.visits[d]:
+                start_row = visit.start.strftime("%H%M")
+                end_row = visit.end.strftime("%H%M")
+                html_code += f'<div class="session session-{visit_number} day-{d+1}" style="grid-column: day-{d+1}; grid-row: time-{start_row} / time-{end_row};">' \
+                             f'<h3 class="session-title"><a href="#">{visit.name}</a></h3>' \
+                             f'</div>'
+
+        #    html_code += self.prepare_day_column(d, day, self.visits[d], self.time_range)
+        return html_code
+
     def prepare_day_column(self, column_number, day, visits, time_range):
         """ Method prepare variables for generating day colums and call mothod to do it. """
         html_code = ''
 
-        visits_list, visits_intervals = self.visit_intervals(visits)
-        hours_off_intervals = self.hours_off_intervals(day)
+
+
+
+        """visits_list, visits_intervals = self.visit_intervals(visits)
         time_status = []
         hours = []
 
@@ -347,7 +347,7 @@ class Schedule:
                     continue
 
         html_code += self.generate_day_column(column_number, day, hours, time_status)
-
+"""
         return html_code
 
     def generate_day_column(self, column_number, day, hours, statuses):
@@ -520,22 +520,40 @@ class UserTwoDaysSchedule(Schedule):
         self.days = [day.date(), (day+timedelta(days=1)).date()]
         self.title = 'Terminarz'
 
+    def get_navigation_dates(self):
+        prev = self.days[0] - timedelta(days=1)
+        next = self.days[0] + timedelta(days=1)
+        return prev, next
+
+    def get_navigation_url(self, date):
+        return reverse('dashboard', args=[date.year, date.month, date.day])
+
     def main_header(self):
-        days = []
-        classes = []
+        """ Method generates header of schedule with days, months and years for current week """
+        html_code = ''
+        #classes = []
+
         for n, day in enumerate(self.days):
-            data = []
             rel_day =''
             if day == date.today(): rel_day = ' (dzisiaj)'
             elif day == date.today() - timedelta(1): rel_day = ' (wczoraj)'
             elif day == date.today() + timedelta(1): rel_day = ' (jutro)'
-            #elif datetime.now() - timedelta(1):
-            data.append(DAYS_OF_WEEK[day.weekday()])
-            if n==0: data.append(f', {str(self.days[0].day)} {MONTHS[(self.days[0].month)-1]}')
-            data.append(rel_day)
-            days.append(data)
-            if is_holiday(day) or day.weekday()==6: classes.append(' class="red"')
-            else: classes.append('')
+
+            day_name = DAYS_OF_WEEK[day.weekday()]
+
+            #if is_holiday(day) or day.weekday()==6: classes.append(' class="red"')
+            #else: classes.append('')
+
+
+            html_code += f'<span class="day-slot" aria-hidden="true" style="grid-column: day-{n+1}; grid-row: days;">{day_name}{rel_day}</span>'
+
+
+
+        return html_code
+
+"""    def main_header(self):
+        for n, day in enumerate(self.days):
+
 
 
         html_code = '<div class="dates-header">'
@@ -546,13 +564,6 @@ class UserTwoDaysSchedule(Schedule):
 
         return html_code
 
-    def get_navigation_dates(self):
-        prev = self.days[0] - timedelta(days=1)
-        next = self.days[0] + timedelta(days=1)
-        return prev, next
-
-    def get_navigation_url(self, date):
-        return reverse('dashboard', args=[date.year, date.month, date.day])
 
     def schedule_content(self):
 
@@ -577,7 +588,7 @@ class UserTwoDaysSchedule(Schedule):
         html_code = f'<span>{visit.name}<br />' \
                      f'<b>{visit.client.name} {visit.client.surname}</b><br />' \
                      f'{visit.client.phone_number}<span>'
-        return html_code
+        return html_code"""
 
 class UserOneDaySchedule(Schedule):
     def __init__(self, user, year=datetime.now().year, month=datetime.now().month, day=datetime.now().day):
