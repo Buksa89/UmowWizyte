@@ -1,7 +1,7 @@
 /*************************
  * GRID SCHEDULE LAYOUT
  *************************/
-@media screen and (min-width:700px) {
+@media screen and (min-width:320px) {
 	.schedule {
 		display: grid;
 		grid-template-rows:
@@ -131,7 +131,7 @@
 }
 
 @supports( display:grid ) {
-	@media screen and (min-width:700px) {
+	@media screen and (min-width:320px) {
 		.day-slot {
 			display: block;
 			padding: 10px 5px 5px;
@@ -151,7 +151,7 @@
 }
 
 @supports( display:grid ) {
-	@media screen and (min-width: 700px) {
+	@media screen and (min-width: 320px) {
 		.time-off {
 			margin: 0;
 		}
