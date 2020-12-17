@@ -296,7 +296,10 @@ hr {
 	border-bottom: 1px solid #ddd;
     box-shadow: 0px 3px 3px #bec4d9;
 }
+.line-off {
 
+	border-bottom: 3px solid red;
+}
 span.holiday {
   background-color: #7f0000;
   color:#fff;

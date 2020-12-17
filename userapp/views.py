@@ -173,10 +173,10 @@ class DashboardVisitReject(CreateView):
     def get(self, request, visit_id):
         user = User.objects.get(username=request.user)
         visit = get_object_or_404(Visit, id=visit_id,user=user)
-        if visit.is_available: visit.is_confirmed
+        if visit.is_available:
+            visit.delete()
         else:
             visit.is_available = True
-            visit.is_confirmed = True
             visit.save()
 
         return redirect('dashboard')

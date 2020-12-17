@@ -327,7 +327,7 @@ class Schedule:
         for days in visits:
             day_visits = []
             for visit in days:
-                if (visit.is_available and visit.is_confirmed) or (not visit.is_available and not visit.is_confirmed):
+                if not (not visit.is_available and visit.is_confirmed):
                     day_visits.append(visit)
             visits_filtered.append(day_visits)
 
