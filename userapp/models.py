@@ -33,8 +33,6 @@ class Client(models.Model):
     def get_remove_url(self):
         return reverse('dashboard_clients_remove', args=[self.id])
 
-
-
 class Service(models.Model):
 
     """ User create services. Then his client can choose one of services and book visit """
@@ -106,7 +104,6 @@ class Visit(models.Model):
     def get_cancel_url(self):
         return reverse('client_app_cancel_visit', args=[self.user, self.id])
 
-
 class WorkTime(models.Model):
 
     user = models.OneToOneField(User, on_delete=models.CASCADE)
@@ -145,3 +142,13 @@ class WorkTime(models.Model):
     def create_profile(sender, instance, created, **kwargs):
         if created:
             WorkTime.objects.create(user=instance)
+
+class UserSettings(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    site_url = models.CharField(max_length=25, unique=True, blank=True)
+    site_name = models.CharField(max_length=60, blank=True)
+
+    @receiver(post_save, sender=User)
+    def create_profile(sender, instance, created, **kwargs):
+        if created:
+            UserSettings.objects.create(user=instance, site_url=instance.username)

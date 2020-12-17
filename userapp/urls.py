@@ -19,7 +19,6 @@ urlpatterns = [
 
     path('terminarz/', views.DashboardSchedule.as_view(), name='dashboard_schedule'),
     path('terminarz/<int:year>/<int:week>/', views.DashboardSchedule.as_view(), name='dashboard_schedule'),
-    path('terminarz/<int:year>/<int:month>/<int:day>/', views.DashboardSchedule.as_view(), name='dashboard_schedule'),
 
     path('klienci/', views.dashboard_clients, name='dashboard_clients'),
     path('klienci/nowy/', views.DashboardClientsAdd.as_view(), name='dashboard_clients_add'),

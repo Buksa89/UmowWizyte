@@ -10,7 +10,7 @@ from django.urls import reverse
 from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.generic.edit import CreateView
-from .base import DAYS_FOR_CODE, UserAddVisitSchedule, UserLockTimeSchedule, UserOneDaySchedule, UserSchedule, UserTwoDaysSchedule
+from .base import DAYS_FOR_CODE, UserAddVisitSchedule, UserLockTimeSchedule, UserSchedule, UserTwoDaysSchedule
 from .forms import AddClientForm, AddServiceForm, AddVisitForm, LoginForm, WorkTimeForm
 from .models import Client, Service, Visit, WorkTime
 
@@ -83,14 +83,14 @@ class DashboardNewVisit(CreateView):
     def get(self, request, client_id, service_id, hours, minutes, year=datetime.now().year, week=False):
         if not week:
             week = datetime.now().isocalendar()[1]
-        schedule = UserAddVisitSchedule(request.user)
         user = User.objects.get(username=request.user)
         client = get_object_or_404(Client, user=user, id=client_id)
         service = get_object_or_404(Service, user=user, id=service_id)
         duration = timedelta(hours=hours, minutes=minutes)
+        schedule = UserAddVisitSchedule(request.user, year, week, client, service, duration)
 
         return render(request, self.template_name, {'section': self.section,
-                                                    'schedule': schedule.display(client, service, year, week, duration)})
+                                                    'schedule': schedule.display()})
 
 
 class DashboardVisitReject(CreateView):
