@@ -175,7 +175,7 @@ class ClientAppCancelVisit(View):
     def get(self, request, username, visit_id):
         user = get_object_or_404(User, username__iexact=username)
         client = get_object_or_404(Client, phone_number=request.session['client_authorized']['phone'], user=user)
-        visit = get_object_or_404(Visit.objects.filter(user=user, client=client, end__gt=not_naive(datetime.now())).exclude(is_available=False, is_confirmed=True))
+        visit = get_object_or_404(Visit.objects.filter(user=user, client=client, id=visit_id, end__gt=not_naive(datetime.now())).exclude(is_available=False, is_confirmed=True))
         if visit.is_confirmed:
             visit.is_available = False
             visit.is_confirmed = False

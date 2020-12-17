@@ -99,7 +99,9 @@ class Visit(models.Model):
             raise ValidationError('Nie kombinuj bo zepsujesz. Czas musi być podzielny przez 15 min')
         for visit in current_visits:
             if visit.start <= self.start < visit.end or visit.start < self.end <= visit.end or self.start < visit.start < self.end:
-                raise ValidationError('Termin zajęty')
+                #TODO: przetestuj warunek
+                if visit.is_available or (not visit.is_available and not visit.is_confirmed):
+                    raise ValidationError('Termin zajęty')
 
 
     def get_confirm_url(self):

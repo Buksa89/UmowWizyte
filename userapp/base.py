@@ -380,6 +380,9 @@ class Schedule:
             end_row = past.upper.strftime("%H%M")
             html_code += f'<div class="time-past day-{d + 1}" style="grid-column: day-{d + 1}; grid-row: time-{start_row} / time-{end_row};">' \
                          f'</div>'
+            if past.upper >= not_naive(datetime.now()) and past.upper.date() == date.today():
+                html_code += f'<div class="line-off day-{d + 1}" style="grid-column: day-{d + 1}; grid-row: time-{end_row};">' \
+                             f'</div>'
         return html_code
 
     def generate_time_off_content(self, d, times_off):
@@ -390,6 +393,7 @@ class Schedule:
             html_code += f'<div class="time-off day-{d + 1}" style="grid-column: day-{d + 1}; grid-row: time-{start_row} / time-{end_row};">' \
                          f'</div>'
         return html_code
+
     #TODO: Niepotwierdzone niech wyswietlaja sie innym kolorem
     def generate_visit_content(self, d, visit_number, visit):
         start_row = visit.start.strftime("%H%M")
@@ -426,65 +430,134 @@ class ClientAddVisitSchedule(Schedule):
         return reverse('client_app_new_visit', args=[self.user.username, self.service.id, year, week])
 
     def get_time_range(self):
+
         times = []
 
         for n, day in enumerate(self.days):
             name = day.strftime("%A").lower()
-            start = datetime.combine(date.min, self.work_time.__dict__['start_' + name])
-            end = start + self.work_time.__dict__['duration_' + name]
+
+            start = self.work_time.__dict__['start_'+name]
+            end = datetime.combine(date.min, start) + self.work_time.__dict__['duration_'+name]
+            if end != datetime(1,1,2,0,0,0):
+                end = end.time()
+            else:
+                end = time.max
+
             if start < end:
                 times.append(start)
                 times.append(end)
 
         if times:
             start = min(times)
-            duration = (max(times) - start)
-            time_range = list_of_times_generate(start.time(), duration)
+            if max(times) != time.max:
+                duration = datetime.combine(date.min, max(times)) - datetime.combine(date.min, start)
+            else:
+                duration = datetime(1,1,2,0,0,0) - datetime.combine(date.min, start)
+
+            time_range = list_of_times_generate(start, duration)
+            if time_range[-1] == time(0,0,0): time_range[-1] = time.max
+
         else:
             time_range = []
 
         return time_range
 
+    def get_intervals(self):
+        visit_intervals = self.get_visit_intervals()
+        time_off_intervals = self.get_off_intervals()
+        past_interval = self.get_past_intervals()
+        available_intervals = []
 
-    def generate_day_column(self, column_number, day, hours, statuses):
+        for d, day in enumerate(self.days):
+            available_interval = interval.closedopen(not_naive(datetime.combine(day, time.min)),
+                                                     not_naive(datetime.combine(day, time.max)))
+            time_off_intervals[d] |= past_interval[d]
+            time_off_intervals[d] |= visit_intervals[d]
+
+            available_interval -= time_off_intervals[d]
+
+            available_intervals.append(available_interval)
+
+        return time_off_intervals, available_intervals
+
+
+    def generate_time_off_content(self, d, time_off):
         html_code = ''
-        simple_duration = int(self.service.duration / timedelta(minutes=15))
-        display_day = True
-        if day < (date.today() + timedelta(self.work_time.earliest_visit)) : display_day = False
-        if day > (date.today() + timedelta(self.work_time.latest_visit)) : display_day = False
-        if is_holiday(day) and not self.work_time.holidays: display_day = False
-        for n, status in enumerate(statuses):
-            hour_class = hours[n].strftime("%H-%M")
-            if status == 'av' and display_day and hours[n] > not_naive(datetime.now()):
-                flag = True
-                # Check if next time quarters are free to put there new visitx
-                for i in range(simple_duration):
-                    try:
-                        if statuses[i+n] == 'av':
-                            continue
-                    except:
-                        pass
-                    flag = False
-
-                if flag:
-                    html_code += f'<a href="{self.get_visit_url(hours[n])}" ' \
-                                 f'onmouseover="on_hover({self.id}, {simple_duration})" ' \
-                                 f'onmouseout="out_hover({self.id}, {simple_duration})">' \
-                                 f'<li class="{hour_class} {column_number} avaliable" id="{self.id}">&nbsp;</li></a>'
-                else:
-                    html_code += f'<li class="{hour_class} {column_number} avaliable" id="{self.id}">&nbsp;</li>'
-                self.id += 1
-            else:
-                html_code += f'<li class="{hour_class} {column_number} not-avaliable">&nbsp;</li>'
-                self.id += 1
-
+        if not time_off.empty:
+            start_row = time_off.lower.strftime("%H%M")
+            end_row = time_off.upper.strftime("%H%M")
+            html_code += f'<div class="time-past day-{d + 1}" style="grid-column: day-{d + 1}; grid-row: time-{start_row} / time-{end_row};">' \
+                         f'</div>'
+            if time_off.upper >= not_naive(datetime.now()) and time_off.upper.date() == date.today():
+                html_code += f'<div class="line-off day-{d + 1}" style="grid-column: day-{d + 1}; grid-row: time-{end_row};">' \
+                             f'</div>'
         return html_code
 
+    def schedule_content(self):
+        html_code = ''
+        time_off_intervals, available_intervals = self.get_intervals()
+
+        for d, day in enumerate(self.days):
+            for times_off in time_off_intervals[d]:
+                html_code += self.generate_time_off_content(d, times_off)
+
+            for available_time in available_intervals[d]:
+                html_code += self.generate_available_time_content(d, day, available_time)
+
+        return html_code
 
     def get_visit_url(self, date_tim):
         """ Method return link for choose visit by clients """
         return reverse('client_app_confirm_visit', args=[self.user.username, self.service.id, date_tim.year,
                                                          date_tim.month, date_tim.day, date_tim.hour, date_tim.minute])
+
+    #TODO: cos z wyswietlaniem czasow nie tak
+    def generate_available_time_content(self, d, day, available_time):
+        simple_duration = int(self.service.duration / timedelta(minutes=15))
+        html_code =''
+        if not available_time.empty:
+            field_number_base = (d * len(self.time_range)) - d
+            for n, current_time in enumerate(self.time_range):
+                field_number = field_number_base + n
+                current_time = not_naive(datetime.combine(day, current_time))
+                if current_time in available_time:
+
+                    start_row = current_time.strftime("%H%M")
+                    end_row = (current_time+timedelta(minutes=15)).strftime("%H%M")
+                    if end_row == ("2400"): end_row = "2359"
+                    #TODO: Sprawdzanie kolejnego dnia i blokowanie pola jesli wizyta sie nie wcisnie
+                    duration_hours = self.service.duration.seconds//3600
+                    duration_minutes = (self.service.duration.seconds//60)%60
+                    visit_url = reverse('client_app_confirm_visit', args=[self.user.username, self.service.id,
+                                                                          current_time.year, current_time.month,
+                                                                         current_time.day, current_time.hour,
+                                                                          current_time.minute])
+                    # TODO Do refaktoryzacji  - chyba uda się połączyć z if current_time in available_time:
+                    available = True
+                    for step in range (1, simple_duration):
+                        try:
+                            next_time = not_naive(datetime.combine(day, self.time_range[n+step]))
+                            if next_time not in available_time:
+                                available = False
+                                break
+                        except:
+                            available=False
+                            break
+
+                    if available:
+                        html_code += f'<a id="{field_number}" href="{visit_url}" ' \
+                                     f'class="available day-{d + 1}" style="grid-column: day-{d + 1}; ' \
+                                     f'grid-row: time-{start_row}" ' \
+                                     f'onmouseover="on_hover({field_number}, {simple_duration})" ' \
+                                     f'onmouseout="out_hover({field_number}, {simple_duration})">' \
+                                     f'</a>'
+                    else:
+                        html_code += f'<div id="{field_number}" href="{visit_url}" ' \
+                                     f'class="available day-{d + 1}" style="grid-column: day-{d + 1}; ' \
+                                     f'grid-row: time-{start_row}">' \
+                                     f'</div>'
+
+        return html_code
 
 class UserAddVisitSchedule(Schedule):
 
@@ -677,4 +750,7 @@ class UserTwoDaysSchedule(Schedule):
             end_row = past.upper.strftime("%H%M")
             html_code += f'<div class="time-past day-{d + 1}" style="grid-column: day-{self.columns[d][0]}/day-{self.columns[d][1]}; grid-row: time-{start_row} / time-{end_row};">' \
                          f'</div>'
+            if past.upper >= not_naive(datetime.now()) and past.upper.date() == date.today():
+                html_code += f'<div class="line-off day-{d + 1}" style="grid-column: day-{self.columns[d][0]}/day-{self.columns[d][1]}; grid-row: time-{end_row};">' \
+                             f'</div>'
         return html_code

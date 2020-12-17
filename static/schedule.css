@@ -105,17 +105,17 @@
             [time-2315] auto
             [time-2330] auto
             [time-2345] auto
-            [time-2400] auto;
+            [time-2359] auto;
 
 		grid-template-columns:
 			[times] 4em
-			[day-1-start] auto
-			[day-1-end day-2-start] auto
-			[day-2-end day-3-start] auto
-			[day-3-end day-4-start] auto
-			[day-4-end day-5-start] auto
-			[day-5-end day-6-start] auto
-			[day-6-end day-7-start] auto
+			[day-1-start] 1fr
+			[day-1-end day-2-start] 1fr
+			[day-2-end day-3-start] 1fr
+			[day-3-end day-4-start] 1fr
+			[day-4-end day-5-start] 1fr
+			[day-5-end day-6-start] 1fr
+			[day-6-end day-7-start] 1fr
 			[day-7-end];
 	}
 }
@@ -136,11 +136,11 @@
 	@media screen and (min-width:320px) {
 		.day-slot {
 			display: block;
-			padding: 10px 5px 5px;
+			padding:7px;
 			position: sticky;
 			top: 0;
 			z-index: 1000;
-			background-color: rgba(243,247,250,.7);
+			background-color: rgba(243,247,250,0.8);
 
 
 		}
@@ -175,14 +175,15 @@
       opacity: 0.5;
       filter: alpha(opacity=50);
 }
-
-.session {
-	padding: .5em;
+.time-past {
+	background-color:#999;
 	border-radius: 5px;
-	font-size: 14px;
-	background-color:#c2cbdc;
 	margin:2px;
+      opacity: 0.5;
+      filter: alpha(opacity=50);
 }
+
+
 
 .session-title,
 .session-time,
@@ -190,8 +191,32 @@
 .session-presenter {
 	display: block;
 }
+.session {
+	border-radius: 5px;
+	font-size: 14px;
+	background-color:#c2cbdc;
+	margin:2px;
+	text-align: center;
+}
 
-.session-title,
+.session h3 a {
+	text-decoration:none;
+	color:#222;
+}
+.session a {
+	text-decoration:none;
+	color:#333;
+}
+.session a:hover {
+	text-decoration:underline;
+}
+
+.session-title{
+	font-size: 1em;
+	color:#333;
+}
+
+
 .time-slot {
 	margin: 0;
 	font-size: 1em;
@@ -224,7 +249,6 @@
 .day-number-slot {
 	text-align:center;
 	background-color: #f3f7fa;
-	font-weight: bold;
 	font-size:.75em;
 }
 
@@ -271,6 +295,34 @@ hr {
 .menu-line-strong {
 	border-bottom: 1px solid #ddd;
     box-shadow: 0px 3px 3px #bec4d9;
+}
+
+span.holiday {
+  background-color: #7f0000;
+  color:#fff;
+  box-shadow:inset 0 -0.6em 1em -0.35em rgba(0,0,0,0.17),inset 0 0.6em 2em -0.3em rgba(255,255,255,0.15),inset 0 0 0em 0.05em rgba(0,0,0,0.3);
+}
+span.today {
+  padding:4px;
+}
+span.today span{
+  background-color: #312788;
+  display: block;
+  padding:3px;
+  box-shadow:inset 0 -0.6em 1em -0.35em rgba(0,0,0,0.17),inset 0 0.6em 2em -0.3em rgba(255,255,255,0.15),inset 0 0 0em 0.05em rgba(255,255,255,0.12);
+  color:#fff;
+}
+
+.available {
+z-index:5;
+    background-color:#c2cbdc;
+      opacity: 0.1;
+      filter: alpha(opacity=10);
+}
+.available.hover {
+    background-color:#c2cbdc;
+      opacity: 0.7;
+      filter: alpha(opacity=70);
 }
 
 /*************************
