@@ -91,9 +91,16 @@ class Visit(models.Model):
             current_visits = Visit.objects.filter(Q(user=self.user, client=self.client, start__year=start_d.year, start__month=start_d.month, start__day=start_d.day) |
                                                   Q(user=self.user, client=self.client, end__year=start_d.year, end__month=start_d.month, end__day=start_d.day))
 
+        if self.start >= self.end:
+            raise ValidationError('Czas trwania usługi jest zbyt krótki')
+        if (self.end - self.start) > timedelta(hours=8):
+            raise ValidationError('Usługa może trwać maksymalnie 8h')
+        if self.start.time().minute % 15 != 0 or self.end.time().minute % 15 != 0:
+            raise ValidationError('Nie kombinuj bo zepsujesz. Czas musi być podzielny przez 15 min')
         for visit in current_visits:
-            if visit.start <= self.start < visit.end or visit.start < self.end <= visit.end:
+            if visit.start <= self.start < visit.end or visit.start < self.end <= visit.end or self.start < visit.start < self.end:
                 raise ValidationError('Termin zajęty')
+
 
     def get_confirm_url(self):
         return reverse('dashboard_visit_confirm', args=[self.id])
@@ -103,6 +110,12 @@ class Visit(models.Model):
 
     def get_cancel_url(self):
         return reverse('client_app_cancel_visit', args=[self.user, self.id])
+
+    def get_user_cancel_url(self):
+        return reverse('dashboard_visit_cancel', args=[self.id])
+
+    def get_display_url(self):
+        return reverse('dashboard_visit', args=[self.id])
 
 class WorkTime(models.Model):
 

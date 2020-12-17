@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block title %}Terminarz{% endblock %}
+
+{% block content %}
+<p>{{visit.name}}</p>
+<p>{{visit.client.name}}</p>
+<p>{{visit.client.surname}}</p>
+<p>{{visit.client.phone_number}}</p>
+<p>{{visit.start}}</p>
+<p>{{visit.end}}</p>
+<p>{{visit.description}}</p>
+<p>aktywna potwierdzona</p>
+<a href="{{visit.get_user_cancel_url}}" class="button">Odwołaj</a>
+{% endblock %}

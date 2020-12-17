@@ -2,6 +2,7 @@ from datetime import date, datetime, timedelta
 from django import forms
 from django.contrib.auth.models import User
 from django.core.exceptions import NON_FIELD_ERRORS, ValidationError
+from django.forms import Textarea
 from django.shortcuts import get_object_or_404
 from .models import Client, Service, Visit, WorkTime
 from .base import pin_generate, time_options
@@ -154,13 +155,13 @@ class WorkTimeForm(forms.ModelForm):
         self.instance.duration_sunday = durations[6]
         return super().save()
 
-class AddVisitForm(forms.Form):
+class NewVisitForm(forms.Form):
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop('user')
-        super(AddVisitForm, self).__init__(*args, **kwargs)
+        super(NewVisitForm, self).__init__(*args, **kwargs)
         self.fields['client'] = forms.ChoiceField(label='', choices=self.client_choices())
         self.fields['service'] = forms.ChoiceField(label='',  choices=self.service_choices())
-        self.fields['duration'] = forms.ChoiceField(label='', choices=time_options(timedelta(hours=8)))
+        self.fields['duration'] = forms.ChoiceField(label='', choices=self.duration_choices())
 
     def client_choices(self):
         clients = Client.objects.filter(user=self.user)
@@ -175,3 +176,34 @@ class AddVisitForm(forms.Form):
         for service in services:
             choices.append([service.id, f'{service.name} {service.display_duration()}'])
         return choices
+
+    def duration_choices(self):
+        choices = time_options(timedelta(hours=8))
+        choices[0][1] = 'Standardowy czas'
+        return choices
+
+
+class AddVisitForm(forms.ModelForm):
+    def save(self, user, client, name, start, end):
+        self.instance.user = user
+        self.instance.client = client
+        self.instance.name = name
+        self.instance.start = start
+        self.instance.end = end
+        self.instance.is_available = True
+        self.instance.is_confirmed = True
+        return super().save()
+
+    class Meta:
+        model = Visit
+        fields = ['description']
+        labels = {
+            'description': 'Dodatkowe informacje',
+        }
+        widgets = {
+            'description': Textarea(attrs={'cols': 80, 'rows': 2,
+                'placeholder': 'Dodatkowe informacje',}),
+            }
+        error_messages = {
+            'description': {'max_length': 'Opis jest za długi'},
+        }

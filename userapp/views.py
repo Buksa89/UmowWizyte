@@ -10,8 +10,8 @@ from django.urls import reverse
 from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.generic.edit import CreateView
-from .base import DAYS_FOR_CODE, UserAddVisitSchedule, UserLockTimeSchedule, UserSchedule, UserTwoDaysSchedule
-from .forms import AddClientForm, AddServiceForm, AddVisitForm, LoginForm, WorkTimeForm
+from .base import DAYS_FOR_CODE, not_naive, UserAddVisitSchedule, UserLockTimeSchedule, UserSchedule, UserTwoDaysSchedule
+from .forms import AddClientForm, AddServiceForm, AddVisitForm, LoginForm, NewVisitForm, WorkTimeForm
 from .models import Client, Service, Visit, WorkTime
 
 
@@ -33,7 +33,7 @@ class Dashboard(CreateView):
         visits_list = []
         user = User.objects.get(username=request.user)
         visits = Visit.objects.filter(user=user, is_confirmed=False)
-        form = AddVisitForm(user=user)
+        form = NewVisitForm(user=user)
 
         for visit in visits:
             client = [visit.client.name, visit.client.surname, visit.client.phone_number]
@@ -54,8 +54,12 @@ class Dashboard(CreateView):
 
     @method_decorator(login_required)
     def post(self, request):
-        hours = int(request.POST['duration'][:2])
-        minutes = int(request.POST['duration'][-2:])
+        service = get_object_or_404(Service, user=request.user, id=request.POST['service'])
+        if request.POST['duration'] == '00:00': duration = service.display_duration()
+        else: duration = request.POST['duration']
+
+        hours = int(duration[:2])
+        minutes = int(duration[-2:])
 
         return redirect(reverse('dashboard_new_visit', args=[request.POST['client'], request.POST['service'], hours, minutes]))
 
@@ -72,6 +76,33 @@ class DashboardLockTime(CreateView):
         schedule = UserLockTimeSchedule(request.user)
 
         return render(request, self.template_name, {'section': self.section, 'schedule': schedule.display(year, week)})
+
+class DashboardVisit(CreateView):
+
+    template_name = 'visit.html'
+    section = 'dashboard'
+
+    @method_decorator(login_required)
+    def get(self, request, visit_id):
+        user = User.objects.get(username=request.user)
+        visit = get_object_or_404(Visit, user=user, id=visit_id)
+
+        return render(request, self.template_name, {'section': self.section, 'visit': visit})
+
+
+class DashboardVisitCancel(CreateView):
+
+    template_name = 'visit.html'
+    section = 'dashboard'
+
+    @method_decorator(login_required)
+    def get(self, request, visit_id):
+        user = User.objects.get(username=request.user)
+        visit = get_object_or_404(Visit, user=user, id=visit_id)
+        visit.is_available = False
+        visit.is_confirmed = True
+        visit.save()
+        return redirect('dashboard')
 
 
 class DashboardNewVisit(CreateView):
@@ -92,6 +123,49 @@ class DashboardNewVisit(CreateView):
         return render(request, self.template_name, {'section': self.section,
                                                     'schedule': schedule.display()})
 
+class DashboardConfirmVisit(CreateView):
+
+    template_name = 'confirm_visit.html'
+    section = 'dashboard'
+    #TODO Walidacje, wspolna czesc kodu dla get i post
+    @method_decorator(login_required)
+    def get(self, request, client_id, service_id, hours, minutes, year, month, day, hour, minute):
+
+        user = User.objects.get(username=request.user)
+        client = get_object_or_404(Client, user=user, id=client_id)
+        service = get_object_or_404(Service, user=user, id=service_id)
+        start = not_naive(datetime(year, month, day, hour, minute))
+        form = AddVisitForm()
+
+        data = {'client': client, 'service': service, 'start_date': start.strftime("%y-%m-%d"), 'start_time': start.strftime("%H:%M"), 'duration': f'{hours}:{minutes}'}
+        url_data = {'client_id': client_id, 'service_id':service_id , 'hours':hours, 'minutes':minutes, 'year':year,
+                'month':month, 'day':day, 'hour':hour, 'minute':minute}
+
+        return render(request, self.template_name, {'form': form,
+                                                    'section': self.section,
+                                                    'data': data, 'url_data':url_data})
+
+    @method_decorator(login_required)
+    def post(self, request, client_id, service_id, hours, minutes, year, month, day, hour, minute):
+
+        user = User.objects.get(username=request.user)
+        client = get_object_or_404(Client, user=user, id=client_id)
+        service = get_object_or_404(Service, user=user, id=service_id)
+        start = not_naive(datetime(year, month, day, hour, minute))
+        end = start + timedelta(hours=hours, minutes=minutes)
+        form = AddVisitForm(data=self.request.POST)
+        data = {'client': client, 'service': service, 'start_date': start.strftime("%y-%m-%d"), 'start_time': start.strftime("%H:%M"), 'duration': f'{hours}:{minutes}', 'description':self.request.POST['description']}
+        url_data = {'client_id': client_id, 'service_id':service_id , 'hours':hours, 'minutes':minutes, 'year':year,
+                'month':month, 'day':day, 'hour':hour, 'minute':minute}
+
+        try:
+            form.save(user, client, service.name, start, end)
+            return render(request, self.template_name, {'section': self.section,
+                                                    'data': data, 'url_data': url_data, 'saved': True})
+        except:
+            return render(request, self.template_name, {'form': form,
+                                                        'section': self.section,
+                                                        'data': data, 'url_data':url_data})
 
 class DashboardVisitReject(CreateView):
 
@@ -168,7 +242,7 @@ class DashboardSchedule(View):
     @method_decorator(login_required)
     def get(self, request, year=datetime.now().year, week=False, month=False, day=False):
         user = User.objects.get(username=request.user)
-        form = AddVisitForm(user=user)
+        form = NewVisitForm(user=user)
         if not week: week = datetime.now().isocalendar()[1]
 
         if not day:
