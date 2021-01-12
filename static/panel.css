@@ -1,22 +1,53 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital@0;1&display=swap');
+
 body{
-  font-family: Helvetica;
-  background-color:#c2cbdc;
+  font-family: 'Inter', sans-serif;
+  background-color:#fafafa;
   padding:0px;
   margin: 0px;
-}
-/** Login  **/
-
-#login-container {
-   margin: 5px auto;
-   max-width: 400px;
-   padding: 10px;
-   background-color:#fff;
-   color:black;
-   text-align:center;
-   box-shadow: 0px 0px 40px #a6acc1;
+  color:#111;
 }
 
-/** Login  **/
+h1 {
+color:#333;
+font-size:1.5em;
+font-style: oblique;
+font-weight:normal;
+font-family: 'Playfair Display', serif;
+}
+
+h2 {
+color:#333;
+font-size:1.3em;
+font-style: oblique;
+font-weight:normal;
+font-family: 'Playfair Display', serif;
+}
+
+a:link {
+  color: #666;
+}
+
+a:visited {
+  color: #666;
+}
+
+/* mouse over link */
+a:hover {
+  color: #000;
+}
+
+a:active {
+  color: #666;
+}
+
+a.disabled {
+  pointer-events: none;
+  cursor: default;
+  color: #eee;
+}
+
 .schedule-container {
 background-color: #f3f7fa
 }
@@ -33,88 +64,236 @@ background-color: #f3f7fa
 padding:5px 20px;
 }
 
-/** Menu  **/
+.small-container {
+   margin: 5px auto;
+   max-width: 400px;
+   padding: 1em 2em;
+   background-color:#fff;
+   text-align:left;
+   box-shadow: 0px 0px 40px #a6acc1;
+}
 
+
+
+.small-container h1, .small-container h2 {
+   text-align:center;
+}
+
+.button {
+  background-color: #4CAF50; /* Green */
+  border: none;
+  color: white;
+  padding: 15px 32px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+}
+.full-width {
+width:100%
+padding: 14px 20px;
+margin: 8px 0;
+}
+.right {
+text-align: right;}
+
+/** Menu  **/
 ul.menu {
+  font-size:1.5em;
   list-style-type: none;
   margin: 0;
   padding: 0;
   overflow: hidden;
-  background-color: #f3f7fa;
-  box-shadow: 0px 0px 15px #a6acc1;
-  border-bottom:solid 1px #aaa;
+  border: 1px solid #e7e7e7;
+  border-bottom:none;
+  background-color: #f3f3f3;
+}
+
+ul.submenu {
+  border-top:solid 1px #fff;
+  border-bottom: 1px solid #e7e7e7;
+  font-size:0.8em;
 }
 
 ul.menu li {
   float: right;
 }
 
-ul.menu li.selected{
-  background-color: #fff;
-  box-shadow: 0px 0px 15px #a6acc1;
-  z-index: 1;
-}
-
 ul.menu li a {
-  color: #5e6d89;
   display: block;
+  color: #666;
   text-align: center;
-  padding: 16px;
+  padding: 14px 16px;
   text-decoration: none;
 }
 
-ul.menu li a:hover {
-  background-color: #fff;
-  box-shadow: 0px 0px 15px #a6acc1;
-  z-index: 400;
+ul.menu li a:hover:not(.selected) {
+  background-color: #ddd;
 }
 
+ul.menu li a.selected {
+  color: white;
+  background-color: #4CAF50;
+}
 
+ul.menu li a.disabled {
+  pointer-events: none;
+  cursor: default;
+  color: #ccc;
+}
+/** Forms **/
+
+input[type=text], input[type=password] , select, input[type=email], input[type=number], textarea{
+  width: 100%;
+  padding: 12px 20px;
+  margin: 8px 0;
+  display: inline-block;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+  background-color:#fff;
+}
+
+input[type=submit] {
+  width: 100%;
+  background-color: #4CAF50;
+  color: white;
+  padding: 14px 20px;
+  margin: 8px 0;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size:1em;
+}
+
+input[type=submit]:hover {
+  background-color: #45a049;
+}
+
+label {
+position:relative;
+font-size:0.9em;
+top:15px;
+left:15px;
+background-color:#fff;
+}
 
 
 form li {
   list-style-type: none;
 }
+
+.work-time-day{
+border: 1px solid #ccc;
+margin-bottom:10px;
+
+}
+
+
+.legend, .work-time-day p {
+padding:0px;
+margin:0px;
+position:relative;
+width:100%;
+}
+
+.work-time-day div {
+padding:0px;
+margin:0px;
+position:relative;
+width:49.6%;
+display:inline-block;
+}
+.work-time-day select {
+
+}
+.work-time-day label {
+position:relative;
+font-size:0.9em;
+top:17px;
+left:20px;
+background-color:#fff;
+}
+
+/** Messages **/
+.helptext {
+display:none;
+}
+
+.errorlist, .has-error {
+  list-style-type: none;
+  background-color: #af0000;
+  color: white;
+  padding: 14px 20px;
+  margin: 8px 0;
+  border: none;
+  border-radius: 4px;
+  opacity: 0.5;
+  text-align:center;
+}
+.success {
+  list-style-type: none;
+  background-color: #4CAF50;
+  color: white;
+  padding: 14px 20px;
+  margin: 8px 0;
+  border: none;
+  border-radius: 4px;
+  text-align:center;
+}
+
+
+
+
+
+
+
+
+
+
+/** Login  **/
+
+/**
+
+
+#login label {
+    width:60px;
+    display:inline-block;
+    text-align:left;
+}
+
+
+
+
+
+
+/*
+
+
+
+
 form li label{
   padding-right:40px;
 }
 
 
-.errorlist {
-  list-style-type: none;
-  padding:0px;
-}
 
 
 
-.button {
-    font-size:14px;
-  background-color: #312788;
-  padding:0.4em 1.4em;
-  border-radius:0.2em;
-  box-sizing: border-box;
-  text-decoration:none;
-  font-weight:400;
-  color:#FFFFFF;
-  box-shadow:inset 0 -0.6em 1em -0.35em rgba(0,0,0,0.17),inset 0 0.6em 2em -0.3em rgba(255,255,255,0.15),inset 0 0 0em 0.05em rgba(255,255,255,0.12);
-  text-align:center;
-  position:relative;
-  border:none;
-}
-.button:active{
- box-shadow:inset 0 0.6em 2em -0.3em rgba(0,0,0,0.15),inset 0 0 0em 0.05em rgba(255,255,255,0.12);
-}
+
 
 
 table {
     border-collapse: collapse;
     border-spacing: 0;
     empty-cells: show;
-    border: 1px solid #cbcbcb;
     color: #777;
     line-height: 1.6;
     font-family: Helvetica,Arial,sans-serif;
     letter-spacing: .01em;
+    border:solid 1px #f3f7fa;
+    width:100%;
+    position: relative;
 }
 table a {
     color: #777;
@@ -128,7 +307,16 @@ tr{
     border-collapse: collapse;
     border-spacing: 0;
     empty-cells: show;
+    border:none;
+    background-color:white;
     }
+tr.client-row {
+  cursor: pointer;
+}
+tr.client-row:hover {
+  background-color:#f3f7fa;
+  cursor: pointer;
+}
 
 td{
 
@@ -139,10 +327,8 @@ td{
     margin: 0;
     overflow: visible;
     padding: .5em .5em;
-    background-color:white;
-    border-right-width: 0;
-    border-top-width: 0;
-    box-shadow: 0px -1px 0px 0px #f5f5f5;
+    border:none;
+    box-shadow: 0px -1px 0px 0px #f3f7fa;
     font-size: inherit;
 }
 
@@ -152,7 +338,114 @@ td.icon{
 
 
 table .header td{
-    background-color:#e0e0e0;
-    color:black;
-    font-weight:bold;}
+    background-color:#f3f7fa;
+    color:#5e6d89;
+    font-weight:bold;
+}
 
+#work-time-settings label {
+    margin-bottom:5px;
+    width:150px;
+    display:inline-block;
+    text-align:right;
+}
+#add-client label {
+    margin-bottom:5px;
+    width:150px;
+    display:inline-block;
+}*/
+
+
+/* Table */
+table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+table td, table th {
+  border: 1px solid #ddd;
+  padding: 8px;
+}
+
+table tr:nth-child(even){background-color: #f2f2f2;}
+
+table tr:hover {background-color: #ddd;}
+
+table th {
+  padding-top: 12px;
+  padding-bottom: 12px;
+  text-align: left;
+  background-color: #4CAF50;
+  color: white;
+}
+
+
+  /*checkboxes */
+  /* The container */
+label.checkbox {
+  display: block;
+  position: relative;
+  padding-left: 35px;
+  margin-bottom: 10px;
+  padding-bottom:15px;
+  cursor: pointer;
+  font-size: 1em;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* Hide the browser's default checkbox */
+label.checkbox input {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+  height: 0;
+  width: 0;
+}
+
+/* Create a custom checkbox */
+label.checkbox .checkmark {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 20px;
+  width: 20px;
+  background-color: #eee;
+}
+
+/* On mouse-over, add a grey background color */
+label.checkbox:hover input ~ .checkmark {
+  background-color: #ccc;
+}
+
+/* When the checkbox is checked, add a blue background */
+label.checkbox input:checked ~ .checkmark {
+  background-color: #2196F3;
+}
+
+/* Create the checkmark/indicator (hidden when not checked) */
+label.checkbox .checkmark:after {
+  content: "";
+  position: absolute;
+  display: none;
+}
+
+/* Show the checkmark when checked */
+label.checkbox input:checked ~ .checkmark:after {
+  display: block;
+}
+
+/* Style the checkmark/indicator */
+label.checkbox .checkmark:after {
+  left: 7px;
+  top: 3px;
+  width: 4px;
+  height: 8px;
+  border: solid white;
+  border-width: 0 3px 3px 0;
+  -webkit-transform: rotate(45deg);
+  -ms-transform: rotate(45deg);
+  transform: rotate(45deg);
+}
