@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+
+{% block title %}Ustawienia{% endblock %}
+
+{% block content %}
+
+<div id="content">
+        {% for message in messages %}
+            <p class="success">{{ message|safe }}</p>
+        {% endfor %}
+
+        {% for error in form.non_field_errors %}
+            <p class="has-error">{{error}}</p>
+        {% endfor %}
+    <div id="work-time-settings">
+        <form name="work-time-form" method="POST" action="{% url 'settings_work_time' %}">
+
+ <fieldset class="work-time-day">
+  <legend>Poniedziałek:</legend>
+     {% if start_monday.errors %}<p class="has-error">{{ form.start_monday.errors }}</p>{% endif %}
+     {% if start_monday.errors %}<p class="has-error">{{ form.end_monday.errors }}</p>{% endif %}
+    <p><div>
+        <label for="{{ form.start_monday.id_for_label }}">{{ form.start_monday.label }}</label>
+        {{ form.start_monday }}
+    </div>
+    <div>
+        <label for="{{ form.end_monday.id_for_label }}">{{ form.end_monday.label }}</label>
+        {{ form.end_monday }}</div></p>
+ </fieldset>
+ <fieldset class="work-time-day">
+  <legend>Wtorek:</legend>
+     {% if start_tuesday.errors %}<p class="has-error">{{ form.start_tuesday.errors }}</p>{% endif %}
+     {% if start_tuesday.errors %}<p class="has-error">{{ form.end_tuesday.errors }}</p>{% endif %}
+    <p><div>
+        <label for="{{ form.start_tuesday.id_for_label }}">{{ form.start_tuesday.label }}</label>
+        {{ form.start_tuesday }}
+    </div>
+    <div>
+        <label for="{{ form.end_tuesday.id_for_label }}">{{ form.end_tuesday.label }}</label>
+        {{ form.end_tuesday }}</div></p>
+ </fieldset>
+ <fieldset class="work-time-day">
+  <legend>Środa:</legend>
+     {% if start_wednesday.errors %}<p class="has-error">{{ form.start_wednesday.errors }}</p>{% endif %}
+     {% if start_wednesday.errors %}<p class="has-error">{{ form.end_wednesday.errors }}</p>{% endif %}
+    <p><div>
+        <label for="{{ form.start_wednesday.id_for_label }}">{{ form.start_wednesday.label }}</label>
+        {{ form.start_wednesday }}
+    </div>
+    <div>
+        <label for="{{ form.end_wednesday.id_for_label }}">{{ form.end_wednesday.label }}</label>
+        {{ form.end_wednesday }}</div></p>
+ </fieldset>
+ <fieldset class="work-time-day">
+  <legend>Czwartek:</legend>
+     {% if start_thursday.errors %}<p class="has-error">{{ form.start_thursday.errors }}</p>{% endif %}
+     {% if start_thursday.errors %}<p class="has-error">{{ form.end_thursday.errors }}</p>{% endif %}
+    <p><div>
+        <label for="{{ form.start_thursday.id_for_label }}">{{ form.start_thursday.label }}</label>
+        {{ form.start_thursday }}
+    </div>
+    <div>
+        <label for="{{ form.end_thursday.id_for_label }}">{{ form.end_thursday.label }}</label>
+        {{ form.end_thursday }}</div></p>
+ </fieldset>
+ <fieldset class="work-time-day">
+  <legend>Piątek:</legend>
+     {% if start_friday.errors %}<p class="has-error">{{ form.start_friday.errors }}</p>{% endif %}
+     {% if start_friday.errors %}<p class="has-error">{{ form.end_friday.errors }}</p>{% endif %}
+    <p><div>
+        <label for="{{ form.start_friday.id_for_label }}">{{ form.start_friday.label }}</label>
+        {{ form.start_friday }}
+    </div>
+    <div>
+        <label for="{{ form.end_friday.id_for_label }}">{{ form.end_friday.label }}</label>
+        {{ form.end_friday }}</div></p>
+ </fieldset>
+ <fieldset class="work-time-day">
+  <legend>Sobota:</legend>
+     {% if start_saturday.errors %}<p class="has-error">{{ form.start_saturday.errors }}</p>{% endif %}
+     {% if start_saturday.errors %}<p class="has-error">{{ form.end_saturday.errors }}</p>{% endif %}
+    <p><div>
+        <label for="{{ form.start_saturday.id_for_label }}">{{ form.start_saturday.label }}</label>
+        {{ form.start_saturday }}
+    </div>
+    <div>
+        <label for="{{ form.end_saturday.id_for_label }}">{{ form.end_saturday.label }}</label>
+        {{ form.end_saturday }}</div></p>
+ </fieldset>
+ <fieldset class="work-time-day">
+  <legend>Niedziela:</legend>
+     {% if start_sunday.errors %}<p class="has-error">{{ form.start_sunday.errors }}</p>{% endif %}
+     {% if start_sunday.errors %}<p class="has-error">{{ form.end_sunday.errors }}</p>{% endif %}
+    <p><div>
+        <label for="{{ form.start_sunday.id_for_label }}">{{ form.start_sunday.label }}</label>
+        {{ form.start_sunday }}
+    </div>
+    <div>
+        <label for="{{ form.end_sunday.id_for_label }}">{{ form.end_sunday.label }}</label>
+        {{ form.end_sunday }}</div></p>
+ </fieldset>
+ <fieldset class="work-time-day">
+  <legend>Terminy rezerwacji (w dniach):</legend>
+     {% if earliest_visit.errors %}<p class="has-error">{{ form.earliest_visit.errors }}</p>{% endif %}
+     {% if latest_visit.errors %}<p class="has-error">{{ form.latest_visit.errors }}</p>{% endif %}
+    <p><div>
+        <label for="{{ form.earliest_visit.id_for_label }}">{{ form.earliest_visit.label }}</label>
+        {{ form.earliest_visit }}
+    </div>
+    <div>
+        <label for="{{ form.latest_visit.id_for_label }}">{{ form.latest_visit.label }}</label>
+        {{ form.latest_visit }}</div></p>
+ </fieldset>
+                <div class="fieldWrapper">
+                    <label class="checkbox" for="{{ form.holidays.id_for_label }}">{{form.holidays.label}}
+                    {{ form.holidays }}
+                  <span class="checkmark"></span></label>
+                {% csrf_token %}
+                <p><input type="submit" name="submit" value="Zapisz"></p>
+        </form>
+    </div>
+
+{% endblock %}

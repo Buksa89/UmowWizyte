@@ -5,9 +5,8 @@
 {% block content %}
 
 <div id="content">
-    <h3>Dodawanie klienta</h3>
     {% for message in messages %}
-    {{ message|safe }}
+        <div class="success">{{ message|safe }}</div>
     {% endfor %}
     {% if form.errors %}
         <div class="form-group has-error">
@@ -15,10 +14,10 @@
         </div>
     {% endif %}
     <div id="add-client">
-        <form name="add-client-form" method="POST" action="{% url 'dashboard_clients_add' %}">
+        <form name="add-client-form" method="POST" action="{% url 'dashboard_clients_edit' client_id %}">
             {{ form.as_p }}
             {% csrf_token %}
-            <p><input class="button" type="submit" value="Dodaj" name="submit"></p>
+            <p><input class="button" type="submit" value="Zapisz" name="submit"></p>
         </form>
     </div>
 </div>

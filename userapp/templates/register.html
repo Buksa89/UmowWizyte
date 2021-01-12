@@ -1,0 +1,13 @@
+{% extends "base_small.html" %}
+{% load static %}
+
+{% block content %}
+    <h1>Zakładamy nowe konto!</h1>
+
+        <form action="{% url 'register' %}" name="login-form" method="post">
+            {{ form.as_p }}
+            {% csrf_token %}
+        <p><input type="submit" name="submit" value="Gotowe"></p>
+        </form>
+        <p class="right"><a href="{% url 'welcome' %}">Powrót do strony głównej</a><br /><a href="{% url 'login' %}">Logowanie</a></p>
+{% endblock %}

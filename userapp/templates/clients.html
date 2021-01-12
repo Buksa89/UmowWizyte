@@ -5,29 +5,26 @@
 {% block content %}
 
 <div id="content">
-    <p><a href="{% url 'dashboard_clients_add' %}" class="button">+</a></p>
+    <p><a href="{% url 'dashboard_clients_add' %}" class="button"><i class="fas fa-user-plus"></i>
+
+</a></p>
     {% if clients %}
     <table>
         <tr class="header">
-                <td></td>
                 <td></td>
                 <td>Imię</td>
                 <td>Nazwisko</td>
                 <td>Numer telefonu</td>
                 <td>Opis</td>
-                <td>Status</td>
-                <td>pin</td>
             </tr>
         {% for client in clients %}
-            <tr>
-                <td><a href="{{ client.get_remove_url }}">&#9986</a></td>
-                <td>&#9998;</td>
-                <td>{% if client.is_active is True %}&#9745;{% else %}&#9746;{% endif %}</td>
+            <tr class="client-row" onclick="location.href='{% url 'dashboard_clients_edit' client.id %}'">
+                <td>{% if client.is_active is True %}<i class="far fa-check-circle"></i>{% else %}
+                    <i class="fas fa-times-circle"></i>{% endif %}</td>
                 <td>{{ client.name }}</td>
                 <td>{{ client.surname }}</td>
                 <td>{{ client.phone_number }}</td>
                 <td>{{ client.description }}</td>
-                <td>{{ client.pin }}</td>
             </tr>
         {% endfor %}
     </table>

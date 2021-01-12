@@ -1,4 +1,5 @@
 from datetime import date, datetime, time, timedelta
+from django.contrib import messages
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
@@ -11,7 +12,8 @@ from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.generic.edit import CreateView
 from .base import DAYS_FOR_CODE, not_naive, UserAddVisitSchedule, UserLockTimeSchedule, UserSchedule, UserTwoDaysSchedule
-from .forms import AddClientForm, AddServiceForm, AddVisitForm, LoginForm, NewVisitForm, WorkTimeForm
+from .forms import AddClientForm, AddServiceForm, AddVisitForm, ContactForm,\
+    EditClientForm, LoginForm, NewVisitForm, RegistrationForm, WorkTimeForm
 from .models import Client, Service, Visit, WorkTime
 
 
@@ -20,7 +22,6 @@ from .models import Client, Service, Visit, WorkTime
 """ User Views """
 
 class Dashboard(CreateView):
-
     """ In Dashboard User can see all not-confirmed visit, confirm or reject them
     Also he can see today schedule and navigate to previous or next day schedule".
     In this view is form to add new visit by user."""
@@ -217,14 +218,43 @@ class DashboardClientsAdd(CreateView):
         if form.is_valid():
             user = User.objects.get(username=request.user)
             form.save(user)
-            created_client_name = request.POST.get('name','')
+            messages.success(self.request, f'<p>{request.POST.get("name","")} dodany.</p>'
+                                           f'<p><a href="{reverse("dashboard_clients")}">Kliknij tutaj</a> aby powrócić do listy klientów</p>')
             form = AddClientForm()
             return render(request, self.template_name, {'form': form,
-                                                        'created_client_name':created_client_name,
                                                         'section':self.section})
 
-        form = AddClientForm(data=self.request.POST)
         return render(self.request, self.template_name, {'form': form, 'section': 'dashboard_clients'})
+
+class DashboardClientsEdit(CreateView):
+    template_name = 'clients_edit.html'
+    section = 'dashboard_clients'
+
+    @method_decorator(login_required)
+    def get(self, request, client_id):
+        user = User.objects.get(username=request.user)
+        client = get_object_or_404(Client, id=client_id,user=user)
+        form = EditClientForm(instance=client)
+        # dane w formularzu
+        # wizyty
+        # historia
+        return render(request, self.template_name, {'form': form, 'client_id': client.id, 'section':self.section})
+
+    @method_decorator(login_required)
+    def post(self, request, client_id):
+        user = User.objects.get(username=request.user)
+        client = get_object_or_404(Client, id=client_id,user=user)
+        form = EditClientForm(data=self.request.POST, instance=client)
+        if form.is_valid():
+            form.save()
+            messages.success(self.request, f'Dane klienta zostały zmienione')
+            form = EditClientForm(instance=client)
+            return render(request, self.template_name, {'form': form,
+                                                        'client_id': client.id,
+                                                        'section': self.section})
+
+        return render(self.request, self.template_name, {'form': form, 'section': 'dashboard_clients'})
+
 
 
 @login_required
@@ -256,55 +286,35 @@ class DashboardSchedule(View):
 
 
 
-class DashboardSettings(CreateView):
-    template_name = 'settings.html'
 
 
+
+""" Settings Account """
+
+""" Settings Contact """
+class SettingsContact(CreateView):
+    template = 'settings_contact.html'
+    section = 'settings'
+    subsection= 'contact'
+    form = ContactForm()
 
     @method_decorator(login_required)
     def get(self, request):
-        user, service_form, work_time_form = self.settings_prepare_data(request)
-        services = self.settings_prepare_services(user)
-        return render(request, 'settings.html', {'work_time_form': work_time_form,
-                                                        'service_form': service_form,
-                                                       'services': services,
-                                                       'section':'dashboard_settings'})
 
-    @method_decorator(login_required)
-    def post(self, request):
-        created_service = None
-        work_time_changed = False
-        user, service_form, work_time_form = self.settings_prepare_data(request)
+        return render(request, self.template, {'form': self.form,
+                                               'section':self.section,
+                                               'subsection':self.subsection})
 
-        if 'submit' not in request.POST.keys(): None
-        elif request.POST['submit'] == 'add_service':
-            service_form, created_service = self.dashboard_settings_services(request, user)
-        elif request.POST['submit'] == 'set_work_time':
-            work_time_form, work_time_changed = self.dashboard_settings_work_time(request, user)
+""" Settings WorkTime """
 
-        services = self.settings_prepare_services(user)
+class SettingsWorkTime(CreateView):
+    template = 'settings_work_time.html'
+    section = 'settings'
+    subsection= 'work_time'
 
-
-
-
-        return render(request, 'settings.html', {'work_time_form': work_time_form,
-                                                        'service_form': service_form,
-                                                       'services': services,
-                                                       'created_service': created_service,
-                                                       'work_time_changed': work_time_changed,
-                                                       'section':'dashboard_settings'})
-
-    def settings_prepare_services(self, user):
-        services = Service.objects.filter(user=user)
-        services = self.generate_service_list(services)
-        return services
-
-    def settings_prepare_data(self, request):
+    def prepare_data(self, request):
         user = User.objects.get(username=request.user)
-        service_form = AddServiceForm()
         work_time = WorkTime.objects.get(user=user)
-
-
 
         for day in DAYS_FOR_CODE:
             end = datetime.combine(date.min, work_time.__dict__['start_'+day]) + work_time.__dict__['duration_'+day]
@@ -314,43 +324,23 @@ class DashboardSettings(CreateView):
 
 
         work_time_form = WorkTimeForm(initial=work_time.__dict__, instance=work_time)
-        return user, service_form, work_time_form
+        return user, work_time_form
 
-    def generate_service_list(self, services):
-        service_list = []
-        for service in services:
-            dict = {}
-            dict['name'] = service.name
-            dict['display_duration'] = service.display_duration
-            dict['status'] = service.is_active
-            dict['get_remove_url'] = service.get_remove_url
-            dict['get_lock_url'] = service.get_lock_url
-            service_list.append(dict)
-        return service_list
+    @method_decorator(login_required)
+    def get(self, request):
+        user, self.form = self.prepare_data(request)
+        return render(request, self.template, {'form': self.form,
+                                               'section':self.section,
+                                               'subsection':self.subsection})
 
-    def dashboard_settings_services(self, request, user):
-        service_form = AddServiceForm(data=request.POST)
-        created_service = None
-        if service_form.is_valid():
-            if request.POST['duration'] == '00:00:00':  # Usługa nie może trwać 0
-                service_form.add_error(None, 'Ustaw czas')
-            else:
-                try:
-                    with transaction.atomic():  # Bez tego wyrzuca błąd
-                        service_form.save(user=user)
-                    created_service = request.POST.get('name', '')
-                    service_form = AddServiceForm()
-
-                except IntegrityError:
-                    # TODO: Tą walidację przenieś do formularza
-                    service_form.add_error(None, 'Usługa o tej nazwie już istnieje')
-        return service_form, created_service
-
-    def dashboard_settings_work_time(self, request, user):
+    @method_decorator(login_required)
+    def post(self, request):
+        user, self.form = self.prepare_data(request)
         work_time = WorkTime.objects.get(user=user)
         duration_for_days = []
+
         for day in DAYS_FOR_CODE:
-            hours, minutes = request.POST['end_'+day].split(':')
+            hours, minutes = request.POST['end_' + day].split(':')
             hours = int(hours)
             minutes = int(minutes)
             if hours < 24:
@@ -359,28 +349,63 @@ class DashboardSettings(CreateView):
             else:
                 days = hours // 24 + 1
                 hours = hours % 24
-            end_time = datetime(1,1, days, hours, minutes)
+            end_time = datetime(1, 1, days, hours, minutes)
 
-            hours, minutes = request.POST['start_'+day].split(':')
-            start_time = datetime(1,1, 1, int(hours), int(minutes))
+            hours, minutes = request.POST['start_' + day].split(':')
+            start_time = datetime(1, 1, 1, int(hours), int(minutes))
             duration_for_days.append(end_time - start_time)
 
-        form = WorkTimeForm(data=request.POST, instance=work_time)
-        if form.is_valid():
-            form.save(duration_for_days)
-            return form, True
-        return form, False
+        self.form = WorkTimeForm(data=request.POST, instance=work_time)
+
+        if self.form.is_valid():
+            messages.add_message(request, messages.INFO, f'Czas pracy zmieniony.')
+            self.form.save(duration_for_days)
+
+        return render(request, self.template, {'form': self.form,
+                                               'section':self.section,
+                                               'subsection':self.subsection})
 
 
 
-@login_required
-def dashboard_settings_service_remove(request,service_id):
-    #TODO: Dodaj potwierdzenie usunięcia
-    user = User.objects.get(username=request.user)
-    get_object_or_404(Service, id=service_id,user=user).delete()
-    return redirect('dashboard_settings')
 
-class DashboardSettingsServiceLock(CreateView):
+""" Settings Services """
+
+class SettingsServices(CreateView):
+    template = 'settings_services.html'
+    section = 'settings'
+    subsection= 'services'
+    form = AddServiceForm()
+
+    @method_decorator(login_required)
+    def get(self, request):
+        user = User.objects.get(username=request.user)
+        services = Service.objects.filter(user=user)
+        return render(request, self.template, {'form': self.form,
+                                               'services': services,
+                                               'section':self.section,
+                                               'subsection':self.subsection})
+
+    @method_decorator(login_required)
+    def post(self, request):
+        user = User.objects.get(username=request.user)
+        self.form = AddServiceForm(data=request.POST)
+        if self.form.is_valid():
+            cd = self.form.cleaned_data
+            if Service.objects.filter(name=cd['name'], user=user):
+                self.form.add_error(None, 'Usługa o tej nazwie już istnieje')
+            else:
+                messages.add_message(request, messages.INFO, f'Usługa {cd["name"]} dodana.')
+                self.form.save(user)
+                self.form = AddServiceForm()
+
+        services = Service.objects.filter(user=user)
+
+        return render(request, self.template, {'form': self.form,
+                                               'services': services,
+                                               'section':self.section,
+                                               'subsection':self.subsection})
+
+class SettingsServiceLock(CreateView):
 
     @method_decorator(login_required)
     def get(self, request, service_id):
@@ -392,38 +417,77 @@ class DashboardSettingsServiceLock(CreateView):
         else:
             service.is_active = True
             service.save()
-
-        return redirect('dashboard_settings')
-
+        return redirect('settings')
 
 
-def login_screen(request):
-    if request.user.is_authenticated:
-        return redirect('dashboard')
-    else:
-        if request.method == 'POST':
-            form = LoginForm(request.POST)
-            if form.is_valid():
-                cd = form.cleaned_data
-                user = authenticate(username=cd['username'],
-                                    password=cd['password'])
-                if user:
-                    login(request, user)
-                    return redirect('dashboard')
-                elif User.objects.filter(username=cd['username'], is_active=False):
-                    form.clean()
-                    form.add_error(None, 'Konto zablokowane')
-                else:
-                    form.clean()
-                    form.add_error(None, 'Błędny login lub hasło')
-        else:
-            form = LoginForm()
-
-        return render(request, 'login.html', {'form':form})
+class SettingsServiceRemove(CreateView):
+    @method_decorator(login_required)
+    def get(self, request, service_id):
+        user = User.objects.get(username=request.user)
+        service = get_object_or_404(Service, id=service_id,user=user)
+        service.delete()
+        return redirect('settings_services')
 
 
 """ Other Views """
 
-def welcome_screen(request):
-    users = User.objects.filter(is_superuser=False)
-    return render(request, 'welcome.html', {'users':users})
+class Welcome(CreateView):
+    template = 'welcome.html'
+    def get(self, request):
+        users = User.objects.filter(is_superuser=False)
+        return render(request, self.template, {'users':users})
+
+
+
+class Register(CreateView):
+    template = 'register.html'
+    form = RegistrationForm()
+
+    def get(self, request):
+        return render(request, self.template, {'form': self.form})
+
+    def post(self, request):
+        self.form = RegistrationForm(request.POST)
+        if self.form.is_valid():
+            self.form.save()
+            login_template = 'login.html'
+            form = LoginForm()
+            messages.add_message(request, messages.INFO, 'Witaj na pokładzie!<br />Możesz się teraz zalogować')
+            return render(request, login_template, {'form':form})
+
+
+        return render(request, self.template, {'form': self.form})
+
+
+class Login(CreateView):
+    template = 'login.html'
+    form = LoginForm()
+
+    def get(self, request):
+        return render(request, self.template, {'form': self.form})
+
+    def post(self, request):
+        self.form = LoginForm(request.POST)
+        if self.form.is_valid():
+            cd = self.form.cleaned_data
+            user = authenticate(username=cd['username'],
+                                password=cd['password'])
+            if user:
+                login(request, user)
+                return redirect('settings')
+            else:
+                self.form.clean()
+                self.form.add_error(None, 'Błędny login lub hasło')
+
+        return render(request, self.template, {'form': self.form})
+
+
+class PasswordResetComplete(CreateView):
+    template = 'login.html'
+    form = LoginForm()
+
+    def get(self, request):
+        messages.add_message(request, messages.INFO, 'Hasło zmienione!<br />Możesz się teraz zalogować')
+        return render(request, self.template, {'form':self.form})
+
+

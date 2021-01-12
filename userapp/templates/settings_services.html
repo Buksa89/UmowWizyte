@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block title %}Ustawienia{% endblock %}
+
+{% block content %}
+
+<div id="content">
+<div>
+    <div>
+        {% for message in messages %}
+            <p class="success">{{ message|safe }}</p>
+        {% endfor %}
+
+        {% for error in form.non_field_errors %}
+            <p class="has-error">{{error}}</p>
+        {% endfor %}
+        {% for field in form %}
+            {% for error in field.errors %}
+                <p class="has-error">{{error}}</p>
+            {% endfor %}
+        {% endfor %}
+
+
+
+
+            <form  name="add-service-form" method="POST" action="{% url 'settings' %}">
+
+                <div class="fieldWrapper">
+                    <label for="{{ form.name.id_for_label }}">{{form.name.label}}</label>
+                    {{ form.name }}
+                </div>
+                <div class="fieldWrapper">
+                    <label for="{{ form.duration.id_for_label }}">{{form.duration.label}}</label>
+                    {{ form.duration }}
+                </div>
+                <div class="fieldWrapper">
+                    <label class="checkbox" for="{{ form.is_active.id_for_label }}">{{form.is_active.label}}
+                    {{ form.is_active }}
+                  <span class="checkmark"></span></label>
+
+                </div>
+
+
+
+                {% csrf_token %}
+                <p><input type="submit" name="submit" value="Dodaj usługę"></p>
+            </form>
+        </div>
+        {% if services %}
+        <table>
+            <tr>
+                <th>Nazwa</th>
+                <th>Czas trwania</th>
+                <th>Status</th>
+                <th></th>
+            </tr>
+            {% for service in services %}
+                <tr>
+                    <td>{{ service.name }}</td>
+                    <td>{{ service.display_duration }}</td>
+                    <td class="icon"><a href="{{ service.get_lock_url }}">{% if service.is_active %}<i class="far fa-check-circle"></i>{% else %}<i class="fas fa-times-circle"></i>
+{% endif %}</a></td>
+                    <td class="icon"><a href="#" onclick="confirmation('service', '{{ service.name }}', '{{ service.get_remove_url }}')"><i class="far fa-trash-alt"></i></a>
+                </tr>
+            {% endfor %}
+        </table>
+        {% endif %}
+    </div>
+</div>
+</div>
+{% endblock %}

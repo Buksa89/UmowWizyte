@@ -89,7 +89,7 @@ class DashboardSettingsTests(BaseTest):
         response = self.client.get('/ustawienia/')
 
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'settings.html')
+        self.assertTemplateUsed(response, 'settings_services.html')
 
     def test_dashboard_settings_template_POST(self):
         # TODO: Tu są trzy formularze. Dla każdego trzeba sprawdzić templatkę
@@ -98,5 +98,5 @@ class DashboardSettingsTests(BaseTest):
         response = self.client.post('/ustawienia/', data={})
 
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'settings.html')
+        self.assertTemplateUsed(response, 'settings_services.html')
 '''

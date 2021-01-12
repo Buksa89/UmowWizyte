@@ -9,6 +9,8 @@ from django.urls import reverse
 from django.utils import timezone
 
 class Client(models.Model):
+    def __str__(self):
+        return self.name
 
     """ Client is different model than user. User is owner of clients and can create themm """
 
@@ -30,10 +32,14 @@ class Client(models.Model):
         # with one number should be added to shedules of two users
         unique_together = ('user', 'phone_number')
 
+
+
     def get_remove_url(self):
         return reverse('dashboard_clients_remove', args=[self.id])
 
 class Service(models.Model):
+    def __str__(self):
+        return self.name
 
     """ User create services. Then his client can choose one of services and book visit """
 
@@ -47,10 +53,10 @@ class Service(models.Model):
         unique_together = ('user', 'name')
 
     def get_remove_url(self):
-        return reverse('dashboard_settings_service_remove', args=[self.id])
+        return reverse('settings_services_remove', args=[self.id])
 
     def get_lock_url(self):
-        return reverse('dashboard_settings_service_lock', args=[self.id])
+        return reverse('settings_services_lock', args=[self.id])
 
     def display_duration(self):
         # Duration should be display in format: 00:00.
@@ -59,9 +65,12 @@ class Service(models.Model):
 
     def clean(self):
         if not self.duration:
-            raise ValidationError('Wybierz czas')
+            raise ValidationError('Ustaw czas')
+
 
 class Visit(models.Model):
+    def __str__(self):
+        return self.name
 
     """ Visits can be created by user or by client. If client do it, user need to confirmed visit (is_confirmed -> True)
      Client can cancel visit. if he do it before confirmation, visit is deleted. If after, user need to confirm it

@@ -20,9 +20,15 @@ class only_digits (object):
             raise ValidationError(self.message)
 
 class LoginForm(forms.Form):
-    username = forms.CharField(label='Imię', error_messages={'required': 'Podaj login'})
+    username = forms.CharField(label='Login', error_messages={'required': 'Podaj login'})
     password = forms.CharField(widget=forms.PasswordInput, label='Hasło',
                                error_messages={'required': 'Podaj hasło'})
+
+    def clean(self):
+        cd = self.cleaned_data
+        if User.objects.filter(username=cd['username'], is_active=False):
+            raise forms.ValidationError('Konto zablokowane')
+
 
 class AddClientForm(forms.ModelForm):
 
@@ -36,16 +42,14 @@ class AddClientForm(forms.ModelForm):
 
     class Meta:
         model = Client
-        fields = ['phone_number', 'email', 'name', 'surname', 'description']
+        fields = ['phone_number', 'name', 'surname', 'description']
         labels = {
-            'email': 'email',
             'name': 'Imię*',
             'surname': 'Nazwisko',
             'description': 'Dodatkowe info',
             'phone_number': 'Telefon*',
         }
         widgets = {
-            'email': forms.fields.TextInput(attrs={'placeholder': 'Mail',}),
             'name': forms.fields.TextInput(attrs={'placeholder': 'Imię (to pole wyświetla sie klientowi!)',}),
             'surname': forms.fields.TextInput(attrs={'placeholder': 'Nazwisko',}),
             'description': forms.fields.TextInput(attrs={'placeholder': 'Opis (Tego pola klient nie widzi',}),
@@ -54,7 +58,36 @@ class AddClientForm(forms.ModelForm):
         error_messages = {
             'name': {'required': "Pole nie może być puste",
                      'max_length': 'Nazwa jest za długa'},
-            'email': {'invalid': 'Email nieprawidłowy','max_length': 'Email jest za długi'},
+            'surname': {'max_length': 'Nazwisko jest za długie'},
+            'description': {'max_length': 'Opis jest za długi'},
+            'phone_number': {'required': 'Pole nie może być puste',
+                             'max_length': 'Numer jest za długi'},
+            NON_FIELD_ERRORS: {
+                'unique_together': "Posiadasz już klienta z tym numerem telefonu",
+            }
+        }
+
+class EditClientForm(forms.ModelForm):
+
+    class Meta:
+        model = Client
+        fields = ['phone_number', 'name', 'surname', 'description', 'is_active']
+        labels = {
+            'name': 'Imię*',
+            'surname': 'Nazwisko',
+            'description': 'Dodatkowe info',
+            'phone_number': 'Telefon*',
+            'is_active': 'Aktywny',
+        }
+        widgets = {
+            'name': forms.fields.TextInput(attrs={'placeholder': 'Imię (to pole wyświetla sie klientowi!)',}),
+            'surname': forms.fields.TextInput(attrs={'placeholder': 'Nazwisko',}),
+            'description': forms.fields.TextInput(attrs={'placeholder': 'Opis (Tego pola klient nie widzi',}),
+            'phone_number': forms.TextInput(attrs={'placeholder': 'Telefon'}),
+            }
+        error_messages = {
+            'name': {'required': "Pole nie może być puste",
+                     'max_length': 'Nazwa jest za długa'},
             'surname': {'max_length': 'Nazwisko jest za długie'},
             'description': {'max_length': 'Opis jest za długi'},
             'phone_number': {'required': 'Pole nie może być puste',
@@ -70,9 +103,9 @@ class AddServiceForm(forms.ModelForm):
         model = Service
         fields = ['name', 'duration', 'is_active']
         labels = {
-            'name': '',
-            'duration': '',
-            'is_active': ''
+            'name': 'Nazwa',
+            'duration': 'Czas trwania',
+            'is_active': 'Aktywna'
         }
         widgets = {
             'name': forms.fields.TextInput(attrs={'placeholder': 'Nazwa',}),
@@ -92,19 +125,20 @@ class AddServiceForm(forms.ModelForm):
             }
         }
 
+
     def save(self, user):
         self.instance.user = user
         return super().save()
 
 class WorkTimeForm(forms.ModelForm):
 
-    end_monday = forms.ChoiceField(label='do', choices=time_options(timedelta(hours=24), False))
-    end_tuesday = forms.ChoiceField(label='do', choices=time_options(timedelta(hours=24), False))
-    end_wednesday = forms.ChoiceField(label='do', choices=time_options(timedelta(hours=24), False))
-    end_thursday = forms.ChoiceField(label='do', choices=time_options(timedelta(hours=24), False))
-    end_friday = forms.ChoiceField(label='do', choices=time_options(timedelta(hours=24), False))
-    end_saturday = forms.ChoiceField(label='do', choices=time_options(timedelta(hours=24), False))
-    end_sunday = forms.ChoiceField(label='do', choices=time_options(timedelta(hours=24), False))
+    end_monday = forms.ChoiceField(label='do:', choices=time_options(timedelta(hours=24), False))
+    end_tuesday = forms.ChoiceField(label='do:', choices=time_options(timedelta(hours=24), False))
+    end_wednesday = forms.ChoiceField(label='do:', choices=time_options(timedelta(hours=24), False))
+    end_thursday = forms.ChoiceField(label='do:', choices=time_options(timedelta(hours=24), False))
+    end_friday = forms.ChoiceField(label='do:', choices=time_options(timedelta(hours=24), False))
+    end_saturday = forms.ChoiceField(label='do:', choices=time_options(timedelta(hours=24), False))
+    end_sunday = forms.ChoiceField(label='do:', choices=time_options(timedelta(hours=24), False))
 
     class Meta:
         model = WorkTime
@@ -114,16 +148,16 @@ class WorkTimeForm(forms.ModelForm):
                   'earliest_visit', 'latest_visit']
 
         labels = {
-            'start_monday': 'Poniedziałek: od',
-            'start_tuesday': 'Wtorek: od',
-            'start_wednesday': 'Środa: od',
-            'start_thursday': 'Czwartek: od',
-            'start_friday': 'Piątek: od',
-            'start_saturday': 'Sobota: od',
-            'start_sunday': 'Niedziela: od',
-            'holidays': 'Święta',
-            'earliest_visit': 'Terminy wizyt (min)',
-            'latest_visit': 'Terminy wizyt (max)',
+            'start_monday': 'od:',
+            'start_tuesday': 'od:',
+            'start_wednesday': 'od:',
+            'start_thursday': 'od:',
+            'start_friday': 'od:',
+            'start_saturday': 'od:',
+            'start_sunday': 'od:',
+            'holidays': 'Pracuję w świeta',
+            'earliest_visit': 'od:',
+            'latest_visit': 'do:',
         }
         widgets = {
             'start_monday': forms.Select(choices=time_options(timedelta(hours=24), False)),
@@ -207,3 +241,29 @@ class AddVisitForm(forms.ModelForm):
         error_messages = {
             'description': {'max_length': 'Opis jest za długi'},
         }
+
+class RegistrationForm(forms.ModelForm):
+    password = forms.CharField(label='I hasło',
+                               widget=forms.PasswordInput)
+    password2 = forms.CharField(label='Dla pewności powtórz hasło',
+                                widget=forms.PasswordInput)
+    class Meta:
+        model = User
+        fields = ('username', 'first_name', 'last_name', 'email')
+        labels = {
+            'username': 'Twoja nazwa użytkownika:',
+            'first_name': 'Jak masz na imię?',
+            'last_name': 'I na nazwisko?',
+            'email': 'Podaj jeszcze adres email',
+        }
+
+    def clean_password2(self):
+        cd = self.cleaned_data
+        if cd['password'] != cd['password2']:
+            raise forms.ValidationError('Hasła się różnią')
+        return cd['password2']
+
+class ContactForm(forms.Form):
+
+    content = forms.CharField(widget=forms.Textarea(attrs={'placeholder': 'Hej, jeśli masz problem z aplikacją lub masz pomysł jak ją ulepszyć, daj mi znać!'}), label='', )
+

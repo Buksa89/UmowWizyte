@@ -1,0 +1,17 @@
+{% load static %}
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{% endblock %}</title>
+    <link href="{% static 'panel.css' %}" rel="stylesheet">
+    <link href="{% static 'schedule.css' %}" rel="stylesheet">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://kit.fontawesome.com/74fa286ffd.js" crossorigin="anonymous"></script>
+</head>
+<body>
+        <div class="small-container">
+        {% block content %}
+        {% endblock %}
+        </div>
+</body>
+</html>

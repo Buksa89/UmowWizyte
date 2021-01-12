@@ -5,6 +5,8 @@
     <title>{{ request.user.username }} - {% block title %}{% endblock %}</title>
     <link href="{% static 'panel.css' %}" rel="stylesheet">
     <link href="{% static 'schedule.css' %}" rel="stylesheet">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://kit.fontawesome.com/74fa286ffd.js" crossorigin="anonymous"></script>
     <script>
         function on_hover(id, numbers) {
             for (i = id; i < id+numbers; i++) {
@@ -17,6 +19,17 @@
                     document.getElementById(i).classList.remove("hover");
                 }
         }
+        $(".success").delay(4000).hide();
+
+        function confirmation(type, name, url) {
+          var text = "Czy na pewno chcesz usunąć ";
+          if (type == 'service') {text += "usługę: " };
+          text += name;
+          var r = confirm(text);
+          if (r == true) {
+                window.location.href = url;
+          }
+        }
     </script>
 </head>
 <body>
@@ -24,21 +37,50 @@
         <div id="header">
               <ul class="menu">
                     <li>
-                        <a href="{% url 'logout_screen' %}">Wyloguj</a>
+                        <a href="{% url 'logout' %}"><i class="fas fa-power-off"></i></a>
                     </li>
-                    <li {% if section == 'dashboard_settings' %}class="selected"{% endif %}>
-                        <a href="{% url 'dashboard_settings' %}">Ustawienia</a>
+                    <li>
+                        <a {% if section == 'settings' %}class="selected"{% endif %} href="{% url 'settings' %}"><i class="fas fa-cogs"></i></a>
                     </li>
-                    <li {% if section == 'dashboard_clients' %}class="selected"{% endif %}>
-                        <a href="{% url 'dashboard_clients' %}">Klienci</a>
+                    <li>
+                        <a class="disabled" {% if section == 'dashboard_clients' %}class="selected"{% endif %} href="{% url 'dashboard_clients' %}"><i class="fas fa-users"></i></a>
                     </li>
-                    <li {% if section == 'dashboard_schedule' %}class="selected"{% endif %}>
-                        <a href="{% url 'dashboard_schedule' %}">Terminarz</a>
+                    <li>
+                        <a class="disabled" {% if section == 'dashboard_schedule' %}class="selected"{% endif %} href="{% url 'dashboard_schedule' %}"><i class="far fa-calendar-alt"></i></a>
                     </li>
-                    <li {% if section == 'dashboard' %}class="selected"{% endif %}>
-                        <a href="{% url 'dashboard' %}">Pulpit</a>
+                    <li>
+                        <a class="disabled" {% if section == 'dashboard' %}class="selected"{% endif %} href="{% url 'dashboard' %}"><i class="fas fa-pen-nib"></i></a>
                     </li>
               </ul>
+            {% if section == 'settings' %}
+              <ul class="menu submenu">
+                    <li>
+                        <a class="disabled"  {% if subsection == 'contact' %}class="selected"{% endif %} href="{% url 'settings_contact' %}">Sugestie</a>
+                    </li>
+                    <li>
+                        <a class="disabled"  {% if subsection == 'account' %}class="selected"{% endif %} href="{% url 'settings_account' %}">Konto</a>
+                    </li>
+                    <li>
+                        <a {% if subsection == 'work_time' %}class="selected"{% endif %} href="{% url 'settings_work_time' %}">Czas pracy</a>
+                    </li>
+                    <li>
+                        <a {% if subsection == 'services' %}class="selected"{% endif %} href="{% url 'settings_services' %}">Usługi</a>
+                    </li>
+              </ul>
+            {% endif %}
+            {% if section == 'dashboard' %}
+              <ul class="menu submenu">
+                    <li>
+                        <a disabled="disabled" {% if section == '' %}class="selected"{% endif %} href="{% url 'dashboard' %}">Zaklep wolne</a>
+                    </li>
+                    <li>
+                        <a disabled="disabled" {% if section == '' %}class="selected"{% endif %} href="{% url 'dashboard' %}">Zapisz klienta</a>
+                    </li>
+                    <li>
+                        <a disabled="disabled" {% if section == '' %}class="selected"{% endif %} href="{% url 'dashboard' %}">Dzisiaj</a>
+                    </li>
+              </ul>
+            {% endif %}
         </div>
         {% block content %}
         {% endblock %}

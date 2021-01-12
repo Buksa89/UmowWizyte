@@ -1,13 +1,15 @@
+{% extends "base_small.html" %}
 {% load static %}
 
-<html>
-<head></head>
-<body>
-    <p><a href="{% url 'login_screen' %}">Logowanie</a></p><br />
-
-Użytkownicy:
-    {% for user in users %}
-    <p><a href="{% url 'client_app_login' user.username %}">{{ user.username }}</a></p>
-    {% endfor %}
-</body>
-</html>
+{% block content %}
+        <h1>Hej!</h1>
+        <h2>Witaj w apce do umawiania wizyt</h2>
+            <br />
+            <p>Aby założyć nowe konto, <a href="{% url 'register' %}">kliknij tutaj</a></p>
+            <p>Aby się zalogować, <a href="{% url 'login' %}">kliknij tutaj</a></p>
+            <br />
+            <p>Terminarze użytkowników:</p>
+            {% for user in users %}
+                <p><a href="{% url 'client_app_login' user.username %}">{{ user.username }}</a></p>
+            {% endfor %}
+{% endblock %}
