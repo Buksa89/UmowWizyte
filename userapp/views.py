@@ -449,7 +449,9 @@ class Register(CreateView):
     def post(self, request):
         self.form = RegistrationForm(request.POST)
         if self.form.is_valid():
-            self.form.save()
+            new_user = self.form.save(commit=False)
+            new_user.set_password(self.form.cleaned_data['password'])
+            new_user.save()
             login_template = 'login.html'
             form = LoginForm()
             messages.add_message(request, messages.INFO, 'Witaj na pokładzie!<br />Możesz się teraz zalogować')
