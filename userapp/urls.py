@@ -48,7 +48,7 @@ urlpatterns = [
     path('settings/services/lock/<int:service_id>/', views.SettingsServiceLock.as_view(), name='settings_services_lock'),
     path('settings/work_time/', views.SettingsWorkTime.as_view(), name='settings_work_time'),
 
-    path('settings/account/', views.SettingsServices.as_view(), name='settings_account'),
+    path('settings/account/', views.SettingsAccount.as_view(), name='settings_account'),
     path('settings/contact/', views.SettingsContact.as_view(), name='settings_contact'),
 
 ]

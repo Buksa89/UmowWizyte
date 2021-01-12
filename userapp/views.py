@@ -1,4 +1,5 @@
 from datetime import date, datetime, time, timedelta
+from django.core.mail import send_mail
 from django.contrib import messages
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
@@ -12,9 +13,9 @@ from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.generic.edit import CreateView
 from .base import DAYS_FOR_CODE, not_naive, UserAddVisitSchedule, UserLockTimeSchedule, UserSchedule, UserTwoDaysSchedule
-from .forms import AddClientForm, AddServiceForm, AddVisitForm, ContactForm,\
-    EditClientForm, LoginForm, NewVisitForm, RegistrationForm, WorkTimeForm
-from .models import Client, Service, Visit, WorkTime
+from .forms import AddClientForm, AddServiceForm, AddVisitForm, ContactForm, EditClientForm, LoginForm, NewVisitForm, \
+    RegistrationForm, UserEditForm, UserPassForm, UserSettingsForm, WorkTimeForm
+from .models import Client, Service, UserSettings, Visit, WorkTime
 
 
 
@@ -290,16 +291,87 @@ class DashboardSchedule(View):
 
 
 """ Settings Account """
+class SettingsAccount(CreateView):
+    template = 'settings_account.html'
+    section = 'settings'
+    subsection = 'account'
+
+    @method_decorator(login_required)
+    def get(self, request):
+        user = User.objects.get(username=request.user)
+        user_settings = UserSettings.objects.get(user=user)
+        form_user = UserEditForm(instance=user)
+        form_pass = UserPassForm()
+        form_settings = UserSettingsForm(instance=user_settings)
+
+        return render(request, self.template, {'form_user': form_user,
+                                               'form_pass': form_pass,
+                                               'form_settings': form_settings,
+                                               'section':self.section,
+                                               'subsection':self.subsection})
+
+    @method_decorator(login_required)
+    def post(self, request):
+        user = User.objects.get(username=request.user)
+        user_settings = UserSettings.objects.get(user=user)
+        form_user = UserEditForm(data=request.POST, instance=user)
+        form_pass = UserPassForm(data=request.POST, instance=user)
+        form_settings = UserSettingsForm(data=request.POST, instance=user_settings)
+
+
+        if form_user.is_valid() and form_settings.is_valid() and form_pass.is_valid():
+
+            form_user.save()
+            form_settings.save()
+            fp = form_pass.cleaned_data
+            if fp['password'] or fp['password2']:
+                new_user = form_pass.save(commit=False)
+                new_user.set_password(form_pass.cleaned_data['password'])
+                new_user.save()
+
+            messages.add_message(request, messages.INFO, 'Dane zostały zmienione')
+
+
+
+
+        return render(request, self.template, {'form_user': form_user,
+                                               'form_pass': form_pass,
+                                               'form_settings': form_settings,
+                                               'section':self.section,
+                                               'subsection':self.subsection})
+
 
 """ Settings Contact """
 class SettingsContact(CreateView):
     template = 'settings_contact.html'
     section = 'settings'
-    subsection= 'contact'
+    subsection = 'contact'
     form = ContactForm()
 
     @method_decorator(login_required)
     def get(self, request):
+
+        return render(request, self.template, {'form': self.form,
+                                               'section':self.section,
+                                               'subsection':self.subsection})
+
+    @method_decorator(login_required)
+    def post(self, request):
+        user = User.objects.get(username=request.user)
+        admin = User.objects.get(username='admin')
+        self.form = ContactForm(data=request.POST)
+        if self.form.is_valid():
+            cd = self.form.cleaned_data
+            send_mail(
+                'Kontakt - Umawianie wizyt',
+                cd['content'],
+                user.email,
+                [admin.email],
+                fail_silently=False,
+            )
+            self.form = ContactForm()
+            messages.add_message(request, messages.INFO, 'Wiadomość została wysłana')
+
 
         return render(request, self.template, {'form': self.form,
                                                'section':self.section,
@@ -310,7 +382,7 @@ class SettingsContact(CreateView):
 class SettingsWorkTime(CreateView):
     template = 'settings_work_time.html'
     section = 'settings'
-    subsection= 'work_time'
+    subsection = 'work_time'
 
     def prepare_data(self, request):
         user = User.objects.get(username=request.user)
@@ -365,15 +437,12 @@ class SettingsWorkTime(CreateView):
                                                'section':self.section,
                                                'subsection':self.subsection})
 
-
-
-
 """ Settings Services """
 
 class SettingsServices(CreateView):
     template = 'settings_services.html'
     section = 'settings'
-    subsection= 'services'
+    subsection = 'services'
     form = AddServiceForm()
 
     @method_decorator(login_required)
@@ -392,9 +461,9 @@ class SettingsServices(CreateView):
         if self.form.is_valid():
             cd = self.form.cleaned_data
             if Service.objects.filter(name=cd['name'], user=user):
-                self.form.add_error(None, 'Usługa o tej nazwie już istnieje')
+                self.form.add_error(None, 'Masz już taką usługę ;)')
             else:
-                messages.add_message(request, messages.INFO, f'Usługa {cd["name"]} dodana.')
+                messages.add_message(request, messages.INFO, f'Usługa dodana.')
                 self.form.save(user)
                 self.form = AddServiceForm()
 
@@ -419,7 +488,6 @@ class SettingsServiceLock(CreateView):
             service.save()
         return redirect('settings')
 
-
 class SettingsServiceRemove(CreateView):
     @method_decorator(login_required)
     def get(self, request, service_id):
@@ -428,7 +496,6 @@ class SettingsServiceRemove(CreateView):
         service.delete()
         return redirect('settings_services')
 
-
 """ Other Views """
 
 class Welcome(CreateView):
@@ -436,8 +503,6 @@ class Welcome(CreateView):
     def get(self, request):
         users = User.objects.filter(is_superuser=False)
         return render(request, self.template, {'users':users})
-
-
 
 class Register(CreateView):
     template = 'register.html'
@@ -460,7 +525,6 @@ class Register(CreateView):
 
         return render(request, self.template, {'form': self.form})
 
-
 class Login(CreateView):
     template = 'login.html'
     form = LoginForm()
@@ -482,7 +546,6 @@ class Login(CreateView):
                 self.form.add_error(None, 'Błędny login lub hasło')
 
         return render(request, self.template, {'form': self.form})
-
 
 class PasswordResetComplete(CreateView):
     template = 'login.html'

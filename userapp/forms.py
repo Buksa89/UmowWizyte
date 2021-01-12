@@ -4,7 +4,7 @@ from django.contrib.auth.models import User
 from django.core.exceptions import NON_FIELD_ERRORS, ValidationError
 from django.forms import Textarea
 from django.shortcuts import get_object_or_404
-from .models import Client, Service, Visit, WorkTime
+from .models import Client, Service, Visit, UserSettings, WorkTime
 from .base import pin_generate, time_options
 
 
@@ -267,3 +267,26 @@ class ContactForm(forms.Form):
 
     content = forms.CharField(widget=forms.Textarea(attrs={'placeholder': 'Hej, jeśli masz problem z aplikacją lub masz pomysł jak ją ulepszyć, daj mi znać!'}), label='', )
 
+class UserEditForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = ['first_name', 'last_name', 'email']
+
+class UserSettingsForm(forms.ModelForm):
+    class Meta:
+        model = UserSettings
+        fields = ['site_name', 'site_url']
+
+class UserPassForm(forms.ModelForm):
+    password = forms.CharField(widget=forms.PasswordInput, label='Hasło', required=False)
+    password2 = forms.CharField(widget=forms.PasswordInput, label='Powtórz hasło', required=False)
+
+    class Meta:
+        model = User
+        fields = ('password',)
+
+    def clean_password2(self):
+        cd = self.cleaned_data
+        if cd['password'] != cd['password2']:
+            raise forms.ValidationError('Hasła się różnią')
+        return cd['password2']

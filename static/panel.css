@@ -197,11 +197,13 @@ position:relative;
 width:100%;
 }
 
+
+
 .work-time-day div {
 padding:0px;
 margin:0px;
 position:relative;
-width:49.6%;
+width:48%;
 display:inline-block;
 }
 .work-time-day select {

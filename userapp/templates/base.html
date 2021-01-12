@@ -55,10 +55,13 @@
             {% if section == 'settings' %}
               <ul class="menu submenu">
                     <li>
-                        <a class="disabled"  {% if subsection == 'contact' %}class="selected"{% endif %} href="{% url 'settings_contact' %}">Sugestie</a>
+                        <a {% if subsection == 'contact' %}class="selected"{% endif %} href="{% url 'settings_contact' %}">Sugestie</a>
                     </li>
                     <li>
-                        <a class="disabled"  {% if subsection == 'account' %}class="selected"{% endif %} href="{% url 'settings_account' %}">Konto</a>
+                        <a class="disabled"  {% if subsection == 'subscription' %}class="selected"{% endif %} href="{% url 'dashboard' %}">Subskrypcja</a>
+                    </li>
+                    <li>
+                        <a {% if subsection == 'account' %}class="selected"{% endif %} href="{% url 'settings_account' %}">Konto</a>
                     </li>
                     <li>
                         <a {% if subsection == 'work_time' %}class="selected"{% endif %} href="{% url 'settings_work_time' %}">Czas pracy</a>
