@@ -314,9 +314,14 @@ class SettingsAccount(CreateView):
     def post(self, request):
         user = User.objects.get(username=request.user)
         user_settings = UserSettings.objects.get(user=user)
-        form_user = UserEditForm(data=request.POST, instance=user)
-        form_pass = UserPassForm(data=request.POST, instance=user)
-        form_settings = UserSettingsForm(data=request.POST, instance=user_settings)
+        form_user = UserEditForm(instance=user, data=request.POST)
+        form_pass = UserPassForm(data=request.POST)
+        form_settings = UserSettingsForm(instance=user_settings, data=request.POST)
+
+        #TODO: Znajdź lepsze rozwiązanie
+        # if form_user.is_valid() and form_settings.is_valid() and form_pass.is_valid() nie działa, bo
+        # zapisuje puste hasło nawet bez form.pass.save()
+        # Tutaj rozwiazalem przez ponowne utworzenie formularza, tym razem z instancją
 
 
         if form_user.is_valid() and form_settings.is_valid() and form_pass.is_valid():
@@ -325,9 +330,10 @@ class SettingsAccount(CreateView):
             form_settings.save()
             fp = form_pass.cleaned_data
             if fp['password'] or fp['password2']:
-                new_user = form_pass.save(commit=False)
-                new_user.set_password(form_pass.cleaned_data['password'])
-                new_user.save()
+                form_pass = UserPassForm(instance=user, data=request.POST)
+                new_pass = form_pass.save(commit=False)
+                new_pass.set_password(form_pass.cleaned_data['password'])
+                new_pass.save()
 
             messages.add_message(request, messages.INFO, 'Dane zostały zmienione')
 

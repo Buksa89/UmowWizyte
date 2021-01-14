@@ -1,4 +1,5 @@
 from datetime import time, timedelta
+from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -130,7 +131,7 @@ class Visit(models.Model):
 
 class WorkTime(models.Model):
 
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     start_monday = models.TimeField(auto_now=False, auto_now_add=False, default=time(8,0))
     duration_monday = models.DurationField(blank=False, default=timedelta(hours=8))
     start_tuesday = models.TimeField(auto_now=False, auto_now_add=False, default=time(8,0))
@@ -168,7 +169,7 @@ class WorkTime(models.Model):
             WorkTime.objects.create(user=instance)
 
 class UserSettings(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     site_url = models.CharField(max_length=25, unique=True, blank=True)
     site_name = models.CharField(max_length=60, blank=True)
 
