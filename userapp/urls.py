@@ -15,24 +15,26 @@ urlpatterns = [
     path('reset/<uidb64>/<token>/', auth_views.PasswordResetConfirmView.as_view(), name='password_reset_confirm'),
     path('reset/done/', views.PasswordResetComplete.as_view(), name='password_reset_complete'),
 
+    path('dashboard/', views.Dashboard.as_view(), name='dashboard'),
+    path('dashboard/<int:year>/<int:month>/<int:day>/', views.Dashboard.as_view(), name='dashboard'),
+    path('dashboard/new_visit/', views.DashboardNewVisit1.as_view(), name='dashboard_new_visit_1'),
+    path('dashboard/new_visit/<int:client_id>/<int:service_id>/<int:hours>/<int:minutes>/', views.DashboardNewVisit2.as_view(), name='dashboard_new_visit_2'),
+    path('dashboard/new_visit/<int:client_id>/<int:service_id>/<int:hours>/<int:minutes>/<int:year>/<int:week>/', views.DashboardNewVisit2.as_view(), name='dashboard_new_visit_2'),
+    path('dashboard/new_visit/<int:client_id>/<int:service_id>/<int:hours>/<int:minutes>/<int:year>/<int:month>/<int:day>/<int:hour>/<int:minute>/', views.DashboardNewVisit3.as_view(), name='dashboard_new_visit_3'),
 
 
 
 
-
-
-
-    path('panel/', views.Dashboard.as_view(), name='dashboard'),
-    path('panel/<int:year>/<int:month>/<int:day>/', views.Dashboard.as_view(), name='dashboard'),
     path('panel/wizyta/<int:visit_id>/', views.DashboardVisit.as_view(), name='dashboard_visit'),
-    path('panel/wizyta/<int:visit_id>/odrzuc/', views.DashboardVisitReject.as_view(), name='dashboard_visit_reject'),
-    path('panel/wizyta/<int:visit_id>/potwierdz/', views.DashboardVisitConfirm.as_view(), name='dashboard_visit_confirm'),
-    path('panel/wizyta/<int:visit_id>/odwolaj/', views.DashboardVisitCancel.as_view(), name='dashboard_visit_cancel'),
-    path('panel/zablokuj_terminy/', views.DashboardLockTime.as_view(), name='dashboard_lock_time'),
-    path('panel/zablokuj_terminy/<int:year>/<int:week>/', views.DashboardLockTime.as_view(), name='dashboard_lock_time'),
-    path('panel/nowa_wizyta/<int:client_id>/<int:service_id>/<int:hours>/<int:minutes>/', views.DashboardNewVisit.as_view(), name='dashboard_new_visit'),
-    path('panel/nowa_wizyta/<int:client_id>/<int:service_id>/<int:hours>/<int:minutes>/<int:year>/<int:week>/', views.DashboardNewVisit.as_view(), name='dashboard_new_visit'),
-    path('panel/nowa_wizyta/<int:client_id>/<int:service_id>/<int:hours>/<int:minutes>/<int:year>/<int:month>/<int:day>/<int:hour>/<int:minute>/', views.DashboardConfirmVisit.as_view(), name='dashboard_confirm_visit'),
+    #path('panel/wizyta/<int:visit_id>/odrzuc/', views.DashboardVisitReject.as_view(), name='dashboard_visit_reject'),
+    #path('panel/wizyta/<int:visit_id>/potwierdz/', views.DashboardVisitConfirm.as_view(), name='dashboard_visit_confirm'),
+    #path('panel/wizyta/<int:visit_id>/odwolaj/', views.DashboardVisitCancel.as_view(), name='dashboard_visit_cancel'),
+    #path('panel/zablokuj_terminy/', views.DashboardLockTime.as_view(), name='dashboard_lock_time'),
+    #path('panel/zablokuj_terminy/<int:year>/<int:week>/', views.DashboardLockTime.as_view(), name='dashboard_lock_time'),
+    #path('panel/nowa_wizyta/<int:client_id>/<int:service_id>/<int:hours>/<int:minutes>/<int:year>/<int:month>/<int:day>/<int:hour>/<int:minute>/', views.DashboardConfirmVisit.as_view(), name='dashboard_confirm_visit'),
+
+
+
 
     path('schedule/', views.Schedule.as_view(), name='schedule'),
     path('schedule/<int:year>/<int:week>/', views.Schedule.as_view(), name='schedule_date'),

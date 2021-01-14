@@ -193,9 +193,9 @@ class NewVisitForm(forms.Form):
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop('user')
         super(NewVisitForm, self).__init__(*args, **kwargs)
-        self.fields['client'] = forms.ChoiceField(label='', choices=self.client_choices())
-        self.fields['service'] = forms.ChoiceField(label='',  choices=self.service_choices())
-        self.fields['duration'] = forms.ChoiceField(label='', choices=self.duration_choices())
+        self.fields['client'] = forms.ChoiceField(label='Klient', choices=self.client_choices())
+        self.fields['service'] = forms.ChoiceField(label='Usługa',  choices=self.service_choices())
+        self.fields['duration'] = forms.ChoiceField(label='Czas trwania (Zostaw pole puste, jeśli usługa ma trwać tyle co zwykle)', choices=self.duration_choices())
 
     def client_choices(self):
         clients = Client.objects.filter(user=self.user)

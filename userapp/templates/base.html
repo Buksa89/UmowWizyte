@@ -91,13 +91,13 @@
             {% if section == 'dashboard' %}
               <ul class="menu submenu">
                     <li>
-                        <a disabled="disabled" {% if section == '' %}class="selected"{% endif %} href="{% url 'dashboard' %}">Zaklep wolne</a>
+                        <a class="disabled" {% if subsection == '' %}class="selected"{% endif %} href="{% url 'dashboard' %}">Zaklep wolne</a>
                     </li>
                     <li>
-                        <a disabled="disabled" {% if section == '' %}class="selected"{% endif %} href="{% url 'dashboard' %}">Zapisz klienta</a>
+                        <a {% if subsection == 'new_visit' %}class="selected"{% endif %} href="{% url 'dashboard_new_visit_1' %}">Zapisz klienta</a>
                     </li>
                     <li>
-                        <a disabled="disabled" {% if section == '' %}class="selected"{% endif %} href="{% url 'dashboard' %}">Dzisiaj</a>
+                        <a {% if subsection == 'today' %}class="selected"{% endif %} href="{% url 'dashboard' %}">Dzisiaj</a>
                     </li>
               </ul>
             {% endif %}

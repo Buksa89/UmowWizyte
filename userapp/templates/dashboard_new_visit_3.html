@@ -16,10 +16,10 @@
     <p>Klient: {{data.client.name}} {{data.client.surname}} </p>
     <p>Telefon: {{data.client.phone_number}}</p>
     {% if not saved %}
-    <form name="add-visit-form" action="{% url 'dashboard_confirm_visit' url_data.client_id url_data.service_id url_data.hours url_data.minutes url_data.year url_data.month url_data.day url_data.hour url_data.minute %}" method="post">
+    <form name="add-visit-form" action="{% url 'dashboard_new_visit_3' url_data.client_id url_data.service_id url_data.hours url_data.minutes url_data.year url_data.month url_data.day url_data.hour url_data.minute %}" method="post">
         {{ form.as_p }}
         {% csrf_token %}
-        <input class="button" type="submit" name="submit" value="Potwierdź"> <a class="button" href="{% url 'dashboard_new_visit' url_data.client_id url_data.service_id url_data.hours url_data.minutes %}">Zmień termin</a>
+        <input class="button" type="submit" name="submit" value="Potwierdź"> <a class="button" href="{% url 'dashboard_new_visit_2' url_data.client_id url_data.service_id url_data.hours url_data.minutes %}">Zmień termin</a>
     </form>
     {%else%}
     <p>opis: {{data.description}}</p>

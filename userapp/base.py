@@ -240,6 +240,10 @@ class Schedule:
         for d, day in enumerate(self.days):
             day_intervals = interval.empty()
             for visit in self.visits[d]:
+                print('start')
+                print(visit.start)
+                print('end')
+                print(visit.end)
                 day_intervals |= interval.closedopen(visit.start, visit.end)
 
             intervals.append(day_intervals)
@@ -575,7 +579,7 @@ class UserAddVisitSchedule(Schedule):
         week = date.isocalendar()[1]
         hours = self.duration.seconds//3600
         minutes = (self.duration.seconds//60)%60
-        return reverse('dashboard_new_visit', args=[self.client.id, self.service.id, hours, minutes, year, week])
+        return reverse('dashboard_new_visit_2', args=[self.client.id, self.service.id, hours, minutes, year, week])
 
     def get_time_range(self):
         """ Find all hours important to display on shedule. """
@@ -622,7 +626,7 @@ class UserAddVisitSchedule(Schedule):
                     #TODO: Sprawdzanie kolejnego dnia i blokowanie pola jesli wizyta sie nie wcisnie
                     duration_hours = self.duration.seconds//3600
                     duration_minutes = (self.duration.seconds//60)%60
-                    visit_url = reverse('dashboard_confirm_visit', args=[self.client.id, self.service.id, duration_hours,
+                    visit_url = reverse('dashboard_new_visit_3', args=[self.client.id, self.service.id, duration_hours,
                                                                          duration_minutes, current_time.year, current_time.month,
                                                                          current_time.day, current_time.hour, current_time.minute])
                     # TODO Do refaktoryzacji  - chyba uda się połączyć z if current_time in available_time:
