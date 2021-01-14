@@ -195,23 +195,51 @@ class DashboardVisitConfirm(CreateView):
         return redirect('dashboard')
 
 
-@login_required
-def dashboard_clients(request):
-    #TODO: wylogowanie jesli nie jest autoryzowany
-    user = User.objects.get(username=request.user)
-    clients = Client.objects.filter(user=user)
-    return render(request, 'clients.html', {"clients":clients,
-                                                  'section':'dashboard_clients'})
 
 
-class DashboardClientsAdd(CreateView):
+
+""" Schedule """
+class Schedule(View):
+    template = 'schedule.html'
+    section = 'schedule'
+
+    @method_decorator(login_required)
+    def get(self, request, year=datetime.now().year, week=False):
+        user = User.objects.get(username=request.user)
+        if not week: week = datetime.now().isocalendar()[1]
+
+        schedule = UserSchedule(request.user, year, week)
+        return render(request, self.template, {'section': self.section,
+                                               'schedule': schedule.display()})
+
+""" Clients """
+class Clients(CreateView):
+    template = 'clients.html'
+    section = 'clients'
+    subsection = 'list'
+
+    @method_decorator(login_required)
+    def get(self, request):
+        user = User.objects.get(username=request.user)
+        clients = Client.objects.filter(user=user)
+
+        return render(request, self.template, {"clients": clients,
+                                               'section':self.section,
+                                               'subsection':self.subsection})
+
+""" Clients Add """
+
+class ClientsAdd(CreateView):
     template_name = 'clients_add.html'
-    section = 'dashboard_clients'
+    section = 'clients'
+    subsection = 'add'
 
     @method_decorator(login_required)
     def get(self, request):
         form = AddClientForm()
-        return render(request, self.template_name, {'form': form, 'section':self.section})
+        return render(request, self.template_name, {'form': form,
+                                                    'section':self.section,
+                                                    'subsection':self.subsection})
 
     @method_decorator(login_required)
     def post(self, request):
@@ -219,27 +247,62 @@ class DashboardClientsAdd(CreateView):
         if form.is_valid():
             user = User.objects.get(username=request.user)
             form.save(user)
-            messages.success(self.request, f'<p>{request.POST.get("name","")} dodany.</p>'
-                                           f'<p><a href="{reverse("dashboard_clients")}">Kliknij tutaj</a> aby powrócić do listy klientów</p>')
+            messages.add_message(request, messages.INFO, 'Klient dodany')
+            #TODO Wiedomości sukces powinny być dodawane tak:
+            # messages.success(self.request, f'<p>{request.POST.get("name","")} dodany.</p>')
             form = AddClientForm()
-            return render(request, self.template_name, {'form': form,
-                                                        'section':self.section})
 
-        return render(self.request, self.template_name, {'form': form, 'section': 'dashboard_clients'})
+        return render(request, self.template_name, {'form': form,
+                                                    'section':self.section,
+                                                    'subsection':self.subsection})
 
-class DashboardClientsEdit(CreateView):
-    template_name = 'clients_edit.html'
-    section = 'dashboard_clients'
+""" Clients Remove """
+
+class ClientsRemove(CreateView):
+
+    @method_decorator(login_required)
+    def get(self, request, client_id):
+        user = User.objects.get(username=request.user)
+        get_object_or_404(Client, id=client_id,user=user).delete()
+        return redirect('clients')
+
+""" Clients Data """
+
+class ClientsData(CreateView):
+
+    template = 'clients_data.html'
+    section = 'clients'
+    subsection = 'data'
+
+    @method_decorator(login_required)
+    def get(self, request, client_id):
+        user = User.objects.get(username=request.user)
+        client = get_object_or_404(Client, id=client_id,user=user)
+        visits = Visit.objects.filter(client=client)
+        return render(request, self.template, {'client': client,
+                                                    'visits':visits,
+                                                    'section':self.section,
+                                                    'subsection':self.subsection})
+    #TODO: WIZYTY!!!!
+
+""" Clients Edit """
+
+class ClientsEdit(CreateView):
+
+    template = 'clients_edit.html'
+    success_template = 'clients_data.html'
+    section = 'clients'
+    subsection = 'edit'
 
     @method_decorator(login_required)
     def get(self, request, client_id):
         user = User.objects.get(username=request.user)
         client = get_object_or_404(Client, id=client_id,user=user)
         form = EditClientForm(instance=client)
-        # dane w formularzu
-        # wizyty
-        # historia
-        return render(request, self.template_name, {'form': form, 'client_id': client.id, 'section':self.section})
+        return render(request, self.template, {'form': form,
+                                                    'client_id': client.id,
+                                                    'section':self.section,
+                                                    'subsection':self.subsection})
 
     @method_decorator(login_required)
     def post(self, request, client_id):
@@ -248,47 +311,12 @@ class DashboardClientsEdit(CreateView):
         form = EditClientForm(data=self.request.POST, instance=client)
         if form.is_valid():
             form.save()
-            messages.success(self.request, f'Dane klienta zostały zmienione')
-            form = EditClientForm(instance=client)
-            return render(request, self.template_name, {'form': form,
-                                                        'client_id': client.id,
-                                                        'section': self.section})
+            return redirect('clients_data', client.id)
 
-        return render(self.request, self.template_name, {'form': form, 'section': 'dashboard_clients'})
-
-
-
-@login_required
-def dashboard_clients_remove(request, client_id):
-    #TODO: Dodaj potwierdzenie usunięcia
-    user = User.objects.get(username=request.user)
-    get_object_or_404(Client, id=client_id,user=user).delete()
-    return redirect(dashboard_clients)
-
-
-class DashboardSchedule(View):
-    template_schedule_name = 'schedule.html'
-    section = 'dashboard_schedule'
-
-    @method_decorator(login_required)
-    def get(self, request, year=datetime.now().year, week=False, month=False, day=False):
-        user = User.objects.get(username=request.user)
-        form = NewVisitForm(user=user)
-        if not week: week = datetime.now().isocalendar()[1]
-
-        if not day:
-            schedule = UserSchedule(request.user, year, week)
-            return render(request, self.template_schedule_name,
-                          {'section': self.section, 'schedule': schedule.display(), 'form':form})
-        else:
-            schedule = UserOneDaySchedule(request.user)
-            return render(request, self.template_schedule_name,
-                          {'section': self.section, 'schedule': schedule.display(year, month, day), 'form':form})
-
-
-
-
-
+        return render(request, self.template, {'form': form,
+                                                    'client_id': client.id,
+                                                    'section':self.section,
+                                                    'subsection':self.subsection})
 
 """ Settings Account """
 class SettingsAccount(CreateView):
@@ -345,7 +373,6 @@ class SettingsAccount(CreateView):
                                                'form_settings': form_settings,
                                                'section':self.section,
                                                'subsection':self.subsection})
-
 
 """ Settings Contact """
 class SettingsContact(CreateView):

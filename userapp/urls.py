@@ -34,13 +34,14 @@ urlpatterns = [
     path('panel/nowa_wizyta/<int:client_id>/<int:service_id>/<int:hours>/<int:minutes>/<int:year>/<int:week>/', views.DashboardNewVisit.as_view(), name='dashboard_new_visit'),
     path('panel/nowa_wizyta/<int:client_id>/<int:service_id>/<int:hours>/<int:minutes>/<int:year>/<int:month>/<int:day>/<int:hour>/<int:minute>/', views.DashboardConfirmVisit.as_view(), name='dashboard_confirm_visit'),
 
-    path('terminarz/', views.DashboardSchedule.as_view(), name='dashboard_schedule'),
-    path('terminarz/<int:year>/<int:week>/', views.DashboardSchedule.as_view(), name='dashboard_schedule'),
+    path('schedule/', views.Schedule.as_view(), name='schedule'),
+    path('schedule/<int:year>/<int:week>/', views.Schedule.as_view(), name='schedule_date'),
 
-    path('klienci/', views.dashboard_clients, name='dashboard_clients'),
-    path('klienci/nowy/', views.DashboardClientsAdd.as_view(), name='dashboard_clients_add'),
-    path('klienci/usun/<int:client_id>/', views.dashboard_clients_remove, name='dashboard_clients_remove'),
-    path('klienci/<int:client_id>/', views.DashboardClientsEdit.as_view(), name='dashboard_clients_edit'),
+    path('clients/', views.Clients.as_view(), name='clients'),
+    path('clients/new/', views.ClientsAdd.as_view(), name='clients_add'),
+    path('clients/remove/<int:client_id>/', views.ClientsRemove.as_view(), name='clients_remove'),
+    path('clients/edit/<int:client_id>/', views.ClientsEdit.as_view(), name='clients_edit'),
+    path('clients/<int:client_id>/', views.ClientsData.as_view(), name='clients_data'),
 
     path('settings/', views.SettingsServices.as_view(), name='settings'),
     path('settings/services/', views.SettingsServices.as_view(), name='settings_services'),

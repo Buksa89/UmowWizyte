@@ -13,10 +13,40 @@
             <span class="help-block">{{ form.text.errors }}</span>
         </div>
     {% endif %}
-    <div id="add-client">
-        <form name="add-client-form" method="POST" action="{% url 'dashboard_clients_edit' client_id %}">
-            {{ form.as_p }}
-            {% csrf_token %}
+    {% for field in form %}
+        {% for error in field.errors %}
+            <p class="has-error">{{error}}</p>
+        {% endfor %}
+    {% endfor %}
+
+    <div id="edit-client">
+        <form name="edit-client-form" method="POST" action="{% url 'clients_edit' client_id %}">
+                <div class="fieldWrapper">
+                    <label for="{{ form.phone_number.id_for_label }}">{{form.phone_number.label}}</label>
+                    {{ form.phone_number }}
+                </div>
+                <div class="fieldWrapper">
+                    <label for="{{ form.name.id_for_label }}">{{form.name.label}}</label>
+                    {{ form.name }}
+                </div>
+                <div class="fieldWrapper">
+                    <label for="{{ form.surname.id_for_label }}">{{form.surname.label}}</label>
+                    {{ form.surname }}
+                </div>
+                <div class="fieldWrapper">
+                    <label for="{{ form.description.id_for_label }}">{{form.description.label}}</label>
+                    {{ form.description }}
+                </div>
+                <div class="fieldWrapper">
+                    <label class="checkbox" for="{{ form.is_active.id_for_label }}">{{form.is_active.label}}
+                    {{ form.is_active }}
+                  <span class="checkmark"></span></label>
+
+                </div>
+
+
+
+                {% csrf_token %}
             <p><input class="button" type="submit" value="Zapisz" name="submit"></p>
         </form>
     </div>

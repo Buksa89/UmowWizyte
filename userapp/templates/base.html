@@ -24,6 +24,7 @@
         function confirmation(type, name, url) {
           var text = "Czy na pewno chcesz usunąć ";
           if (type == 'service') {text += "usługę: " };
+          if (type == 'service') {text += "klienta: " };
           text += name;
           var r = confirm(text);
           if (r == true) {
@@ -43,13 +44,13 @@
                         <a {% if section == 'settings' %}class="selected"{% endif %} href="{% url 'settings' %}"><i class="fas fa-cogs"></i></a>
                     </li>
                     <li>
-                        <a class="disabled" {% if section == 'dashboard_clients' %}class="selected"{% endif %} href="{% url 'dashboard_clients' %}"><i class="fas fa-users"></i></a>
+                        <a {% if section == 'clients' %}class="selected"{% endif %} href="{% url 'clients' %}"><i class="fas fa-users"></i></a>
                     </li>
                     <li>
-                        <a class="disabled" {% if section == 'dashboard_schedule' %}class="selected"{% endif %} href="{% url 'dashboard_schedule' %}"><i class="far fa-calendar-alt"></i></a>
+                        <a {% if section == 'schedule' %}class="selected"{% endif %} href="{% url 'schedule' %}"><i class="far fa-calendar-alt"></i></a>
                     </li>
                     <li>
-                        <a class="disabled" {% if section == 'dashboard' %}class="selected"{% endif %} href="{% url 'dashboard' %}"><i class="fas fa-pen-nib"></i></a>
+                        <a {% if section == 'dashboard' %}class="selected"{% endif %} href="{% url 'dashboard' %}"><i class="fas fa-pen-nib"></i></a>
                     </li>
               </ul>
             {% if section == 'settings' %}
@@ -68,6 +69,22 @@
                     </li>
                     <li>
                         <a {% if subsection == 'services' %}class="selected"{% endif %} href="{% url 'settings_services' %}">Usługi</a>
+                    </li>
+              </ul>
+            {% endif %}
+            {% if section == 'clients' %}
+              <ul class="menu submenu">
+                    <li>
+                        <a {% if subsection == 'edit' %}class="selected"{% else %} class="disabled" {% endif %} href="#">Edycja</a>
+                    </li>
+                    <li>
+                        <a {% if subsection == 'data' %}class="selected"{% else %} class="disabled" {% endif %} href="#">Wizyty</a>
+                    </li>
+                    <li>
+                        <a {% if subsection == 'add' %}class="selected"{% endif %} href="{% url 'clients_add' %}">Nowy</a>
+                    </li>
+                    <li>
+                        <a {% if subsection == 'list' %}class="selected"{% endif %} href="{% url 'clients' %}">Klienci</a>
                     </li>
               </ul>
             {% endif %}

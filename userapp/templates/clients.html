@@ -5,20 +5,17 @@
 {% block content %}
 
 <div id="content">
-    <p><a href="{% url 'dashboard_clients_add' %}" class="button"><i class="fas fa-user-plus"></i>
-
-</a></p>
     {% if clients %}
     <table>
         <tr class="header">
-                <td></td>
-                <td>Imię</td>
-                <td>Nazwisko</td>
-                <td>Numer telefonu</td>
-                <td>Opis</td>
+                <th></th>
+                <th>Imię</th>
+                <th>Nazwisko</th>
+                <th>Numer telefonu</th>
+                <th>Opis</th>
             </tr>
         {% for client in clients %}
-            <tr class="client-row" onclick="location.href='{% url 'dashboard_clients_edit' client.id %}'">
+            <tr class="client-row" onclick="location.href='{% url 'clients_data' client.id %}'">
                 <td>{% if client.is_active is True %}<i class="far fa-check-circle"></i>{% else %}
                     <i class="fas fa-times-circle"></i>{% endif %}</td>
                 <td>{{ client.name }}</td>

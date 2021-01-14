@@ -319,7 +319,7 @@ class Schedule:
     def get_navigation_url(self, date):
         year = date.year
         week = date.isocalendar()[1]
-        return reverse('dashboard_schedule', args=[year, week])
+        return reverse('schedule_date', args=[year, week])
 
     def get_visits(self):
         """ Filter for visits to display """

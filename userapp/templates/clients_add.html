@@ -5,17 +5,17 @@
 {% block content %}
 
 <div id="content">
-    <h3>Dodawanie klienta</h3>
+
     {% for message in messages %}
-    {{ message|safe }}
-    {% endfor %}
-    {% if form.errors %}
-        <div class="form-group has-error">
-            <span class="help-block">{{ form.text.errors }}</span>
-        </div>
-    {% endif %}
+            <p class="success">{{ message|safe }}</p>
+        {% endfor %}
+
+        {% for error in form.non_field_errors %}
+            <p class="has-error">{{error}}</p>
+        {% endfor %}
+
     <div id="add-client">
-        <form name="add-client-form" method="POST" action="{% url 'dashboard_clients_add' %}">
+        <form name="add-client-form" method="POST" action="{% url 'clients_add' %}">
             {{ form.as_p }}
             {% csrf_token %}
             <p><input class="button" type="submit" value="Dodaj" name="submit"></p>

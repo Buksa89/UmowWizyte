@@ -52,7 +52,7 @@ class AddClientForm(forms.ModelForm):
         widgets = {
             'name': forms.fields.TextInput(attrs={'placeholder': 'Imię (to pole wyświetla sie klientowi!)',}),
             'surname': forms.fields.TextInput(attrs={'placeholder': 'Nazwisko',}),
-            'description': forms.fields.TextInput(attrs={'placeholder': 'Opis (Tego pola klient nie widzi',}),
+            'description': forms.fields.TextInput(attrs={'placeholder': 'Opis (Tego pola klient nie widzi)',}),
             'phone_number': forms.TextInput(attrs={'placeholder': 'Telefon'}),
             }
         error_messages = {

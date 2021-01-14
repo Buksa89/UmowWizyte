@@ -36,7 +36,7 @@ class Client(models.Model):
 
 
     def get_remove_url(self):
-        return reverse('dashboard_clients_remove', args=[self.id])
+        return reverse('clients_remove', args=[self.id])
 
 class Service(models.Model):
     def __str__(self):
