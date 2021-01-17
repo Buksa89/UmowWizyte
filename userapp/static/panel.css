@@ -97,7 +97,9 @@ padding:5px 20px;
 .full-width {
 width:100%;
 padding: 14px 20px;
-margin: 8px 0;
+  box-sizing: border-box;
+  margin: 8px 0;
+  display: inline-block;
 }
 .right {
 text-align: right;}

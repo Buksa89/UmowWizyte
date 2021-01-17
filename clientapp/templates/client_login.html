@@ -1,23 +1,19 @@
+{% extends "base_small.html" %}
 {% load static %}
 
-<html>
-    <head>
-        <title>Logowanie</title>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <link href="{% static 'panel.css' %}" rel="stylesheet">
-    </head>
-    <body>
-        <div id="login-container">
-            <form name="client-login-form" action="." method="post">
-                {{ form.as_p }}
-                {% csrf_token %}
-                <p><input class="button" type="submit" name="submit" value="Zaloguj"></p>
-                {% if form.errors %}
-                    <div class="form-group has-error">
-                        <span class="help-block">{{ form.text.errors }}</span>
-                    </div>
-                {% endif %}
-            </form>
-        </div>
-    </body>
-</html>
+<title>{{site.site_name}}</title>
+
+{% block content %}
+    <h1>{{site.site_name}}</h1>
+        {% for message in messages %}
+            <p class="success">{{ message|safe }}</p>
+        {% endfor %}
+    <form action="{% url 'client_login' site.site_url %}" name="login-form" method="post">
+        {{ form.as_p }}
+        {% csrf_token %}
+    <p><input class="button" type="submit" name="submit" value="Zaloguj"></p>
+    </form>
+    <p>
+    <p class="right">Jeśli nie masz konta <br />lub nie pamiętasz PINu, <br /><a href="tel:{{site.phone_number}}">zadzwoń do {{site.site_name}}</a></p></p>
+
+{% endblock %}

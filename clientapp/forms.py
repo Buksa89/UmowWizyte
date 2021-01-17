@@ -17,8 +17,25 @@ class only_digits (object):
 
 class ClientLoginForm(forms.Form):
 
-    phone_number = forms.CharField(validators=[only_digits('phone')], label='Telefon', error_messages={'required': 'Podaj numer telefonu'})
-    pin = forms.CharField(validators=[only_digits('pin')], label='pin', error_messages={'required': 'Podaj pin'})
+    #phone_number = forms.CharField(validators=[only_digits('phone')], label='Telefon', error_messages={'required': 'Podaj numer telefonu'})
+    #pin = forms.CharField(validators=[only_digits('pin')], label='PIN', error_messages={'required': 'Podaj pin'})v
+
+    phone_number = forms.CharField(label='Telefon', error_messages={'required': 'Podaj numer telefonu'})
+    pin = forms.CharField(label='PIN', error_messages={'required': 'Podaj pin'})
+
+    def clean(self, user=False):
+        cd = self.cleaned_data
+        if not cd['phone_number'].isdigit():
+            raise forms.ValidationError('Podaj prawidłowy numer telefonu')
+        if not cd['pin'].isdigit():
+            raise forms.ValidationError('Podaj prawidłowy pin')
+        if user:
+            client = Client.objects.filter(phone_number=cd['phone_number'], user=user)
+            if not client:
+                raise forms.ValidationError('Numer nie jest zapisany')
+
+
+
 
 class ClientChooseVisitForm(forms.Form):
 

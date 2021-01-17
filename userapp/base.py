@@ -9,13 +9,18 @@ import holidays
 import portion as interval
 from random import choice
 
-from userapp.models import Client, Service, Visit, WorkTime
+from userapp.models import Client, Service, UserSettings, Visit, WorkTime
 
 
 DAYS_FOR_CODE = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
 DAYS_OF_WEEK = ['Poniedziałek', 'Wtorek', 'Środa', 'Czwartek', 'Piątek', 'Sobota', 'Niedziela']
 DAYS_OF_WEEK_SHORT = ['Pn','Wt','Śr','Cz','Pt','So','Nd']
 MONTHS = ['Styczeń', 'Luty', 'Marzec', 'Kwiecień', 'Maj', 'Czerwiec', 'Lipiec', 'Sierpień', 'Wrzesień', 'Październik', 'Listopad', 'Grudzień']
+
+def get_user_from_url(url_key):
+    settings = get_object_or_404(UserSettings, site_url=url_key)
+    user = settings.user
+    return user
 
 def is_client_authenticated(request, username):
     """ Check client is logged in. Equivalent of 'user.is_authenticated' """

@@ -4,11 +4,8 @@
 
 {% block content %}
 <div id="content">
-    {% if saved %}
-    <h3>Usługa dodana</h3>
-    <p><a class="button" href="{% url 'dashboard' %}">Powrót do pulpitu</a></p>
-    {%else%}
-    {%endif%}
+
+    <h3>Nowa wizyta</h3>
     <p>Usługa: {{data.service.name}}</p>
     <p>Data: {{data.start_date}}</p>
     <p>Godzina: {{data.start_time}}</p>
@@ -19,7 +16,7 @@
     <form name="add-visit-form" action="{% url 'dashboard_new_visit_3' url_data.client_id url_data.service_id url_data.hours url_data.minutes url_data.year url_data.month url_data.day url_data.hour url_data.minute %}" method="post">
         {{ form.as_p }}
         {% csrf_token %}
-        <input class="button" type="submit" name="submit" value="Potwierdź"> <a class="button" href="{% url 'dashboard_new_visit_2' url_data.client_id url_data.service_id url_data.hours url_data.minutes %}">Zmień termin</a>
+        <input class="button" type="submit" name="submit" value="Potwierdź"> <a class="button full-width" href="{% url 'dashboard_new_visit_2' url_data.client_id url_data.service_id url_data.hours url_data.minutes %}">Zmień termin</a>
     </form>
     {%else%}
     <p>opis: {{data.description}}</p>

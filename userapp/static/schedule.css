@@ -140,7 +140,7 @@
 			position: sticky;
 			top: 0;
 			z-index: 1000;
-			background-color: rgba(243,247,250,0.8);
+			background-color: rgba(76,175,88,0.1);
 
 
 		}
@@ -194,7 +194,7 @@
 .session {
 	border-radius: 5px;
 	font-size: 14px;
-	background-color:#c2cbdc;
+	background-color:#4CAF58;
 	margin:2px;
 	text-align: center;
 }
@@ -333,9 +333,9 @@ z-index:5;
  *************************/
 div.header {
   padding: 0px;
-  background: #c2cbdc;
+  background: #4CAF58;
   text-align: center;
-  box-shadow: 0px 5px 10px #a6acc1;
+  box-shadow: 0px 5px 10px #4CAF58;
   margin-bottom:15px;
   border-bottom:solid 1px #fff;
 }

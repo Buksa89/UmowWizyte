@@ -275,7 +275,12 @@ class UserEditForm(forms.ModelForm):
 class UserSettingsForm(forms.ModelForm):
     class Meta:
         model = UserSettings
-        fields = ['site_name', 'site_url']
+        fields = ['site_name', 'site_url', 'phone_number']
+        labels = {
+            'site_name': 'Nazwa strony',
+            'site_url': 'Adres strony',
+            'phone_number': 'Telefon',
+        }
 
 class UserPassForm(forms.ModelForm):
     password = forms.CharField(widget=forms.PasswordInput, label='Hasło', required=False)

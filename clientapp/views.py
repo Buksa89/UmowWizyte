@@ -7,59 +7,21 @@ from django.views import View
 from django.views.generic.edit import CreateView
 from functools import wraps
 from .forms import AddVisitForm, ClientChooseVisitForm, ClientLoginForm
-from userapp.base import ClientAddVisitSchedule, is_client_authenticated, not_naive
-from userapp.models import Client, Service, Visit, WorkTime
+from userapp.base import ClientAddVisitSchedule, is_client_authenticated, not_naive, get_user_from_url
+from userapp.models import Client, Service, UserSettings, Visit, WorkTime
 
 DAYS_OF_WEEK = ['Poniedziałek', 'Wtorek', 'Środa', 'Czwartek', 'Piątek', 'Sobota', 'Niedziela']
 
 def client_login_required(function):
     @wraps(function)
-    def wrap(request, *args, username, **kwargs):
-        if is_client_authenticated(request, username):
-            return function(request, *args, username, **kwargs)
+    def wrap(request, *args, url_key, **kwargs):
+        user = get_user_from_url(url_key)
+        if is_client_authenticated(request, user.username):
+            return function(request, *args, url_key, **kwargs)
         else:
-            return redirect('client_app_login', username)
+            return redirect('client_login', url_key)
     return wrap
 
-
-class ClientAppLogin(CreateView):
-    """If user is not active, login form is locked
-    If client is authorized, he is redirected to dashboard
-    If client give correct data, he start to be authorized in session:
-    request.session['client_authorized'] = {'phone': phone_of_client, 'user': username
-    This authorization is necessary to display dashboard
-    When client is authorized, he is redirected to dashboard
-    """
-    template = 'client_login.html'
-    template_not_active = 'client_login_not_active.html'
-
-    def get(self, request, username):
-        if is_client_authenticated(request, username): return redirect('client_app_dashboard', username)
-        user = get_object_or_404(User, username__iexact=username)
-        if user.is_active:
-            form = ClientLoginForm()
-            return render(request, self.template, {'form':form, 'user':user.username})
-        else:
-            return render(request, self.template_not_active, {'user': user.username})
-
-    def post(self, request, username):
-        if is_client_authenticated(request, username): return redirect('client_app_dashboard', username)
-        user = get_object_or_404(User, username__iexact=username)
-        form = ClientLoginForm(data=request.POST)
-        if form.is_valid():
-            cd = form.cleaned_data
-            client = Client.objects.filter(phone_number=cd['phone_number'], user=user)
-            if not client:
-                form.add_error(None, f'Nie ma takiego numeru w bazie {user.username}')
-            elif client[0].pin != cd['pin']:
-                form.add_error(None, 'Dane nieprawidłowe')
-            elif not client[0].is_active:
-                form.clean()
-                form.add_error(None, 'Konto zablokowane')
-            else:
-                request.session['client_authorized'] = {'phone': cd['phone_number'], 'user': user.username}
-                return redirect('client_app_dashboard', username)
-        return render(request, self.template, {'form':form, 'user':user.username})
 
 
 class ClientAppDashboard(View):
@@ -88,8 +50,8 @@ class ClientAppDashboard(View):
 
     @method_decorator(client_login_required)
     def post(self, request, username):
-        if 'service' in request.POST.keys(): return redirect('client_app_new_visit', username, request.POST['service'])
-        return redirect('client_app_dashboard', username)
+        if 'service' in request.POST.keys(): return redirect('client_new_visit', username, request.POST['service'])
+        return redirect('client_dashboard', username)
 
     def prepare_visits_list(self, visits):
         visits_list = []
@@ -164,7 +126,7 @@ class ClientAppConfirmVisit(View):
 
         form.save(user, client, name, start, end, is_available, is_confirmed)
 
-        return redirect('client_app_dashboard', username)
+        return redirect('client_dashboard', username)
 
     def prepare_data(self, request, username, service_id):
         user = get_object_or_404(User, username__iexact=username)
@@ -183,12 +145,105 @@ class ClientAppCancelVisit(View):
         elif visit.is_available:
             visit.delete()
 
-        return redirect('client_app_dashboard', username)
+        return redirect('client_dashboard', username)
 
 class ClientAppLogout(View):
-    def get(self, request, username):
+    def get(self, request, url_key):
         request.session.pop('client_authorized', None)
-        return redirect('client_app_login', username)
+        return redirect('client_login', url_key)
 
 
 
+class Dashboard(View):
+    """In dashboard client see:
+    Main menu (visits, settings, logout)
+    Form to add new visit
+    His future visits. He can cancel them
+    Cancelled and confirmed visit are not display
+    Old visit too"""
+
+    template = 'client_dashboard.html'
+
+    @method_decorator(client_login_required)
+    def get(self, request, url_key):
+        user = get_user_from_url(url_key)
+        client = get_object_or_404(Client, phone_number=request.session.get('client_authorized')['phone'],user=user)
+        visits = Visit.objects.filter(user=user, client=client, end__gt=not_naive(datetime.now())).exclude(is_available=False, is_confirmed=True)
+        visits = self.prepare_visits_list(visits)
+
+        form = ClientChooseVisitForm(user)
+        return render(request, self.template, {'form':form,
+                                               'url_key':url_key,
+                                               'username':user.username,
+                                               'client_name':client.name,
+                                               'visits':visits,
+                                               'section':'dashboard'})
+
+    @method_decorator(client_login_required)
+    def post(self, request, username):
+        if 'service' in request.POST.keys(): return redirect('client_new_visit', username, request.POST['service'])
+        return redirect('client_dashboard', username)
+
+    def prepare_visits_list(self, visits):
+        visits_list = []
+        for visit in visits:
+            dict = {}
+            dict['name'] = visit.name
+            dict['date'] = visit.start.strftime("%Y-%m-%d")
+            dict['day'] = DAYS_OF_WEEK[visit.start.weekday()]
+            dict['time'] = visit.start.strftime("%H:%M")
+            dict['duration'] = str(visit.end - visit.start)[:-3].rjust(5,'0')
+            if visit.is_available: dict['status'] = 'Aktualna'
+            else: dict['status'] = 'Odwołana'
+            if not visit.is_confirmed: dict['status'] += ' (Niepotwierdzona)'
+            dict['is_avaliable'] = visit.is_available
+            dict['cancel_url'] = visit.get_cancel_url()
+            visits_list.append(dict)
+        return visits_list
+
+class ClientLogin(CreateView):
+    """If user is not active, login form is locked
+    If client is authorized, he is redirected to dashboard
+    If client give correct data, he start to be authorized in session:
+    request.session['client_authorized'] = {'phone': phone_of_client, 'user': username
+    This authorization is necessary to display dashboard
+    When client is authorized, he is redirected to dashboard
+    """
+    template = 'client_login.html'
+    template_not_active = 'client_login_not_active.html'
+
+    def get(self, request, url_key):
+        site = get_object_or_404(UserSettings, site_url=url_key)
+        user = site.user
+        #if is_client_authenticated(request, user.username): return redirect('client_dashboard', url_key)
+
+        if user.is_active:
+            form = ClientLoginForm()
+            return render(request, self.template, {'form':form, 'site':site})
+        else:
+            return render(request, self.template_not_active, {'site':site})
+
+
+    def post(self, request, url_key):
+
+        site = get_object_or_404(UserSettings, site_url=url_key)
+        user = site.user
+        #if is_client_authenticated(request, user.username): return redirect('client_dashboard', url_key)
+        form = ClientLoginForm(data=request.POST)
+        if form.is_valid():
+            cd = form.cleaned_data
+            client = Client.objects.filter(phone_number=cd['phone_number'], user=user)
+            form.clean(user)
+            """ if not client:
+                form.add_error(None, f'Nie ma takiego numeru w bazie {user.username}')
+            elif client[0].pin != cd['pin']:
+                form.add_error(None, 'Dane nieprawidłowe')
+            elif not client[0].is_active:
+                form.clean()
+                form.add_error(None, 'Konto zablokowane')
+            else:"""
+
+            request.session['client_authorized'] = {'phone': cd['phone_number'], 'user': user.username}
+            return redirect('client_dashboard', url_key)
+
+        return render(request, self.template, {'form':form, 'site':site})

@@ -25,13 +25,13 @@
         <div id="header">
               <ul class="menu">
                     <li>
-                        <a href="{% url 'client_app_logout' username  %}">Wyloguj</a>
+                        <a href="{% url 'client_logout' url_key %}">Wyloguj</a>
                     </li>
                     <li {% if section == 'settings' %}class="selected"{% endif %}>
                         <a href="#">Ustawienia</a>
                     </li>
                     <li {% if section == 'dashboard' %}class="selected"{% endif %}>
-                        <a href="{% url 'client_app_dashboard' username  %}">Wizyty</a>
+                        <a href="{% url 'client_dashboard' username  %}">Wizyty</a>
                     </li>
               </ul>
         </div>

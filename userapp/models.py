@@ -168,10 +168,19 @@ class WorkTime(models.Model):
         if created:
             WorkTime.objects.create(user=instance)
 
+
+
+
 class UserSettings(models.Model):
+
+    def only_digits(value):
+        if value.isdigit() == False:
+            raise ValidationError('Podaj prawidłowy numer telefonu')
+
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     site_url = models.CharField(max_length=25, unique=True, blank=True)
     site_name = models.CharField(max_length=60, blank=True)
+    phone_number = models.CharField(max_length=20, validators=[only_digits], blank=True)
 
     @receiver(post_save, sender=User)
     def create_profile(sender, instance, created, **kwargs):

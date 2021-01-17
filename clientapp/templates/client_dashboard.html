@@ -3,7 +3,7 @@
 <h1>Miło cię widzieć, {{ client_name }}</h1>
 <h2>Umów się na wizytę</h2>
 <p>
-    <form name="choose-visit-form" action="{% url 'client_app_dashboard' username %}" method="post">
+    <form name="choose-visit-form" action="{% url 'client_dashboard' username %}" method="post">
         {{ form.as_table }}
         {% csrf_token %}
         <input type="submit" name="submit" value="Umów się">
