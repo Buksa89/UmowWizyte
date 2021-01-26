@@ -11,16 +11,32 @@ from ..models import Service, Visit
 
 class BaseTest(TestCase):
 
+
+
+    users = {'active_1': {'username':'Rzesiscie1','password': 'RzesPass12', 'is_active':True},
+             'active_2': {'username':'Brodacz','password': 'BarPass12', 'is_active':True},
+             'not_active': {'username':'LeniwyLeszek','password': 'Nieaktywny', 'is_active':False},
+             }
+
+
+
+
+
+
+
+
+
+
     def correct_datetime(start, duration=False):
         if not duration:
             return timezone.make_aware(start, timezone.get_default_timezone())
 
     # (datetime.combine(date.today(), hour) + timedelta(minutes=15)).time()
 
-    users = {'active_1': {'username':'Rzesiscie1','password': 'RzesPass12', 'is_active':True},
-             'active_2': {'username':'Brodacz','password': 'BarPass12', 'is_active':True},
-             'not_active': {'username':'LeniwyLeszek','password': 'Nieaktywny', 'is_active':False},
-             }
+
+
+
+
     clients = {'active_1': {'phone_number':'111111', 'email':'hania@rz1.pl', 'name':'HannaR', 'surname':'Gronkiewicz-Walc', 'description':'Pierwsza klientka'},
                'active_2': {'phone_number':'111222', 'email':'madzia@rz2.pl', 'name':'Magdalena', 'surname':'Ogórek', 'description':'Druga klientka'},
                'active_3': {'phone_number':'111333', 'email':'janusz@bar1.pl', 'name':'Janusz', 'surname':'Korwin-Mikke', 'description':'Trzeci klient'},
@@ -124,6 +140,7 @@ class BaseTest(TestCase):
     ANY_PIN = 9999
     EMPTY = ''
     WRONG_DATA = 'wrong_data'
+    CORRECT_PASSWORD = 'Qwerty123'
     def LONG_DIGIT(self, n): return '1'*n
     def LONG_STRING(self, n): return 'a'*n
     LONG_EMAIL = 'a' * 31 + '@gmail.com'

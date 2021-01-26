@@ -3,8 +3,25 @@ from django.core.exceptions import ValidationError
 from django.db.utils import IntegrityError
 from django.test import TestCase
 from unittest import skip
-from ..models import Client, Service, Visit, WorkTime
+from ..models import Client, Service, Visit, UserSettings
 from .base import BaseTest
+
+
+class UserTests(BaseTest):
+
+    def test_user_saving(self):
+        user = self.users['active_1']
+        user = User.objects.create_user(username=user['username'], password=user['password'])
+
+        self.assertEqual(user, User.objects.first())
+
+    def test_create_user_settings_with_user(self):
+        user = self.users['active_1']
+        user = User.objects.create_user(username=user['username'], password=user['password'])
+        work_time = UserSettings.objects.get(user=user)
+        self.assertTrue(work_time)
+
+
 
 '''class ClientsTests(BaseTest):
 

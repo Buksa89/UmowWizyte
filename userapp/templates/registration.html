@@ -1,0 +1,13 @@
+{% extends "base_small.html" %}
+{% load static %}
+
+{% block content %}
+    <h1>{{ l.REGISTRATION_TITLE }}</h1>
+
+        <form action="{% url 'registration' %}" name="registration-form" method="post">
+            {{ form.as_p }}
+            {% csrf_token %}
+        <p><input type="submit" name="submit" value="{{l.READY_BUTTON}}"></p>
+        </form>
+        <p class="right"><a href="{% url 'welcome' %}">{{l.RETURN_TO_MAIN_PAGE}}</a><br /><a href="{% url 'login' %}">{{l.LOGIN_PAGE}}</a></p>
+{% endblock %}

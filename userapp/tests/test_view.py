@@ -1,4 +1,4 @@
-from bs4 import BeautifulSoup as Bs
+'''from bs4 import BeautifulSoup as Bs
 from datetime import date, datetime, timedelta
 from django.test import TestCase
 from unittest import skip
@@ -108,7 +108,7 @@ class ScheduleTest(BaseTest):
         soup = Bs(response.content.decode(), features="html.parser")
         holiday = soup.find("span", {"class": "holiday"})
 
-        self.assertTrue(holiday)
+        self.assertTrue(holiday)'''
 
 
 '''class DashboardClientsTests(BaseTest):

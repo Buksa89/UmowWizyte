@@ -1,3 +1,20 @@
+Rejestracja
+        test_model          UserTest        test_user_saving                            Czy model user się prawidłowo tworzy
+        test_model          UserTest        test_create_user_settings_with_user         Czy razem z modelem user tworzy się model user_settings
+
+        test_forms
+
+        test_view
+
+        test_template
+
+
+
+
+
+#############333333
+
+
 Bazowe
     Model
 

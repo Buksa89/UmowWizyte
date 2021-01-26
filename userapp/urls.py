@@ -4,7 +4,7 @@ from . import views
 
 urlpatterns = [
     path('', views.Welcome.as_view(), name='welcome'),
-    path('register/', views.Register.as_view(), name='register'),
+    path('registration/', views.Registration.as_view(), name='registration'),
     path('login/', views.Login.as_view(), name='login'),
     path('logout/', auth_views.LogoutView.as_view(), name='logout'),
 
@@ -36,8 +36,8 @@ urlpatterns = [
 
 
 
-    path('schedule/', views.Schedule.as_view(), name='schedule'),
-    path('schedule/<int:year>/<int:week>/', views.Schedule.as_view(), name='schedule_date'),
+    path('schedule/', views.MainSchedule.as_view(), name='schedule'),
+    path('schedule/<int:year>/<int:week>/', views.MainSchedule.as_view(), name='schedule_date'),
 
     path('clients/', views.Clients.as_view(), name='clients'),
     path('clients/new/', views.ClientsAdd.as_view(), name='clients_add'),
@@ -50,6 +50,7 @@ urlpatterns = [
     path('settings/services/remove/<int:service_id>/', views.SettingsServiceRemove.as_view(), name='settings_services_remove'),
     path('settings/services/lock/<int:service_id>/', views.SettingsServiceLock.as_view(), name='settings_services_lock'),
     path('settings/work_time/', views.SettingsWorkTime.as_view(), name='settings_work_time'),
+    path('settings/work_time/remove/<int:work_time_id>/', views.SettingsWorkTimeRemove.as_view(), name='settings_work_time_remove'),
 
     path('settings/account/', views.SettingsAccount.as_view(), name='settings_account'),
     path('settings/contact/', views.SettingsContact.as_view(), name='settings_contact'),

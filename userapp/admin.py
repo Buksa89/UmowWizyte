@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Client, Service, UserSettings, Visit, WorkTime
+from .models import Client, Service, TimeOff, UserSettings, Visit, WorkTime
 
 @admin.register(Client)
 class ClientAdmin(admin.ModelAdmin):
@@ -16,16 +16,15 @@ class VisitAdmin(admin.ModelAdmin):
 @admin.register(WorkTime)
 class WorkTimeAdmin(admin.ModelAdmin):
     list_display = ['user',
-                    'start_monday', 'duration_monday',
-                    'start_tuesday', 'duration_tuesday',
-                    'start_wednesday', 'duration_wednesday',
-                    'start_thursday', 'duration_thursday',
-                    'start_friday', 'duration_friday',
-                    'start_saturday', 'duration_saturday',
-                    'start_sunday', 'duration_sunday',
-                    'holidays',
-                    'earliest_visit', 'latest_visit']
+                    'day_of_week',
+                    'start',
+                    'end',]
 
+@admin.register(TimeOff)
+class TimeOffAdmin(admin.ModelAdmin):
+    list_display = ['user',
+                    'start',
+                    'end',]
 
 @admin.register(UserSettings)
 class UserSettingsAdmin(admin.ModelAdmin):

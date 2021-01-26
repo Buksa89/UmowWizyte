@@ -12,10 +12,12 @@ from django.urls import reverse
 from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.generic.edit import CreateView
-from .base import DAYS_FOR_CODE, not_naive, UserAddVisitSchedule, UserLockTimeSchedule, UserSchedule, UserTwoDaysSchedule
-from .forms import AddClientForm, AddServiceForm, AddVisitForm, ContactForm, EditClientForm, LoginForm, NewVisitForm, \
-    RegistrationForm, UserEditForm, UserPassForm, UserSettingsForm, WorkTimeForm
+from .variables import DAYS_OF_WEEK, DAYS_FOR_CODE
+from .base import not_naive, UserAddVisitSchedule, UserLockTimeSchedule, Schedule, UserTwoDaysSchedule, td_to_string
+from .forms import AddClientForm, AddServiceForm, AddVisitForm, ContactForm, EditClientForm, WorkHolidaysForm, LoginForm, NewVisitForm, \
+    RegistrationForm, UserEditForm, UserPassForm, UserSettingsForm, NewWorkTimeForm
 from .models import Client, Service, UserSettings, Visit, WorkTime
+import userapp.language as l
 
 
 
@@ -255,11 +257,12 @@ class DashboardNewVisit1(View):
     @method_decorator(login_required)
     def post(self, request):
         service = get_object_or_404(Service, user=request.user, id=request.POST['service'])
-        if request.POST['duration'] == '00:00': duration = service.display_duration()
+        if request.POST['duration'] == '0:00:00': duration = service.display_duration()
         else: duration = request.POST['duration']
-        #TODO: Można to zrobić bardziej elegancko
-        hours = int(duration[:2])
-        minutes = int(duration[-2:])
+        print(f'dur:{duration}')
+        splitted_duration = duration.split(":")
+        hours = splitted_duration[0]
+        minutes = splitted_duration[1]
 
         return redirect(reverse('dashboard_new_visit_2', args=[request.POST['client'], request.POST['service'], hours, minutes]))
 
@@ -279,10 +282,11 @@ class Dashboard(View):
         return render(request, self.template, {'section': self.section,
                                                'subsection':self.subsection,
                                                'visits': visits,
-                                                'schedule': schedule.display()})
+                                               'schedule': schedule.display(),
+                                               })
 
 """ Schedule """
-class Schedule(View):
+class MainSchedule(View):
     template = 'schedule.html'
     section = 'schedule'
 
@@ -290,8 +294,8 @@ class Schedule(View):
     def get(self, request, year=datetime.now().year, week=False):
         user = User.objects.get(username=request.user)
         if not week: week = datetime.now().isocalendar()[1]
+        schedule = Schedule(request.user, year, week)
 
-        schedule = UserSchedule(request.user, year, week)
         return render(request, self.template, {'section': self.section,
                                                'schedule': schedule.display()})
 
@@ -500,59 +504,68 @@ class SettingsWorkTime(CreateView):
     template = 'settings_work_time.html'
     section = 'settings'
     subsection = 'work_time'
-
-    def prepare_data(self, request):
-        user = User.objects.get(username=request.user)
-        work_time = WorkTime.objects.get(user=user)
-
-        for day in DAYS_FOR_CODE:
-            end = datetime.combine(date.min, work_time.__dict__['start_'+day]) + work_time.__dict__['duration_'+day]
-            if end >= datetime(1,1,2,0,0,0): work_time.__dict__['end_'+day] = '24:00'
-            else: work_time.__dict__['end_'+day] = end.time().strftime("%H:%M")
-            work_time.__dict__['start_'+day] = work_time.__dict__['start_'+day].strftime("%H:%M")
-
-
-        work_time_form = WorkTimeForm(initial=work_time.__dict__, instance=work_time)
-        return user, work_time_form
+    work_time_form = NewWorkTimeForm()
 
     @method_decorator(login_required)
     def get(self, request):
-        user, self.form = self.prepare_data(request)
-        return render(request, self.template, {'form': self.form,
+        user = User.objects.get(username=request.user)
+        work_times = self.work_time_display(user)
+        user_settings = UserSettings.objects.get(user=user)
+        work_holidays_form = WorkHolidaysForm(instance=user_settings)
+
+        return render(request, self.template, {'work_times': work_times,
+                                               'work_time_form': self.work_time_form,
+                                               'work_holidays_form': work_holidays_form,
                                                'section':self.section,
                                                'subsection':self.subsection})
 
     @method_decorator(login_required)
     def post(self, request):
-        user, self.form = self.prepare_data(request)
-        work_time = WorkTime.objects.get(user=user)
-        duration_for_days = []
+        user = User.objects.get(username=request.user)
+        user_settings = UserSettings.objects.get(user=user)
+        work_holidays_form = WorkHolidaysForm(instance=user_settings)
+        if request.POST['submit'] == 'work_time':
+            self.work_time_form = NewWorkTimeForm(data=request.POST)
+            if self.work_time_form.is_valid():
+                cd = self.work_time_form.cleaned_data
+                self.work_time_form.save(user)
+                messages.add_message(request, messages.INFO, f'Czas pracy dodany.')
+                self.work_time_form = NewWorkTimeForm()
+        if request.POST['submit'] == 'holidays':
+            work_holidays_form = WorkHolidaysForm(data=request.POST, instance=user_settings)
+            if work_holidays_form.is_valid():
+                cd = work_holidays_form.cleaned_data
+                messages.add_message(request, messages.INFO, f'Czas pracy zmeiniony.')
+                work_holidays_form.save(user)
+                work_holidays_form = WorkHolidaysForm(instance=user_settings)
 
-        for day in DAYS_FOR_CODE:
-            hours, minutes = request.POST['end_' + day].split(':')
-            hours = int(hours)
-            minutes = int(minutes)
-            if hours < 24:
-                days = 1
-                hours = hours
-            else:
-                days = hours // 24 + 1
-                hours = hours % 24
-            end_time = datetime(1, 1, days, hours, minutes)
 
-            hours, minutes = request.POST['start_' + day].split(':')
-            start_time = datetime(1, 1, 1, int(hours), int(minutes))
-            duration_for_days.append(end_time - start_time)
-
-        self.form = WorkTimeForm(data=request.POST, instance=work_time)
-
-        if self.form.is_valid():
-            messages.add_message(request, messages.INFO, f'Czas pracy zmieniony.')
-            self.form.save(duration_for_days)
-
-        return render(request, self.template, {'form': self.form,
+        work_times = self.work_time_display(user)
+        return render(request, self.template, {'work_times': work_times,
+                                               'work_time_form': self.work_time_form,
+                                               'work_holidays_form': work_holidays_form,
                                                'section':self.section,
                                                'subsection':self.subsection})
+
+    def work_time_display(self, user):
+        work_times = WorkTime.objects.filter(user=user).order_by('day_of_week','start','end')
+
+        for work_time in work_times:
+            work_time.start = td_to_string(work_time.start)
+            work_time.end = td_to_string(work_time.end)
+            work_time.day_of_week = DAYS_OF_WEEK[work_time.day_of_week]
+
+        return work_times
+
+class SettingsWorkTimeRemove(CreateView):
+    @method_decorator(login_required)
+    def get(self, request, work_time_id):
+        user = User.objects.get(username=request.user)
+        work_time = get_object_or_404(WorkTime, id=work_time_id, user=user)
+        work_time.delete()
+        return redirect('settings_work_time')
+
+
 
 """ Settings Services """
 
@@ -621,12 +634,12 @@ class Welcome(CreateView):
         users = User.objects.filter(is_superuser=False)
         return render(request, self.template, {'users':users})
 
-class Register(CreateView):
-    template = 'register.html'
+class Registration(CreateView):
+    template = 'registration.html'
     form = RegistrationForm()
 
     def get(self, request):
-        return render(request, self.template, {'form': self.form})
+        return render(request, self.template, {'form': self.form, 'l':l})
 
     def post(self, request):
         self.form = RegistrationForm(request.POST)
@@ -636,11 +649,11 @@ class Register(CreateView):
             new_user.save()
             login_template = 'login.html'
             form = LoginForm()
-            messages.add_message(request, messages.INFO, 'Witaj na pokładzie!<br />Możesz się teraz zalogować')
-            return render(request, login_template, {'form':form})
+            messages.success(request, l.WELCOME_ABOARD)
+            return render(request, login_template, {'form':form, 'l':l})
 
 
-        return render(request, self.template, {'form': self.form})
+        return render(request, self.template, {'form': self.form, 'l':l})
 
 class Login(CreateView):
     template = 'login.html'
@@ -669,6 +682,7 @@ class PasswordResetComplete(CreateView):
     form = LoginForm()
 
     def get(self, request):
+        messages.success(request, 'Profile details updated.')
         messages.add_message(request, messages.INFO, 'Hasło zmienione!<br />Możesz się teraz zalogować')
         return render(request, self.template, {'form':self.form})
 

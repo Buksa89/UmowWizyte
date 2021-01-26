@@ -33,8 +33,6 @@ class Client(models.Model):
         # with one number should be added to shedules of two users
         unique_together = ('user', 'phone_number')
 
-
-
     def get_remove_url(self):
         return reverse('clients_remove', args=[self.id])
 
@@ -68,7 +66,6 @@ class Service(models.Model):
         if not self.duration:
             raise ValidationError('Ustaw czas')
 
-
 class Visit(models.Model):
     def __str__(self):
         return self.name
@@ -80,8 +77,8 @@ class Visit(models.Model):
     user = models.ForeignKey(User, default ='', on_delete=models.CASCADE)
     client = models.ForeignKey(Client, default ='', on_delete=models.CASCADE)
     name = models.CharField(max_length=60, blank=False, default='')
-    start = models.DateTimeField(auto_now=False, auto_now_add=False)
-    end = models.DateTimeField(auto_now=False, auto_now_add=False)
+    start = models.DateTimeField(auto_now=False, auto_now_add=False, default=timezone.now)
+    end = models.DateTimeField(auto_now=False, auto_now_add=False, default=timezone.now)
     is_available = models.BooleanField(default=True)
     is_confirmed = models.BooleanField(default=False)
     description = models.CharField(max_length=400, blank=True, default='')
@@ -131,21 +128,35 @@ class Visit(models.Model):
 
 class WorkTime(models.Model):
 
+    user = models.ForeignKey(User, default ='', on_delete=models.CASCADE)
+    day_of_week = models.SmallIntegerField(blank=False, default=0)
+    start = models.DurationField(blank=False, default='')
+    end = models.DurationField(blank=False, default='')
+
+    def clean(self):
+        errors = []
+        if self.end <= self.start:
+            errors.append('Popraw godziny pracy')
+        if 0 > self.day_of_week > 6:
+            errors.append('Nie kombinuj!')
+
+        errors = ', '.join(errors)
+        if errors:
+            raise ValidationError(errors)
+
+    def get_remove_url(self):
+        return reverse('settings_work_time_remove', args=[self.id])
+
+class UserSettings(models.Model):
+
+    def only_digits(value):
+        if value.isdigit() == False:
+            raise ValidationError('Podaj prawidłowy numer telefonu')
+
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    start_monday = models.TimeField(auto_now=False, auto_now_add=False, default=time(8,0))
-    duration_monday = models.DurationField(blank=False, default=timedelta(hours=8))
-    start_tuesday = models.TimeField(auto_now=False, auto_now_add=False, default=time(8,0))
-    duration_tuesday = models.DurationField(blank=False, default=timedelta(hours=8))
-    start_wednesday = models.TimeField(auto_now=False, auto_now_add=False, default=time(8,0))
-    duration_wednesday = models.DurationField(blank=False, default=timedelta(hours=8))
-    start_thursday = models.TimeField(auto_now=False, auto_now_add=False, default=time(8,0))
-    duration_thursday = models.DurationField(blank=False, default=timedelta(hours=8))
-    start_friday = models.TimeField(auto_now=False, auto_now_add=False, default=time(8,0))
-    duration_friday = models.DurationField(blank=False, default=timedelta(hours=8))
-    start_saturday = models.TimeField(auto_now=False, auto_now_add=False, default=time(8,0))
-    duration_saturday = models.DurationField(blank=False, default=timedelta(hours=8))
-    start_sunday = models.TimeField(auto_now=False, auto_now_add=False, default=time(8,0))
-    duration_sunday = models.DurationField(blank=False, default=timedelta(hours=8))
+    site_url = models.CharField(max_length=25, unique=True, blank=True)
+    site_name = models.CharField(max_length=60, blank=True)
+    phone_number = models.CharField(max_length=20, validators=[only_digits], blank=True)
     holidays = models.BooleanField(default=False)
     earliest_visit = models.PositiveIntegerField(default=1, null=False)
     latest_visit = models.PositiveIntegerField(default=14, null=False)
@@ -166,23 +177,10 @@ class WorkTime(models.Model):
     @receiver(post_save, sender=User)
     def create_profile(sender, instance, created, **kwargs):
         if created:
-            WorkTime.objects.create(user=instance)
-
-
-
-
-class UserSettings(models.Model):
-
-    def only_digits(value):
-        if value.isdigit() == False:
-            raise ValidationError('Podaj prawidłowy numer telefonu')
-
-    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    site_url = models.CharField(max_length=25, unique=True, blank=True)
-    site_name = models.CharField(max_length=60, blank=True)
-    phone_number = models.CharField(max_length=20, validators=[only_digits], blank=True)
-
-    @receiver(post_save, sender=User)
-    def create_profile(sender, instance, created, **kwargs):
-        if created:
             UserSettings.objects.create(user=instance, site_url=instance.username, site_name=instance.username.title())
+
+class TimeOff(models.Model):
+
+    user = models.ForeignKey(User, default ='', on_delete=models.CASCADE)
+    start = models.DateTimeField(auto_now=False, auto_now_add=False, default=timezone.now)
+    end = models.DateTimeField(auto_now=False, auto_now_add=False, default=timezone.now)

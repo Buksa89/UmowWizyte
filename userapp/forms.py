@@ -6,6 +6,7 @@ from django.forms import Textarea
 from django.shortcuts import get_object_or_404
 from .models import Client, Service, Visit, UserSettings, WorkTime
 from .base import pin_generate, time_options
+import userapp.language as l
 
 
 class only_digits (object):
@@ -28,7 +29,6 @@ class LoginForm(forms.Form):
         cd = self.cleaned_data
         if User.objects.filter(username=cd['username'], is_active=False):
             raise forms.ValidationError('Konto zablokowane')
-
 
 class AddClientForm(forms.ModelForm):
 
@@ -109,7 +109,7 @@ class AddServiceForm(forms.ModelForm):
         }
         widgets = {
             'name': forms.fields.TextInput(attrs={'placeholder': 'Nazwa',}),
-            'duration': forms.Select(choices=time_options(timedelta(hours=8), True)),
+            'duration': forms.Select(choices=time_options(8)),
             'is_active': forms.CheckboxInput()
             }
 
@@ -130,63 +130,39 @@ class AddServiceForm(forms.ModelForm):
         self.instance.user = user
         return super().save()
 
-class WorkTimeForm(forms.ModelForm):
+class NewWorkTimeForm(forms.ModelForm):
+    days_of_week = (
+        ("0", "Poniedziałek"),
+        ("1", "Wtorek"),
+        ("2", "Środa"),
+        ("3", "Czwartek"),
+        ("4", "Piątek"),
+        ("5", "Sobota"),
+        ("6", "Niedziela"),
+    )
 
-    end_monday = forms.ChoiceField(label='do:', choices=time_options(timedelta(hours=24), False))
-    end_tuesday = forms.ChoiceField(label='do:', choices=time_options(timedelta(hours=24), False))
-    end_wednesday = forms.ChoiceField(label='do:', choices=time_options(timedelta(hours=24), False))
-    end_thursday = forms.ChoiceField(label='do:', choices=time_options(timedelta(hours=24), False))
-    end_friday = forms.ChoiceField(label='do:', choices=time_options(timedelta(hours=24), False))
-    end_saturday = forms.ChoiceField(label='do:', choices=time_options(timedelta(hours=24), False))
-    end_sunday = forms.ChoiceField(label='do:', choices=time_options(timedelta(hours=24), False))
+    day_of_week = forms.ChoiceField(label='Dzień Tygodnia', choices=days_of_week)
+    start = forms.ChoiceField(label='do:', choices=time_options(24))
+    end = forms.ChoiceField(label='do:', choices=time_options(24))
 
     class Meta:
         model = WorkTime
-        fields = ['start_monday', 'end_monday', 'start_tuesday', 'end_tuesday', 'start_wednesday',
-                  'end_wednesday', 'start_thursday', 'end_thursday', 'start_friday', 'end_friday',
-                  'start_saturday', 'end_saturday', 'start_sunday', 'end_sunday', 'holidays',
-                  'earliest_visit', 'latest_visit']
+        fields = ['day_of_week', 'start', 'end']
 
-        labels = {
-            'start_monday': 'od:',
-            'start_tuesday': 'od:',
-            'start_wednesday': 'od:',
-            'start_thursday': 'od:',
-            'start_friday': 'od:',
-            'start_saturday': 'od:',
-            'start_sunday': 'od:',
-            'holidays': 'Pracuję w świeta',
-            'earliest_visit': 'od:',
-            'latest_visit': 'do:',
-        }
-        widgets = {
-            'start_monday': forms.Select(choices=time_options(timedelta(hours=24), False)),
-            'start_tuesday': forms.Select(choices=time_options(timedelta(hours=24), False)),
-            'start_wednesday': forms.Select(choices=time_options(timedelta(hours=24), False)),
-            'start_thursday': forms.Select(choices=time_options(timedelta(hours=24), False)),
-            'start_friday': forms.Select(choices=time_options(timedelta(hours=24), False)),
-            'start_saturday': forms.Select(choices=time_options(timedelta(hours=24), False)),
-            'start_sunday': forms.Select(choices=time_options(timedelta(hours=24), False)),
-            'holidays': forms.CheckboxInput(),
-            'earliest_visit': forms.NumberInput(),
-            'latest_visit': forms.NumberInput(),
-            }
-        error_messages = {
-            'earliest_visit': {'required': "Pole nie może być puste",
-                               'min-value':"Liczba dni nieprawidłowa"},
+    def save(self, user):
+        self.instance.user = user
+        return super().save()
 
-            'latest_visit': {'required': "Pole nie może być puste",
-                             'invalid':"Liczba dni nieprawidłowa"},
-        }
+class WorkHolidaysForm(forms.ModelForm):
 
-    def save(self, durations):
-        self.instance.duration_monday = durations[0]
-        self.instance.duration_tuesday = durations[1]
-        self.instance.duration_wednesday = durations[2]
-        self.instance.duration_thursday = durations[3]
-        self.instance.duration_friday = durations[4]
-        self.instance.duration_saturday = durations[5]
-        self.instance.duration_sunday = durations[6]
+    holidays = forms.BooleanField(label='Pracuję w świeta', widget=forms.CheckboxInput(), required=False)
+
+    class Meta:
+        model = UserSettings
+        fields = ['holidays']
+
+    def save(self, user):
+        self.instance.user = user
         return super().save()
 
 class NewVisitForm(forms.Form):
@@ -212,10 +188,9 @@ class NewVisitForm(forms.Form):
         return choices
 
     def duration_choices(self):
-        choices = time_options(timedelta(hours=8))
+        choices = time_options(8)
         choices[0][1] = 'Standardowy czas'
         return choices
-
 
 class AddVisitForm(forms.ModelForm):
     def save(self, user, client, name, start, end):
@@ -243,25 +218,65 @@ class AddVisitForm(forms.ModelForm):
         }
 
 class RegistrationForm(forms.ModelForm):
-    password = forms.CharField(label='I hasło',
-                               widget=forms.PasswordInput)
-    password2 = forms.CharField(label='Dla pewności powtórz hasło',
-                                widget=forms.PasswordInput)
+
+    username = forms.CharField(label=l.YOUR_USERNAME,
+                                error_messages={'required': l.get_one(l.FIELD_REQUIRED,),
+                                                'max_length': l.get_one(l.FIELD_TOO_LONG),},
+                                max_length='40',)
+    first_name = forms.CharField(label=l.YOUR_FIRST_NAME,
+                                 error_messages={'required': l.get_one(l.FIELD_REQUIRED,),
+                                                 'max_length': l.get_one(l.FIELD_TOO_LONG),},
+                                max_length='40',)
+    last_name = forms.CharField(label=l.YOUR_LAST_NAME,
+                                error_messages={'required': l.get_one(l.FIELD_REQUIRED,),
+                                                'max_length': l.get_one(l.FIELD_TOO_LONG),},
+                                max_length='40',)
+    email = forms.EmailField(required=True,
+                             label=l.YOUR_EMAIL,
+                             error_messages={'required': l.get_one(l.FIELD_REQUIRED,),
+                                             'max_length': l.get_one(l.FIELD_TOO_LONG,),},
+                             max_length='40',)
+    password = forms.CharField(label=l.YOUR_PASSWORD,
+                               widget=forms.PasswordInput,
+                               error_messages={'required': l.get_one(l.FIELD_REQUIRED,),
+                                               'max_length': l.get_one(l.FIELD_TOO_LONG),},
+                               max_length='40',)
+    password2 = forms.CharField(label=l.REPEAT_PASSWORD,
+                                widget=forms.PasswordInput,
+                                error_messages={'required': l.get_one(l.FIELD_REQUIRED,),
+                                                'max_length': l.get_one(l.FIELD_TOO_LONG),},
+                                max_length='40',)
+
     class Meta:
         model = User
         fields = ('username', 'first_name', 'last_name', 'email')
-        labels = {
-            'username': 'Twoja nazwa użytkownika:',
-            'first_name': 'Jak masz na imię?',
-            'last_name': 'I na nazwisko?',
-            'email': 'Podaj jeszcze adres email',
-        }
+
+    def clean_email(self):
+        email = self.cleaned_data['email']
+        users = User.objects.filter(email__iexact=email)
+        if users:
+            raise forms.ValidationError(l.EMAIL_ALREADY_EXIST)
+        return email.lower()
+
+    def clean_username(self):
+        username = self.cleaned_data['username']
+        users = User.objects.filter(username__iexact=username)
+        if users:
+            raise forms.ValidationError(l.USERNAME_ALREADY_EXIST)
+        return username
 
     def clean_password2(self):
         cd = self.cleaned_data
         if cd['password'] != cd['password2']:
-            raise forms.ValidationError('Hasła się różnią')
+            raise forms.ValidationError(l.PASSWORDS_DIFFERENT)
+        if len(cd['password']) < 7 or \
+                not any(char.isdigit() for char in cd['password']) or \
+                not any(char.isupper() for char in cd['password']) or \
+                not any(char.islower() for char in cd['password']):
+            raise forms.ValidationError(l.PASSWORD_TOO_WEAK)
         return cd['password2']
+
+
 
 class ContactForm(forms.Form):
 

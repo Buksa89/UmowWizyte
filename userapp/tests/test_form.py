@@ -1,8 +1,65 @@
 from django.test import TestCase
 from unittest import skip
-from ..forms import AddClientForm, AddServiceForm, LoginForm, WorkTimeForm
+from ..forms import AddClientForm, AddServiceForm, LoginForm, RegistrationForm
 from .base import BaseTest
+import userapp.language as l
 
+class RegistrationTests(BaseTest):
+    def test_form_display(self):
+        response = self.client.get('/registration/')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIsInstance(response.context['form'], RegistrationForm)
+
+    def test_form_validation_blank(self):
+        form = RegistrationForm(data={})
+
+        self.assertFalse(form.is_valid())
+        self.assertIn(form.errors['username'][0], l.FIELD_REQUIRED)
+        self.assertIn(form.errors['email'][0], l.FIELD_REQUIRED)
+        self.assertIn(form.errors['password'][0], l.FIELD_REQUIRED)
+        self.assertIn(form.errors['password2'][0], l.FIELD_REQUIRED)
+
+    def test_form_validation_too_long(self):
+        data = {'username': self.LONG_STRING(41),
+                'first_name': self.LONG_STRING(41),
+                'last_name': self.LONG_STRING(41),
+                'email': self.LONG_EMAIL,
+                'password': self.LONG_STRING(41),
+                'password2': self.LONG_STRING(41)}
+
+        form = RegistrationForm(data=data)
+
+        self.assertFalse(form.is_valid())
+        self.assertIn(form.errors['username'][0], l.FIELD_TOO_LONG)
+        self.assertIn(form.errors['first_name'][0], l.FIELD_TOO_LONG)
+        self.assertIn(form.errors['last_name'][0], l.FIELD_TOO_LONG)
+        self.assertIn(form.errors['email'][0], l.FIELD_TOO_LONG)
+        self.assertIn(form.errors['password'][0], l.FIELD_TOO_LONG)
+        self.assertIn(form.errors['password2'][0], l.FIELD_TOO_LONG)
+
+    def test_form_validation_exists(self):
+        data = {'username': self.LONG_STRING(41),
+                'email': self.LONG_EMAIL,
+                'password': self.CORRECT_PASSWORD,
+                'password2': self.CORRECT_PASSWORD}
+
+        form = RegistrationForm(data=data)
+
+        self.assertFalse(form.is_valid())
+        self.assertIn(form.errors['username'][0], l.FIELD_TOO_LONG)
+        self.assertIn(form.errors['first_name'][0], l.FIELD_TOO_LONG)
+
+        pass
+
+    def test_form_validation_password_strong(self):
+        pass
+
+    def test_form_validation_email_correct(self):
+        pass
+
+    def test_form_validation_password_match(self):
+        pass
 
 
 
