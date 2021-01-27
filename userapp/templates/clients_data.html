@@ -5,13 +5,47 @@
 {% block content %}
 
 <div id="content">
-<h3>{{client.name}} {{client.surname}} </h3> <p>{% if client.is_active is True %}<i class="far fa-check-circle"></i> Aktywny{% else %}
-    <i class="fas fa-times-circle"></i> Zablokowany{% endif %}</p>
-    <p>{{client.description}}</p>
-    <p><a href="tel:{{client.phone_number}}">{{client.phone_number}}</a></p>
+<h3>{{client.name}} {{client.surname}} </h3>
+    <table class="vertical">
+        <tr>
+            <th>Status</th>
+            <td>{% if client.is_active is True %}<i class="far fa-check-circle"></i> Aktywny{% else %}
+    <i class="fas fa-times-circle"></i> Zablokowany{% endif %}</td>
+        </tr>
+        <tr>
+            <th>Opis</th>
+            <td>{{client.description}}</td>
+        </tr>
+        <tr>
+            <th>Numer telefonu</th>
+            <td><a href="tel:{{client.phone_number}}">{{client.phone_number}}</a></td>
+        </tr>
+    </table>
+
     <p><a href="{% url 'clients_edit' client.id %}" class="button">Edytuj dane</a>
         <a class="button" href="#" onclick="confirmation('client', '{{ client.name }} {{client.surname}}', '{{ client.get_remove_url }}')">Usuń klienta</a></p>
 
+    {% if visits %}
+    <table>
+        <tr>
+                <th>Usługa</th>
+                <th>Data</th>
+                <th>Godzina</th>
+                <th>Czas</th>
+                <th>Status</th>
+            </tr>
+        {% for visit in visits %}
+            <tr  class="client-row" onclick="location.href='{% url 'schedule_visit' visit.id %}'"  {% if visit.past is True %}class="past"{% endif %}>
+                <td>{{ visit.name }}</td>
+                <td>{{ visit.get_start_date }}</td>
+                <td>{{ visit.get_start_time }}</td>
+                <td>{{ visit.get_duration }}</td>
+                <td>{% if visit.is_available is True and visit.is_confirmed is True %}<i class="far fa-check-circle"></i>{% else %}
+                    <i class="fas fa-times-circle"></i>{% endif %}</td>
+            </tr>
+        {% endfor %}
+    </table>
+    {% endif %}
 
 </div>
 {% endblock %}

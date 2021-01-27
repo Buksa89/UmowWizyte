@@ -75,13 +75,6 @@ class DashboardVisit(CreateView):
     template_name = 'visit.html'
     section = 'dashboard'
 
-    @method_decorator(login_required)
-    def get(self, request, visit_id):
-        user = User.objects.get(username=request.user)
-        visit = get_object_or_404(Visit, user=user, id=visit_id)
-
-        return render(request, self.template_name, {'section': self.section, 'visit': visit})
-
 class DashboardVisitCancel(CreateView):
 
     template_name = 'visit.html'
@@ -94,64 +87,6 @@ class DashboardVisitCancel(CreateView):
         visit.is_available = False
         visit.is_confirmed = True
         visit.save()
-        return redirect('dashboard')
-
-class DashboardConfirmVisit(CreateView):
-
-    template_name = 'dashboard_new_visit_3.html'
-    section = 'dashboard'
-    #TODO Walidacje, wspolna czesc kodu dla get i post
-    @method_decorator(login_required)
-    def get(self, request, client_id, service_id, hours, minutes, year, month, day, hour, minute):
-
-        user = User.objects.get(username=request.user)
-        client = get_object_or_404(Client, user=user, id=client_id)
-        service = get_object_or_404(Service, user=user, id=service_id)
-        start = not_naive(datetime(year, month, day, hour, minute))
-        form = AddVisitForm()
-
-        data = {'client': client, 'service': service, 'start_date': start.strftime("%y-%m-%d"), 'start_time': start.strftime("%H:%M"), 'duration': f'{hours}:{minutes}'}
-        url_data = {'client_id': client_id, 'service_id':service_id , 'hours':hours, 'minutes':minutes, 'year':year,
-                'month':month, 'day':day, 'hour':hour, 'minute':minute}
-
-        return render(request, self.template_name, {'form': form,
-                                                    'section': self.section,
-                                                    'data': data, 'url_data':url_data})
-
-    @method_decorator(login_required)
-    def post(self, request, client_id, service_id, hours, minutes, year, month, day, hour, minute):
-
-        user = User.objects.get(username=request.user)
-        client = get_object_or_404(Client, user=user, id=client_id)
-        service = get_object_or_404(Service, user=user, id=service_id)
-        start = not_naive(datetime(year, month, day, hour, minute))
-        end = start + timedelta(hours=hours, minutes=minutes)
-        form = AddVisitForm(data=self.request.POST)
-        data = {'client': client, 'service': service, 'start_date': start.strftime("%y-%m-%d"), 'start_time': start.strftime("%H:%M"), 'duration': f'{hours}:{minutes}', 'description':self.request.POST['description']}
-        url_data = {'client_id': client_id, 'service_id':service_id , 'hours':hours, 'minutes':minutes, 'year':year,
-                'month':month, 'day':day, 'hour':hour, 'minute':minute}
-
-        try:
-            form.save(user, client, service.name, start, end)
-            return render(request, self.template_name, {'section': self.section,
-                                                    'data': data, 'url_data': url_data, 'saved': True})
-        except:
-            return render(request, self.template_name, {'form': form,
-                                                        'section': self.section,
-                                                        'data': data, 'url_data':url_data})
-
-class DashboardVisitReject(CreateView):
-
-    @method_decorator(login_required)
-    def get(self, request, visit_id):
-        user = User.objects.get(username=request.user)
-        visit = get_object_or_404(Visit, id=visit_id,user=user)
-        if visit.is_available:
-            visit.delete()
-        else:
-            visit.is_available = True
-            visit.save()
-
         return redirect('dashboard')
 
 class DashboardVisitConfirm(CreateView):
@@ -256,15 +191,20 @@ class DashboardNewVisit1(View):
 
     @method_decorator(login_required)
     def post(self, request):
-        service = get_object_or_404(Service, user=request.user, id=request.POST['service'])
-        if request.POST['duration'] == '0:00:00': duration = service.display_duration()
-        else: duration = request.POST['duration']
-        print(f'dur:{duration}')
-        splitted_duration = duration.split(":")
-        hours = splitted_duration[0]
-        minutes = splitted_duration[1]
-
-        return redirect(reverse('dashboard_new_visit_2', args=[request.POST['client'], request.POST['service'], hours, minutes]))
+        user = User.objects.get(username=request.user)
+        form = NewVisitForm(user=user, data=self.request.POST)
+        if form.is_valid():
+            service = get_object_or_404(Service, user=request.user, id=request.POST['service'])
+            if request.POST['duration'] == '0:00:00': duration = service.display_duration()
+            else: duration = request.POST['duration']
+            splitted_duration = duration.split(":")
+            hours = splitted_duration[0]
+            minutes = splitted_duration[1]
+            return redirect(reverse('dashboard_new_visit_2', args=[request.POST['client'], request.POST['service'], hours, minutes]))
+        else:
+            return render(request, self.template, {'form': form,
+                                               'section': self.section,
+                                               'subsection':self.subsection})
 
 """ Dashboard """
 class Dashboard(View):
@@ -282,13 +222,14 @@ class Dashboard(View):
         return render(request, self.template, {'section': self.section,
                                                'subsection':self.subsection,
                                                'visits': visits,
-                                               'schedule': schedule.display(),
+                                               #'schedule': schedule.display(),
                                                })
 
 """ Schedule """
 class MainSchedule(View):
     template = 'schedule.html'
     section = 'schedule'
+    subsection = 'schedule'
 
     @method_decorator(login_required)
     def get(self, request, year=datetime.now().year, week=False):
@@ -297,7 +238,48 @@ class MainSchedule(View):
         schedule = Schedule(request.user, year, week)
 
         return render(request, self.template, {'section': self.section,
+                                               'subsection': self.subsection,
                                                'schedule': schedule.display()})
+
+""" Schedule Visit """
+class MainScheduleVisit(View):
+    template = 'schedule_visit.html'
+    section = 'schedule'
+    subsection = 'visit'
+
+    @method_decorator(login_required)
+    def get(self, request, visit_id):
+        user = User.objects.get(username=request.user)
+        visit = get_object_or_404(Visit, user=user, id=visit_id)
+
+        return render(request, self.template, {'section': self.section,
+                                               'subsection': self.subsection,
+                                               'visit': visit
+                                               })
+
+class MainScheduleVisitReject(CreateView):
+
+    @method_decorator(login_required)
+    def get(self, request, visit_id):
+        user = User.objects.get(username=request.user)
+        visit = get_object_or_404(Visit, id=visit_id,user=user,is_confirmed=False)
+        if visit.is_available:
+            visit.delete()
+        else:
+            visit.is_available = True
+            visit.save()
+
+        return redirect('dashboard')
+
+class MainScheduleVisitConfirm(CreateView):
+
+    @method_decorator(login_required)
+    def get(self, request, visit_id):
+        user = User.objects.get(username=request.user)
+        visit = get_object_or_404(Visit, id=visit_id,user=user, is_confirmed=False)
+        visit.is_confirmed = True
+        visit.save()
+        return redirect('dashboard')
 
 """ Clients """
 class Clients(CreateView):
@@ -366,12 +348,12 @@ class ClientsData(CreateView):
     def get(self, request, client_id):
         user = User.objects.get(username=request.user)
         client = get_object_or_404(Client, id=client_id,user=user)
-        visits = Visit.objects.filter(client=client)
+        visits = Visit.objects.filter(client=client).order_by('-start')
+
         return render(request, self.template, {'client': client,
                                                     'visits':visits,
                                                     'section':self.section,
                                                     'subsection':self.subsection})
-    #TODO: WIZYTY!!!!
 
 """ Clients Edit """
 

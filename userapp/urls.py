@@ -25,19 +25,20 @@ urlpatterns = [
 
 
 
-    path('panel/wizyta/<int:visit_id>/', views.DashboardVisit.as_view(), name='dashboard_visit'),
-    #path('panel/wizyta/<int:visit_id>/odrzuc/', views.DashboardVisitReject.as_view(), name='dashboard_visit_reject'),
-    #path('panel/wizyta/<int:visit_id>/potwierdz/', views.DashboardVisitConfirm.as_view(), name='dashboard_visit_confirm'),
     #path('panel/wizyta/<int:visit_id>/odwolaj/', views.DashboardVisitCancel.as_view(), name='dashboard_visit_cancel'),
     #path('panel/zablokuj_terminy/', views.DashboardLockTime.as_view(), name='dashboard_lock_time'),
     #path('panel/zablokuj_terminy/<int:year>/<int:week>/', views.DashboardLockTime.as_view(), name='dashboard_lock_time'),
-    #path('panel/nowa_wizyta/<int:client_id>/<int:service_id>/<int:hours>/<int:minutes>/<int:year>/<int:month>/<int:day>/<int:hour>/<int:minute>/', views.DashboardConfirmVisit.as_view(), name='dashboard_confirm_visit'),
 
 
 
 
     path('schedule/', views.MainSchedule.as_view(), name='schedule'),
     path('schedule/<int:year>/<int:week>/', views.MainSchedule.as_view(), name='schedule_date'),
+    path('schedule/visit/<int:visit_id>/', views.MainScheduleVisit.as_view(), name='schedule_visit'),
+    path('schedule/visit/<int:visit_id>/reject/', views.MainScheduleVisitReject.as_view(), name='schedule_visit_reject'),
+    path('schedule/visit/<int:visit_id>/confirm/', views.MainScheduleVisitConfirm.as_view(), name='schedule_visit_confirm'),
+    #path('panel/wizyta/<int:visit_id>/odwolaj/', views.DashboardVisitCancel.as_view(), name='dashboard_visit_cancel'),
+
 
     path('clients/', views.Clients.as_view(), name='clients'),
     path('clients/new/', views.ClientsAdd.as_view(), name='clients_add'),

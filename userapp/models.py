@@ -1,4 +1,4 @@
-from datetime import time, timedelta
+from datetime import time, timedelta, datetime
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
@@ -8,6 +8,14 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.urls import reverse
 from django.utils import timezone
+
+
+def td_to_string(td):
+    hours = str(td.days*24 + td.seconds//3600).rjust(2,'0')
+    minutes = str((td.seconds//60)%60).rjust(2,'0')
+    string = f'{hours}:{minutes}'
+    return string
+
 
 class Client(models.Model):
     def __str__(self):
@@ -59,8 +67,7 @@ class Service(models.Model):
 
     def display_duration(self):
         # Duration should be display in format: 00:00.
-        # TODO: Sprawdź czy istnieje funkcja która robi to bardziej elegancko
-        return str(self.duration)[:-3].rjust(5,'0')
+        return td_to_string(self.duration)
 
     def clean(self):
         if not self.duration:
@@ -106,25 +113,26 @@ class Visit(models.Model):
             raise ValidationError('Nie kombinuj bo zepsujesz. Czas musi być podzielny przez 15 min')
         for visit in current_visits:
             if visit.start <= self.start < visit.end or visit.start < self.end <= visit.end or self.start < visit.start < self.end:
-                #TODO: przetestuj warunek
                 if visit.is_available or (not visit.is_available and not visit.is_confirmed):
                     raise ValidationError('Termin zajęty')
 
-
-    def get_confirm_url(self):
-        return reverse('dashboard_visit_confirm', args=[self.id])
-
-    def get_reject_url(self):
-        return reverse('dashboard_visit_reject', args=[self.id])
-
-    def get_cancel_url(self):
-        return reverse('client_app_cancel_visit', args=[self.user, self.id])
-
-    def get_user_cancel_url(self):
-        return reverse('dashboard_visit_cancel', args=[self.id])
-
     def get_display_url(self):
-        return reverse('dashboard_visit', args=[self.id])
+        return reverse('schedule_visit', args=[self.id])
+
+    def get_start_date(self):
+        return self.start.strftime('%y-%m-%d')
+
+    def get_start_time(self):
+        return self.start.strftime('%H:%M')
+
+    def get_duration(self):
+        return td_to_string(self.end - self.start)
+
+    def if_past(self):
+        if self.end < datetime.now():
+            return True
+
+
 
 class WorkTime(models.Model):
 

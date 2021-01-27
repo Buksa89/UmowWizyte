@@ -78,13 +78,23 @@
                         <a {% if subsection == 'edit' %}class="selected"{% else %} class="disabled" {% endif %} href="#">Edycja</a>
                     </li>
                     <li>
-                        <a {% if subsection == 'data' %}class="selected"{% else %} class="disabled" {% endif %} href="#">Wizyty</a>
+                        <a {% if subsection == 'data' %}class="selected"{% else %} class="disabled" {% endif %} href="#">Dane</a>
                     </li>
                     <li>
                         <a {% if subsection == 'add' %}class="selected"{% endif %} href="{% url 'clients_add' %}">Nowy</a>
                     </li>
                     <li>
                         <a {% if subsection == 'list' %}class="selected"{% endif %} href="{% url 'clients' %}">Klienci</a>
+                    </li>
+              </ul>
+            {% endif %}
+            {% if section == 'schedule' %}
+              <ul class="menu submenu">
+                    <li>
+                        <a {% if subsection == 'visit' %}class="selected"{% else %} class="disabled" {% endif %} href="#">Wizyta</a>
+                    </li>
+                    <li>
+                        <a {% if subsection == 'schedule' %}class="selected"{% endif %} href="{% url 'schedule' %}">Terminarz</a>
                     </li>
               </ul>
             {% endif %}

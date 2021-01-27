@@ -230,9 +230,9 @@ class Schedule:
         last_day = datetime.combine(self.days[-1], time.max)
         intervals = interval.empty()
 
-        visits = Visit.objects.filter(
-                Q(user=self.user, start__range=[first_day, last_day]) |
-                Q(user=self.user, end__range=[first_day, last_day]))
+        visits = Visit.objects.filter(~Q(is_confirmed=True, is_available=False) &
+                                      (Q(user=self.user, start__range=[first_day, last_day]) |
+                                       Q(user=self.user, end__range=[first_day, last_day])))
 
 
         for visit in visits:
@@ -408,14 +408,15 @@ class Schedule:
         color_light = ''
         if not visit.is_confirmed:
             color_light = ' color-light'
-
+        client_url = reverse('clients_data', args=[visit.client.id])
         html_code = f'<div class="session day-{d+1}{color_light}" style="grid-column: day-{d+1}; grid-row: time-{start_row} / time-{end_row};">' \
                      f'<h3 class="session-title"><a href="{visit.get_display_url()}">{visit.name}</a></h3>' \
-                     f'<p><a href="#">{visit.client.name}<br />' \
+                     f'<p><a href="{client_url}">{visit.client.name}<br />' \
                      f'{visit.client.surname}<br /></a>' \
                      f'<a href="tel:{visit.client.phone_number}">{visit.client.phone_number}</a></p>' \
                      f'<p>{visit.description}</p>' \
                      f'</div>'
+
         return html_code
 
     def generate_available_time_content(self, available_time):

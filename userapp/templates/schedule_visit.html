@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block title %}Wizyta{% endblock %}
+
+{% block content %}
+
+<div id="content">
+
+    <h1>{{visit.name}}</h1>
+    <table class="vertical">
+        <tr>
+            <th>Klient</th>
+            <td><a href="{% url 'clients_data' visit.client.id %}">{{visit.client.name}} {{visit.client.surname}}</a></td>
+        </tr>
+        <tr>
+            <th>Telefon</th>
+            <td><a href="tel:{{visit.client.phone_number}}"> {{visit.client.phone_number}}</a></td>
+        </tr>
+        <tr>
+            <th>Data</th>
+            <td>{{visit.get_start_date}}</td>
+        </tr>
+        <tr>
+            <th>Godzina</th>
+            <td>{{visit.get_start_time}}</td>
+        </tr>
+        <tr>
+            <th>Długość wizyty</th>
+            <td>{{visit.get_duration}}</td>
+        </tr>
+        <tr>
+            <th>Opis</th>
+            <td>{{visit.description}}</td>
+        </tr>
+        <tr>
+            <th>Status</th>
+            <td></td>
+        </tr>
+    </table>
+    <p>
+        <a href="#" class="button">Odwołaj</a>
+        <a href="#" class="button">Potwierdź</a>
+        <a href="#" class="button">Odrzuć</a>
+    </p>
+</div>
+{% endblock %}

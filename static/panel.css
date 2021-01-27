@@ -250,119 +250,31 @@ display:none;
   border-radius: 4px;
   text-align:center;
 }
-
-
-
-
-
-
-
-
-
-
-/** Login  **/
-
-/**
-
-
-#login label {
-    width:60px;
-    display:inline-block;
-    text-align:left;
+.message {
+  list-style-type: none;
+  background-color: #4CAF50;
+  color: #fff;
+  padding: 14px 20px;
+  margin: 8px 0;
+  border: none;
+  border-radius: 4px;
+  text-align:left;
+}
+.message a {
+    color:#333;
+}
+.red {
+  background-color: #af4c4c;
 }
 
-
-
-
-
-
-/*
-
-
-
-
-form li label{
-  padding-right:40px;
+.message span.right {
+  float: right;
 }
 
-
-
-
-
-
-
-
-table {
-    border-collapse: collapse;
-    border-spacing: 0;
-    empty-cells: show;
-    color: #777;
-    line-height: 1.6;
-    font-family: Helvetica,Arial,sans-serif;
-    letter-spacing: .01em;
-    border:solid 1px #f3f7fa;
-    width:100%;
-    position: relative;
+.message span.right a i {
+  font-size: 1.9em;
+  margin-top:-5px;
 }
-table a {
-    color: #777;
-  text-decoration: none;
-}
-tr{
-    background-color: #e0e0e0;
-    color: #000;
-    text-align: left;
-    vertical-align: bottom;
-    border-collapse: collapse;
-    border-spacing: 0;
-    empty-cells: show;
-    border:none;
-    background-color:white;
-    }
-tr.client-row {
-  cursor: pointer;
-}
-tr.client-row:hover {
-  background-color:#f3f7fa;
-  cursor: pointer;
-}
-
-td{
-
-    color: #777;
-    line-height: 1.6;
-    vertical-align: middle;
-    border-left: 1px solid #cbcbcb;
-    margin: 0;
-    overflow: visible;
-    padding: .5em .5em;
-    border:none;
-    box-shadow: 0px -1px 0px 0px #f3f7fa;
-    font-size: inherit;
-}
-
-td.icon{
-    font-size: 20px;
-}
-
-
-table .header td{
-    background-color:#f3f7fa;
-    color:#5e6d89;
-    font-weight:bold;
-}
-
-#work-time-settings label {
-    margin-bottom:5px;
-    width:150px;
-    display:inline-block;
-    text-align:right;
-}
-#add-client label {
-    margin-bottom:5px;
-    width:150px;
-    display:inline-block;
-}*/
 
 
 /* Table */
@@ -386,6 +298,12 @@ table th {
   text-align: left;
   background-color: #4CAF50;
   color: white;
+}
+table.vertical th {
+    width:25%;
+}
+table tr.past td {
+  background-color: #ddd;
 }
 
 

@@ -6,29 +6,21 @@
 
 {% if visits %}
 <div id="content">
-    <table>
-        <tr class="header">
-                <td>Typ</td>
-                <td>Klient</td>
-                <td>Termin</td>
-                <td>Status</td>
-                <td>Dodatkowe info</td>
-                <td></td>
-            </tr>
         {% for visit in visits %}
-            <tr>
-                <td>{{ visit.name }}</td>
-                <td>{{ visit.client|safe }}</td>
-                <td>{{ visit.date|safe }}</td>
-                <td>{{ visit.status|safe }}</td>
-                <td>{{ visit.description }}</td>
-                <td><a href="{{ visit.confirm_url }}">Potwierdź</a><br />
-                    <a href="{{ visit.reject_url }}">Odrzuć</a>
-            </tr>
+            <div class="message {% if visit.is_available is False %}red{% endif %}">
+                <span>{{ visit.name }} |</span>
+                <span><a href="{% url 'clients_data' visit.client.id %}">{{visit.client.name}} {{visit.client.surname}}</a> |</span>
+                <span><a href="tel:{{visit.client.phone_number}}"> {{visit.client.phone_number}}</a> |</span>
+                <span>{{ visit.get_start_date }} |</span>
+                <span>{{ visit.get_start_time }}</span>
+                {% if visit.description %}<span>| {{ visit.description }}</span>{% endif %}
+                {% if visit.is_available is False %}<span>| <b>ODWOŁANA</b></span>{% endif %}
+                <span class="right"><a href="{% url 'schedule_visit_confirm' visit.id %}"><i class="far fa-check-circle"></i></a>
+                    {% if visit.is_available is True %}<a href="{% url 'schedule_visit_reject' visit.id %}"><i class="fas fa-times-circle"></i></a></span>{% endif %}
+            </div>
         {% endfor %}
-    </table>
 </div>
-    {% endif %}
+{% endif %}
 
     {{ schedule|safe }}
 {% endblock %}
