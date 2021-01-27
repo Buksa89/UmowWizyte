@@ -211,7 +211,7 @@ class UserAddVisitSchedule(Schedule):
         self.days = self.get_dates_from_week(year, week)
         self.time_range_type = 'full'
         self.visible_visits = True
-        self.available_time = 'available'
+        self.available_time = 'no_visits'
 
         self.prepare_data()
 

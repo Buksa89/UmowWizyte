@@ -156,7 +156,6 @@ class Schedule:
             for visit in self.visits:
                 visit_interval = interval.closedopen(visit.start, visit.end) & day_interval
                 if visit_interval != interval.empty():
-                    print(visit_interval)
                     day_visit = deepcopy(visit)
                     day_visit.start = visit_interval.lower
                     day_visit.end = visit_interval.upper
@@ -250,10 +249,17 @@ class Schedule:
 
         return total_off_intervals
 
+    def get_days_interval(self):
+        start = datetime.combine(self.days[0], time.min)
+        end = datetime.combine(self.days[-1], time.max)
+
+        return interval.closedopen(start, end)
+
     def prepare_data(self):
         self.visits, self.visits_intervals = self.get_visits()
         self.past_interval = interval.openclosed(-interval.inf, datetime.now())
         self.off_intervals = self.get_off_intervals()
+        self.days_interval = self.get_days_interval()
         self.day_intervals, self.day_visits_intervals, self.day_off_intervals, self.day_past_interval, self.day_visits = self.day_intervals()
         self.time_steps, self.start_day, self.end_day = self.get_time_steps(self.time_range_type, self.off_intervals)
         self.navigation = self.generate_navigation()
@@ -368,21 +374,16 @@ class Schedule:
                 html_code += f'<div class="line-off day-{d + 1}" style="grid-column: day-{d + 1}; grid-row: time-{str_time};">' \
                              f'</div>'
 
-            if self.available_time:
+        if self.available_time:
+            if self.available_time == 'available':
+                available_intervals = self.days_interval - self.off_intervals - self.past_interval - self.visits_intervals
 
-                rows_number = (self.end_day - self.start_day) / timedelta(minutes=15)
-                quarters_event_duration = self.event_duration / timedelta(minutes=15)
+            elif self.available_time == 'no_visits':
+                available_intervals = self.days_interval - self.visits_intervals
 
-                if self.available_time == 'available':
-                    day_available_intervals = self.day_intervals[d] - self.day_off_intervals[d] - self.day_past_interval[d] - self.day_visits_intervals[d]
+            else: available_intervals = self.days_interval
 
-                elif self.available_time == 'no_visits':
-                    day_available_intervals = self.day_intervals[d] - self.day_visits_intervals[d]
-
-                else: day_available_intervals = self.day_intervals[d]
-
-                for available_time in day_available_intervals:
-                    html_code += self.generate_available_time_content(d, available_time, rows_number, quarters_event_duration)
+            html_code += self.generate_available_time_content(available_intervals)
 
         return html_code
 
@@ -417,105 +418,57 @@ class Schedule:
                      f'</div>'
         return html_code
 
-    def generate_available_time_content(self, d, available_time, rows_number, quarters_event_duration):
+    def generate_available_time_content(self, available_time):
+
         html_code = ''
-        time_ = available_time.lower
-        end_time = available_time.upper
 
+        rows_number = (self.end_day - self.start_day) / timedelta(minutes=15)
+        quarters_event_duration = self.event_duration / timedelta(minutes=15)
+
+        time_ = self.days_interval.lower
+        start_time = time_
+        end_time = datetime.combine(self.days[-2], time.max)
+        field_id = 1
+        last_id = None
+        last_time = None
+        url = None
+        last_correct_time = None
         while time_ < end_time:
-            str_time_step = time_.strftime("%H%M")
-            time_td = timedelta(hours=time_.hour, minutes=time_.minute)
-            row_number = (time_td - self.start_day) / timedelta(minutes=15)
-            field_id = int(rows_number * d + row_number)
-            url = self.get_available_url(time_, self.days[d])
+            if time_ in available_time:
+                event_interval = interval.closedopen(time_, time_+self.event_duration)
+                row = time_.strftime("%H%M")
+                column = (time_ - start_time).days + 1
+                
+                if event_interval in available_time:
+                    last_correct_time = time_
+                    url = self.get_available_url(last_correct_time, self.days[column - 1])
+                    html_code += f'<a id="{field_id}" href="{url}" ' \
+                                 f'class="available day-{column}" style="grid-column: day-{column}; ' \
+                                 f'grid-row: time-{row}" ' \
+                                 f'onmouseover="on_hover({field_id}, {quarters_event_duration})" ' \
+                                 f'onmouseout="out_hover({field_id}, {quarters_event_duration})">' \
+                                 f'</a>'
 
-            event_interval = interval.closedopen(time_, time_+self.event_duration)
+                    last_id = field_id
+                    last_correct_time = time_
+                    last_time = time_
 
-            if self.available_time == 'no_visits':
-                not_available_interval = self.visits_intervals
-            elif self.available_time == 'available':
-                not_available_interval = self.visits_intervals | self.off_intervals
-            else:
-                not_available_interval = interval.empty()
+                elif last_id and last_time == time_ - timedelta(minutes=15):
+                    html_code += f'<a id="{field_id}" href="{url}" ' \
+                                 f'class="available day-{column}" style="grid-column: day-{column}; ' \
+                                 f'grid-row: time-{row}" ' \
+                                 f'onmouseover="on_hover({last_id}, {quarters_event_duration})" ' \
+                                 f'onmouseout="out_hover({last_id}, {quarters_event_duration})">' \
+                                 f'</a>'
+                    last_time = time_
 
-            if event_interval & not_available_interval == interval.empty():
-                html_code += f'<a id="{field_id}" href="{url}" ' \
-                             f'class="available day-{d + 1}" style="grid-column: day-{d + 1}; ' \
-                             f'grid-row: time-{str_time_step}" ' \
-                             f'onmouseover="on_hover({field_id}, {quarters_event_duration})" ' \
-                             f'onmouseout="out_hover({field_id}, {quarters_event_duration})">' \
-                             f'</a>'
-
-            else:
-                step_back = 1
-                flag = True
-                while step_back <= quarters_event_duration:
-                    test_interval = interval.closedopen(event_interval.lower - step_back * timedelta(minutes=15),
-                                                        event_interval.upper - step_back * timedelta(minutes=15))
-                    if test_interval & not_available_interval == interval.empty():
-                        url = self.get_available_url(time_ - step_back * timedelta(minutes=15), self.days[d])
-                        html_code += f'<a id="{field_id}" href="{url}" ' \
-                                     f'class="available day-{d + 1}" style="grid-column: day-{d + 1}; ' \
-                                     f'grid-row: time-{str_time_step}" ' \
-                                     f'onmouseover="on_hover({field_id-step_back}, {quarters_event_duration})" ' \
-                                     f'onmouseout="out_hover({field_id-step_back}, {quarters_event_duration})">' \
-                                     f'</a>'
-                        flag = False
-                        break
-                    step_back += 1
-
-                if flag:
+                else:
                     html_code += f'<div id="{field_id}" ' \
-                                 f'class="day-{d + 1}" style="grid-column: day-{d + 1}; ' \
-                                 f'grid-row: time-{str_time_step}">' \
+                                 f'class="day-{column}" style="grid-column: day-{column}; ' \
+                                 f'grid-row: time-{row}">' \
                                  f'</div>'
 
+            field_id += 1
             time_ += timedelta(minutes=15)
-
-
-
-
-        """simple_duration = int(self.duration / timedelta(minutes=15))
-        html_code =''
-        if not available_time.empty:
-            field_number_base = (d * len(self.time_range)) - d
-            for n, current_time in enumerate(self.time_range):
-                field_number = field_number_base + n
-                current_time = not_naive(datetime.combine(day, current_time))
-                if current_time in available_time:
-
-                    start_row = current_time.strftime("%H%M")
-                    end_row = (current_time+timedelta(minutes=15)).strftime("%H%M")
-                    if end_row == ("2400"): end_row = "2359"
-                    #TODO: Sprawdzanie kolejnego dnia i blokowanie pola jesli wizyta sie nie wcisnie
-                    duration_hours = self.duration.seconds//3600
-                    duration_minutes = (self.duration.seconds//60)%60
-                    visit_url = reverse('dashboard_new_visit_3', args=[self.client.id, self.service.id, duration_hours,
-                                                                         duration_minutes, current_time.year, current_time.month,
-                                                                         current_time.day, current_time.hour, current_time.minute])
-                    # TODO Do refaktoryzacji  - chyba uda się połączyć z if current_time in available_time:
-                    available = True
-                    for step in range (1, simple_duration):
-                        next_time = not_naive(datetime.combine(day, self.time_range[n+step]))
-                        try:
-                            if next_time not in available_time:
-                                available = False
-                                break
-                        except:
-                            available=False
-                            break
-
-                    if available:
-                        html_code += f'<a id="{field_number}" href="{visit_url}" ' \
-                                     f'class="available day-{d + 1}" style="grid-column: day-{d + 1}; ' \
-                                     f'grid-row: time-{start_row}" ' \
-                                     f'onmouseover="on_hover({field_number}, {simple_duration})" ' \
-                                     f'onmouseout="out_hover({field_number}, {simple_duration})">' \
-                                     f'</a>'
-                    else:
-                        html_code += f'<div id="{field_number}" href="{visit_url}" ' \
-                                     f'class="available day-{d + 1}" style="grid-column: day-{d + 1}; ' \
-                                     f'grid-row: time-{start_row}">' \
-                                     f'</div>'"""
 
         return html_code

@@ -140,7 +140,7 @@
 			position: sticky;
 			top: 0;
 			z-index: 1000;
-			background-color: rgba(243,247,250,0.8);
+	        background-color:#ddf0df;
 
 
 		}
@@ -194,9 +194,14 @@
 .session {
 	border-radius: 5px;
 	font-size: 14px;
-	background-color:#c2cbdc;
-	margin:2px;
+	background-color:#4CAF58;
+	margin:0px 2px 2px 2px;
 	text-align: center;
+}
+
+.color-light {
+   opacity: 0.5;
+  filter: alpha(opacity=50);
 }
 
 .session h3 a {
@@ -248,7 +253,7 @@
 .month-slot,
 .day-number-slot {
 	text-align:center;
-	background-color: #f3f7fa;
+	background-color:#ddf0df;
 	font-size:.75em;
 }
 
@@ -294,10 +299,9 @@ hr {
 }
 .menu-line-strong {
 	border-bottom: 1px solid #ddd;
-    box-shadow: 0px 3px 3px #bec4d9;
+    box-shadow: 0px 1px 1px #bec4d9;
 }
 .line-off {
-
 	border-bottom: 3px solid red;
 }
 span.holiday {
@@ -309,7 +313,7 @@ span.today {
   padding:4px;
 }
 span.today span{
-  background-color: #312788;
+  background-color: #4CAF58;
   display: block;
   padding:3px;
   box-shadow:inset 0 -0.6em 1em -0.35em rgba(0,0,0,0.17),inset 0 0.6em 2em -0.3em rgba(255,255,255,0.15),inset 0 0 0em 0.05em rgba(255,255,255,0.12);
@@ -318,12 +322,12 @@ span.today span{
 
 .available {
 z-index:5;
-    background-color:#c2cbdc;
+    background-color:#69f179;
       opacity: 0.1;
       filter: alpha(opacity=10);
 }
 .available.hover {
-    background-color:#c2cbdc;
+    background-color:#69f179;
       opacity: 0.7;
       filter: alpha(opacity=70);
 }
@@ -333,11 +337,10 @@ z-index:5;
  *************************/
 div.header {
   padding: 0px;
-  background: #c2cbdc;
+  background: #4CAF58;
   text-align: center;
-  box-shadow: 0px 5px 10px #a6acc1;
-  margin-bottom:15px;
-  border-bottom:solid 1px #fff;
+  margin-bottom:5px;
+  border-top:solid 1px #fff;
 }
 
 .header ul {
