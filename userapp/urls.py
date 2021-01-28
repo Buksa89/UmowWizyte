@@ -37,7 +37,7 @@ urlpatterns = [
     path('schedule/visit/<int:visit_id>/', views.MainScheduleVisit.as_view(), name='schedule_visit'),
     path('schedule/visit/<int:visit_id>/reject/', views.MainScheduleVisitReject.as_view(), name='schedule_visit_reject'),
     path('schedule/visit/<int:visit_id>/confirm/', views.MainScheduleVisitConfirm.as_view(), name='schedule_visit_confirm'),
-    #path('panel/wizyta/<int:visit_id>/odwolaj/', views.DashboardVisitCancel.as_view(), name='dashboard_visit_cancel'),
+    path('schedule/visit/<int:visit_id>/cancel/', views.MainScheduleVisitCancel.as_view(), name='schedule_visit_cancel'),
 
 
     path('clients/', views.Clients.as_view(), name='clients'),

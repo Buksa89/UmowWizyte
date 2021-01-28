@@ -23,7 +23,7 @@
     </table>
 
     <p><a href="{% url 'clients_edit' client.id %}" class="button">Edytuj dane</a>
-        <a class="button" href="#" onclick="confirmation('client', '{{ client.name }} {{client.surname}}', '{{ client.get_remove_url }}')">Usuń klienta</a></p>
+        <a class="button red" href="#" onclick="confirmation('client', '{{ client.name }} {{client.surname}}', '{{ client.get_remove_url }}')">Usuń klienta</a></p>
 
     {% if visits %}
     <table>

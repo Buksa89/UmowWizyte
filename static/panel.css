@@ -263,7 +263,7 @@ display:none;
 .message a {
     color:#333;
 }
-.red {
+.red, .button.red, .button.red:visited, .button.red:active, .button.red:link {
   background-color: #af4c4c;
 }
 

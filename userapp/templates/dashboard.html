@@ -8,15 +8,17 @@
 <div id="content">
         {% for visit in visits %}
             <div class="message {% if visit.is_available is False %}red{% endif %}">
-                <span>{{ visit.name }} |</span>
-                <span><a href="{% url 'clients_data' visit.client.id %}">{{visit.client.name}} {{visit.client.surname}}</a> |</span>
+                <span><a href="{% url 'clients_data' visit.client.id %}">{{visit.client.name}} {{visit.client.surname}} </a> |</span>
                 <span><a href="tel:{{visit.client.phone_number}}"> {{visit.client.phone_number}}</a> |</span>
+                <span><a href="{% url 'schedule_visit' visit.id %}">{{ visit.name }}</a> |</span>
                 <span>{{ visit.get_start_date }} |</span>
                 <span>{{ visit.get_start_time }}</span>
                 {% if visit.description %}<span>| {{ visit.description }}</span>{% endif %}
                 {% if visit.is_available is False %}<span>| <b>ODWOŁANA</b></span>{% endif %}
                 <span class="right"><a href="{% url 'schedule_visit_confirm' visit.id %}"><i class="far fa-check-circle"></i></a>
-                    {% if visit.is_available is True %}<a href="{% url 'schedule_visit_reject' visit.id %}"><i class="fas fa-times-circle"></i></a></span>{% endif %}
+                    {% if visit.is_available is True %}
+                    <a  href="#" onclick="confirmation('visit_reject', '{{ visit.name }}', '{% url 'schedule_visit_reject' visit.id %}')">
+                        <i class="fas fa-times-circle"></i></a></span>{% endif %}
             </div>
         {% endfor %}
 </div>

@@ -22,9 +22,11 @@
         $(".success").delay(4000).hide();
 
         function confirmation(type, name, url) {
-          var text = "Czy na pewno chcesz usunąć ";
-          if (type == 'service') {text += "usługę: " };
-          if (type == 'service') {text += "klienta: " };
+          var text = "Czy na pewno chcesz ";
+          if (type == 'service') {text += "usunąć usługę: " };
+          if (type == 'client') {text += "usunąć klienta: " };
+          if (type == 'visit_reject') {text += "odrzucić wizytę: " };
+          if (type == 'visit_cancel') {text += "odwołać wizytę: " };
           text += name;
           var r = confirm(text);
           if (r == true) {

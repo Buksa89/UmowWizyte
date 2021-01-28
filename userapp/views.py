@@ -24,39 +24,6 @@ import userapp.language as l
 
 """ Nieaktualne """
 
-class Dashboard2(CreateView):
-    """ In Dashboard User can see all not-confirmed visit, confirm or reject them
-    Also he can see today schedule and navigate to previous or next day schedule".
-    In this view is form to add new visit by user."""
-
-    template_name = 'dashboard.html'
-    section = 'dashboard'
-
-    @method_decorator(login_required)
-    def get(self, request, year=datetime.now().year, month=datetime.now().month, day=datetime.now().day):
-        visits_list = []
-        user = User.objects.get(username=request.user)
-        visits = Visit.objects.filter(user=user, is_confirmed=False)
-        form = NewVisitForm(user=user)
-
-        for visit in visits:
-            client = [visit.client.name, visit.client.surname, visit.client.phone_number]
-            client = '<br />'.join(client)
-            datetime_ = visit.start.strftime('%y-%m-%d<br />%H:%M')
-            reject_url = visit.get_reject_url()
-            confirm_url = visit.get_confirm_url()
-            if visit.is_available: status = "Nowa"
-            else: status = "<b>Odwołana</b>"
-
-            visits_list.append({'id':visit.id, 'client':client, 'name':visit.name, 'status':status, 'date':datetime_,
-                                'description':visit.description, 'reject_url':reject_url, 'confirm_url':confirm_url})
-
-        schedule = UserTwoDaysSchedule(request.user, year, month, day)
-
-        return render(request, self.template_name, {'section':self.section, 'visits':visits_list,
-                                                    'schedule': schedule.display(), 'form':form})
-
-
 class DashboardLockTime(CreateView):
 
     template_name = 'schedule.html'
@@ -70,34 +37,8 @@ class DashboardLockTime(CreateView):
 
         return render(request, self.template_name, {'section': self.section, 'schedule': schedule.display(year, week)})
 
-class DashboardVisit(CreateView):
 
-    template_name = 'visit.html'
-    section = 'dashboard'
 
-class DashboardVisitCancel(CreateView):
-
-    template_name = 'visit.html'
-    section = 'dashboard'
-
-    @method_decorator(login_required)
-    def get(self, request, visit_id):
-        user = User.objects.get(username=request.user)
-        visit = get_object_or_404(Visit, user=user, id=visit_id)
-        visit.is_available = False
-        visit.is_confirmed = True
-        visit.save()
-        return redirect('dashboard')
-
-class DashboardVisitConfirm(CreateView):
-
-    @method_decorator(login_required)
-    def get(self, request, visit_id):
-        user = User.objects.get(username=request.user)
-        visit = get_object_or_404(Visit, id=visit_id,user=user)
-        visit.is_confirmed = True
-        visit.save()
-        return redirect('dashboard')
 
 
 
@@ -208,6 +149,9 @@ class DashboardNewVisit1(View):
 
 """ Dashboard """
 class Dashboard(View):
+    """ In Dashboard User can see all not-confirmed visit, confirm or reject them
+    Also he can see today schedule and navigate to previous or next day schedule".
+    In this view is form to add new visit by user."""
     template = 'dashboard.html'
     section = 'dashboard'
     subsection = 'today'
@@ -280,6 +224,18 @@ class MainScheduleVisitConfirm(CreateView):
         visit.is_confirmed = True
         visit.save()
         return redirect('dashboard')
+
+class MainScheduleVisitCancel(CreateView):
+
+    @method_decorator(login_required)
+    def get(self, request, visit_id):
+        user = User.objects.get(username=request.user)
+        visit = get_object_or_404(Visit, user=user, id=visit_id)
+        visit.is_available = False
+        visit.is_confirmed = True
+        visit.save()
+        return redirect('dashboard')
+
 
 """ Clients """
 class Clients(CreateView):

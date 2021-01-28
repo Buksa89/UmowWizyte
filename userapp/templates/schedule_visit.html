@@ -34,13 +34,19 @@
         </tr>
         <tr>
             <th>Status</th>
-            <td></td>
+            <td>{% if visit.is_available is True %}{% if visit.is_confirmed is True %}Aktualna{%else%}Niepotwierdzona{%endif%}{%else%}Odwołana{%endif%}</td>
         </tr>
     </table>
-    <p>
-        <a href="#" class="button">Odwołaj</a>
-        <a href="#" class="button">Potwierdź</a>
-        <a href="#" class="button">Odrzuć</a>
+    <p>{% if visit.is_confirmed is False %}
+        {% if visit.is_available is True %}
+        <a href="#" class="button red" onclick="confirmation('visit_reject', '{{ visit.name }}', '{% url 'schedule_visit_reject' visit.id %}')">Odrzuć</a>
+        {%endif%}
+        <a class="button" href="{% url 'schedule_visit_confirm' visit.id %}">Potwierdź</a>
+        {%else%}
+        {% if visit.is_available is True %}
+        <a href="#" class="button red" onclick="confirmation('visit_cancel', '{{ visit.name }}', '{% url 'schedule_visit_cancel' visit.id %}')">Odwołaj</a>
+        {%endif%}
+        {%endif%}
     </p>
 </div>
 {% endblock %}
