@@ -22,100 +22,25 @@ import userapp.language as l
 
 
 
-""" Nieaktualne """
+""" Dashboard Lock Time """
 
-class DashboardLockTime(CreateView):
+class DashboardLockTime1(CreateView):
 
-    template_name = 'schedule.html'
+    template_name = 'dashboard_lock_time_1.html'
     section = 'dashboard'
+    subsection = 'lock_time'
 
     @method_decorator(login_required)
-    def get(self, request, year=datetime.now().year, week=None):
+    def get(self, request, year=datetime.now().year, week=False):
         if not week:
             week = datetime.now().isocalendar()[1]
-        schedule = UserLockTimeSchedule(request.user)
+        schedule = Schedule(request.user, year, week)
 
-        return render(request, self.template_name, {'section': self.section, 'schedule': schedule.display(year, week)})
-
-
-
+        return render(request, self.template_name, {'section': self.section,
+                                                    'schedule': schedule.display()})
 
 
-
-
-
-
-""" Dashboard New Visit Step 3 """
-class DashboardNewVisit3(View):
-    template = 'dashboard_new_visit_3.html'
-    section = 'dashboard'
-    subsection = 'new_visit'
-
-    @method_decorator(login_required)
-    def get(self, request, client_id, service_id, hours, minutes, year, month, day, hour, minute):
-        user = User.objects.get(username=request.user)
-        client = get_object_or_404(Client, user=user, id=client_id)
-        service = get_object_or_404(Service, user=user, id=service_id)
-        start = not_naive(datetime(year, month, day, hour, minute))
-        form = AddVisitForm()
-        #TODO: Walidacja, czy czas wolny, połączenie fragmentu kodu z get i post
-        data = {'client': client, 'service': service, 'start_date': start.strftime("%y-%m-%d"), 'start_time': start.strftime("%H:%M"), 'duration': f'{hours}:{minutes}'}
-        url_data = {'client_id': client_id, 'service_id':service_id , 'hours':hours, 'minutes':minutes, 'year':year,
-                'month':month, 'day':day, 'hour':hour, 'minute':minute}
-
-        return render(request, self.template, {'form': form,
-                                               'subsection':self.subsection,
-                                               'section': self.section,
-                                               'data': data,
-                                               'url_data':url_data})
-
-    @method_decorator(login_required)
-    def post(self, request, client_id, service_id, hours, minutes, year, month, day, hour, minute):
-
-        user = User.objects.get(username=request.user)
-        client = get_object_or_404(Client, user=user, id=client_id)
-        service = get_object_or_404(Service, user=user, id=service_id)
-        start = not_naive(datetime(year, month, day, hour, minute))
-        end = start + timedelta(hours=hours, minutes=minutes)
-        form = AddVisitForm(data=self.request.POST)
-        data = {'client': client, 'service': service, 'start_date': start.strftime("%y-%m-%d"), 'start_time': start.strftime("%H:%M"), 'duration': f'{hours}:{minutes}', 'description':self.request.POST['description']}
-        url_data = {'client_id': client_id, 'service_id':service_id , 'hours':hours, 'minutes':minutes, 'year':year,
-                'month':month, 'day':day, 'hour':hour, 'minute':minute}
-
-
-        try:
-            form.save(user, client, service.name, start, end)
-            return redirect('dashboard')
-        except:
-            pass
-
-        return render(request, self.template, {'form': form,
-                                               'subsection':self.subsection,
-                                               'section': self.section,
-                                               'data': data,
-                                               'url_data':url_data})
-
-""" Dashboard New Visit Step 2 """
-class DashboardNewVisit2(View):
-    template = 'dashboard_new_visit_2.html'
-    section = 'dashboard'
-    subsection = 'new_visit'
-
-    @method_decorator(login_required)
-    def get(self, request, client_id, service_id, hours, minutes, year=datetime.now().year, week=False):
-        if not week:
-            week = datetime.now().isocalendar()[1]
-        user = User.objects.get(username=request.user)
-        client = get_object_or_404(Client, user=user, id=client_id)
-        service = get_object_or_404(Service, user=user, id=service_id)
-        duration = timedelta(hours=hours, minutes=minutes)
-        schedule = UserAddVisitSchedule(request.user, year, week, client, service, duration)
-
-        return render(request, self.template, {'section': self.section,
-                                               'subsection':self.subsection,
-                                               'schedule': schedule.display()})
-
-""" Dashboard New Visit Step 1 """
+""" Dashboard New Visit """
 class DashboardNewVisit1(View):
     template = 'dashboard_new_visit_1.html'
     section = 'dashboard'
@@ -147,6 +72,77 @@ class DashboardNewVisit1(View):
                                                'section': self.section,
                                                'subsection':self.subsection})
 
+class DashboardNewVisit2(View):
+    template = 'dashboard_new_visit_2.html'
+    section = 'dashboard'
+    subsection = 'new_visit'
+
+    @method_decorator(login_required)
+    def get(self, request, client_id, service_id, hours, minutes, year=datetime.now().year, week=False):
+        if not week:
+            week = datetime.now().isocalendar()[1]
+        user = User.objects.get(username=request.user)
+        client = get_object_or_404(Client, user=user, id=client_id)
+        service = get_object_or_404(Service, user=user, id=service_id)
+        duration = timedelta(hours=hours, minutes=minutes)
+        schedule = UserAddVisitSchedule(request.user, year, week, client, service, duration)
+
+        return render(request, self.template, {'section': self.section,
+                                               'subsection':self.subsection,
+                                               'schedule': schedule.display()})
+
+class DashboardNewVisit3(View):
+    template = 'dashboard_new_visit_3.html'
+    section = 'dashboard'
+    subsection = 'new_visit'
+
+    @method_decorator(login_required)
+    def get(self, request, client_id, service_id, hours, minutes, year, month, day, hour, minute):
+        user, client, service, start, end, data, url_data = self.prepare_data(request, client_id, service_id, year, month, day, hour, minute, hours, minutes)
+
+        form = AddVisitForm()
+
+
+        return render(request, self.template, {'form': form,
+                                               'subsection':self.subsection,
+                                               'section': self.section,
+                                               'data': data,
+                                               'url_data':url_data})
+
+    @method_decorator(login_required)
+    def post(self, request, client_id, service_id, hours, minutes, year, month, day, hour, minute):
+
+        user, client, service, start, end, data, url_data = self.prepare_data(request, client_id, service_id, year,
+                                                                              month, day, hour, minute, hours, minutes, self.request.POST['description'])
+
+        form = AddVisitForm(data=self.request.POST)
+
+        try:
+            form.save(user, client, service.name, start, end)
+            return redirect('dashboard')
+        except:
+            pass
+
+        return render(request, self.template, {'form': form,
+                                               'subsection':self.subsection,
+                                               'section': self.section,
+                                               'data': data,
+                                               'url_data':url_data})
+
+    def prepare_data(self, request, client_id, service_id, year, month, day, hour, minute, hours, minutes, description=False):
+        user = User.objects.get(username=request.user)
+        client = get_object_or_404(Client, user=user, id=client_id)
+        service = get_object_or_404(Service, user=user, id=service_id)
+        start = not_naive(datetime(year, month, day, hour, minute))
+        end = start + timedelta(hours=hours, minutes=minutes)
+        data = {'client': client, 'service': service, 'start_date': start.strftime("%y-%m-%d"), 'start_time': start.strftime("%H:%M"), 'duration': f'{hours}:{minutes}'}
+        if description:
+            data['description'] = description
+        url_data = {'client_id': client_id, 'service_id': service_id, 'hours': hours, 'minutes': minutes, 'year': year,
+                    'month': month, 'day': day, 'hour': hour, 'minute': minute}
+
+        return user, client, service, start, end, data, url_data
+
 """ Dashboard """
 class Dashboard(View):
     """ In Dashboard User can see all not-confirmed visit, confirm or reject them
@@ -161,7 +157,7 @@ class Dashboard(View):
         user = User.objects.get(username=request.user)
         #TODO: Przygotuj liste powiadomien!
         visits = Visit.objects.filter(user=user, is_confirmed=False)
-        schedule = UserTwoDaysSchedule(request.user, year, month, day)
+        #schedule = Schedule(request.user, year, week=1)
 
         return render(request, self.template, {'section': self.section,
                                                'subsection':self.subsection,

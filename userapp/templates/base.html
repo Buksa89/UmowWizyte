@@ -103,7 +103,7 @@
             {% if section == 'dashboard' %}
               <ul class="menu submenu">
                     <li>
-                        <a class="disabled" {% if subsection == '' %}class="selected"{% endif %} href="{% url 'dashboard' %}">Zaklep wolne</a>
+                        <a {% if subsection == 'lock_time' %}class="selected"{% endif %} href="{% url 'dashboard_lock_time_1' %}">Zaklep wolne</a>
                     </li>
                     <li>
                         <a {% if subsection == 'new_visit' %}class="selected"{% endif %} href="{% url 'dashboard_new_visit_1' %}">Zapisz klienta</a>

@@ -229,26 +229,28 @@ class UserAddVisitSchedule(Schedule):
 
         return reverse('dashboard_new_visit_3', args=[self.client.id, self.service.id, hours, minutes, day.year, day.month, day.day, time_.hour, time_.minute])
 
-
 class UserLockTimeSchedule(Schedule):
-    def display(self, year, week):
-        self.title = "Wybierz wolne godziny"
+    def __init__(self, user, year, week):
+        self.user = user
+        self.title= f'Wolne od:'
         self.days = self.get_dates_from_week(year, week)
-        prev_date = self.days[0] - timedelta(days=7)
-        next_date = self.days[0] + timedelta(days=7)
-        self.navigation = self.generate_navigation(prev_date, next_date)
-        self.available_dates = self.get_working_days(self.username)
+        self.time_range_type = 'full'
+        self.visible_visits = True
+        self.available_time = 'all'
+        self.event_duration = timedelta(minutes=15)
 
-        html_code = ''
-        html_code += self.title_header()
-        html_code += self.main_header()
-        html_code += self.schedule_content()
-        return (html_code)
+
+        self.prepare_data()
 
     def get_navigation_url(self, date):
         year = date.year
         week = date.isocalendar()[1]
-        return reverse('dashboard_lock_time', args=[year, week])
+        return reverse('dashboard_lock_time_1', args=[year, week])
+
+    def get_available_url(self, time_, day):
+
+        return reverse('dashboard')
+
 
 class UserTwoDaysSchedule(Schedule):
 

@@ -193,6 +193,8 @@ class NewVisitForm(forms.Form):
         return choices
 
 class AddVisitForm(forms.ModelForm):
+
+
     def save(self, user, client, name, start, end):
         self.instance.user = user
         self.instance.client = client

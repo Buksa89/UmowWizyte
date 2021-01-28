@@ -21,13 +21,9 @@ urlpatterns = [
     path('dashboard/new_visit/<int:client_id>/<int:service_id>/<int:hours>/<int:minutes>/', views.DashboardNewVisit2.as_view(), name='dashboard_new_visit_2'),
     path('dashboard/new_visit/<int:client_id>/<int:service_id>/<int:hours>/<int:minutes>/<int:year>/<int:week>/', views.DashboardNewVisit2.as_view(), name='dashboard_new_visit_2'),
     path('dashboard/new_visit/<int:client_id>/<int:service_id>/<int:hours>/<int:minutes>/<int:year>/<int:month>/<int:day>/<int:hour>/<int:minute>/', views.DashboardNewVisit3.as_view(), name='dashboard_new_visit_3'),
+    path('dashboard/lock_time/', views.DashboardLockTime1.as_view(), name='dashboard_lock_time_1'),
+    path('dashboard/lock_time/<int:year>/<int:week>/', views.DashboardLockTime1.as_view(), name='dashboard_lock_time_1'),
 
-
-
-
-    #path('panel/wizyta/<int:visit_id>/odwolaj/', views.DashboardVisitCancel.as_view(), name='dashboard_visit_cancel'),
-    #path('panel/zablokuj_terminy/', views.DashboardLockTime.as_view(), name='dashboard_lock_time'),
-    #path('panel/zablokuj_terminy/<int:year>/<int:week>/', views.DashboardLockTime.as_view(), name='dashboard_lock_time'),
 
 
 
