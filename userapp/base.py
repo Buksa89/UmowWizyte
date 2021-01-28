@@ -2,6 +2,7 @@ from datetime import date, datetime, time, timedelta
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django.utils import timezone
+import portion as interval
 
 from random import choice
 
@@ -50,6 +51,108 @@ def not_naive(dat):
     #return timezone.make_aware(dat, timezone.get_default_timezone())
     return dat
 
+
+class UserAddVisitSchedule(Schedule):
+
+    def __init__(self, user, year, week, client, service, duration):
+        self.title= f'{client.name} {client.surname} - {service.name}'
+        self.client = client
+        self.service = service
+        self.event_duration = duration
+        self.user = user
+        self.days = self.get_dates_from_week(year, week)
+        self.time_range_type = 'full'
+        self.visible_visits = True
+        self.available_time = 'no_visits'
+
+        self.prepare_data()
+
+    def get_navigation_url(self, date):
+        year = date.year
+        week = date.isocalendar()[1]
+        hours = self.event_duration.seconds//3600
+        minutes = (self.event_duration.seconds//60)%60
+        return reverse('dashboard_new_visit_2', args=[self.client.id, self.service.id, hours, minutes, year, week])
+
+    def get_available_url(self, time_, day):
+
+        hours = self.event_duration.seconds//3600
+        minutes = (self.event_duration.seconds//60)%60
+
+        return reverse('dashboard_new_visit_3', args=[self.client.id, self.service.id, hours, minutes, day.year, day.month, day.day, time_.hour, time_.minute])
+
+    def get_available_intervals(self):
+        available_intervals = self.days_interval
+        available_intervals -= self.visits_intervals
+
+        return available_intervals
+
+class UserLockTimeSchedule(Schedule):
+    def __init__(self, user, year, week, start=False):
+        self.user = user
+        self.start = start
+        if start:
+            self.title = 'Wolne do:'
+        else:
+            self.title= f'Wolne od:'
+        self.days = self.get_dates_from_week(year, week)
+        self.time_range_type = 'full'
+        self.visible_visits = True
+        self.available_time = 'all'
+        self.event_duration = timedelta(minutes=15)
+
+
+        self.prepare_data()
+
+    def get_navigation_url(self, date):
+        if self.start:
+            cur_year = date.year
+            week = date.isocalendar()[1]
+            year = self.start.year
+            month = self.start.month
+            day = self.start.day
+            hour = self.start.hour
+            minute = self.start.minute
+            return reverse('dashboard_lock_time_2', args=[cur_year, week, year, month, day, hour, minute])
+
+        else:
+            year = date.year
+            week = date.isocalendar()[1]
+            return reverse('dashboard_lock_time_1', args=[year, week])
+
+    def get_available_url(self, time_, day):
+        if self.start:
+            start_year = self.start.year
+            start_month = self.start.month
+            start_day = self.start.day
+            start_hour = self.start.hour
+            start_minute = self.start.minute
+            time_ += timedelta(minutes=15)
+            end_year = time_.year
+            end_month = time_.month
+            end_day = time_.day
+            end_hour = time_.hour
+            end_minute = time_.minute
+            return reverse('dashboard_lock_time_3', args=[start_year, start_month, start_day, start_hour, start_minute,
+                                                          end_year, end_month, end_day, end_hour, end_minute])
+
+        else:
+            week = time_.isocalendar()[1]
+            year = time_.year
+            month = time_.month
+            day = time_.day
+            hour = time_.hour
+            minute = time_.minute
+
+            return reverse('dashboard_lock_time_2', args=[year, week, year, month, day, hour, minute])
+
+
+    def get_available_intervals(self):
+        available_intervals = self.days_interval
+        if self.start:
+            available_intervals -= interval.closedopen(-interval.inf, self.start)
+
+        return available_intervals
 
 
 class ClientAddVisitSchedule(Schedule):
@@ -200,56 +303,6 @@ class ClientAddVisitSchedule(Schedule):
 
         return html_code
 
-class UserAddVisitSchedule(Schedule):
-
-    def __init__(self, user, year, week, client, service, duration):
-        self.title= f'{client.name} {client.surname} - {service.name}'
-        self.client = client
-        self.service = service
-        self.event_duration = duration
-        self.user = user
-        self.days = self.get_dates_from_week(year, week)
-        self.time_range_type = 'full'
-        self.visible_visits = True
-        self.available_time = 'no_visits'
-
-        self.prepare_data()
-
-    def get_navigation_url(self, date):
-        year = date.year
-        week = date.isocalendar()[1]
-        hours = self.event_duration.seconds//3600
-        minutes = (self.event_duration.seconds//60)%60
-        return reverse('dashboard_new_visit_2', args=[self.client.id, self.service.id, hours, minutes, year, week])
-
-    def get_available_url(self, time_, day):
-
-        hours = self.event_duration.seconds//3600
-        minutes = (self.event_duration.seconds//60)%60
-
-        return reverse('dashboard_new_visit_3', args=[self.client.id, self.service.id, hours, minutes, day.year, day.month, day.day, time_.hour, time_.minute])
-
-class UserLockTimeSchedule(Schedule):
-    def __init__(self, user, year, week):
-        self.user = user
-        self.title= f'Wolne od:'
-        self.days = self.get_dates_from_week(year, week)
-        self.time_range_type = 'full'
-        self.visible_visits = True
-        self.available_time = 'all'
-        self.event_duration = timedelta(minutes=15)
-
-
-        self.prepare_data()
-
-    def get_navigation_url(self, date):
-        year = date.year
-        week = date.isocalendar()[1]
-        return reverse('dashboard_lock_time_1', args=[year, week])
-
-    def get_available_url(self, time_, day):
-
-        return reverse('dashboard')
 
 
 class UserTwoDaysSchedule(Schedule):

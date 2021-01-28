@@ -23,7 +23,9 @@ urlpatterns = [
     path('dashboard/new_visit/<int:client_id>/<int:service_id>/<int:hours>/<int:minutes>/<int:year>/<int:month>/<int:day>/<int:hour>/<int:minute>/', views.DashboardNewVisit3.as_view(), name='dashboard_new_visit_3'),
     path('dashboard/lock_time/', views.DashboardLockTime1.as_view(), name='dashboard_lock_time_1'),
     path('dashboard/lock_time/<int:year>/<int:week>/', views.DashboardLockTime1.as_view(), name='dashboard_lock_time_1'),
-
+    path('dashboard/lock_time/<int:nav_year>/<int:nav_week>/<int:year>/<int:month>/<int:day>/<int:hour>/<int:minute>/', views.DashboardLockTime2.as_view(), name='dashboard_lock_time_2'),
+    path('dashboard/lock_time/<int:start_year>/<int:start_month>/<int:start_day>/<int:start_hour>/<int:start_minute>/'
+         '<int:end_year>/<int:end_month>/<int:end_day>/<int:end_hour>/<int:end_minute>/', views.DashboardLockTime3.as_view(), name='dashboard_lock_time_3'),
 
 
 

@@ -16,7 +16,7 @@ from .variables import DAYS_OF_WEEK, DAYS_FOR_CODE
 from .base import not_naive, UserAddVisitSchedule, UserLockTimeSchedule, Schedule, UserTwoDaysSchedule, td_to_string
 from .forms import AddClientForm, AddServiceForm, AddVisitForm, ContactForm, EditClientForm, WorkHolidaysForm, LoginForm, NewVisitForm, \
     RegistrationForm, UserEditForm, UserPassForm, UserSettingsForm, NewWorkTimeForm
-from .models import Client, Service, UserSettings, Visit, WorkTime
+from .models import Client, Service, UserSettings, Visit, WorkTime, TimeOff
 import userapp.language as l
 
 
@@ -34,10 +34,42 @@ class DashboardLockTime1(CreateView):
     def get(self, request, year=datetime.now().year, week=False):
         if not week:
             week = datetime.now().isocalendar()[1]
-        schedule = Schedule(request.user, year, week)
+        schedule = UserLockTimeSchedule(request.user, year, week)
 
         return render(request, self.template_name, {'section': self.section,
                                                     'schedule': schedule.display()})
+
+class DashboardLockTime2(CreateView):
+
+    template_name = 'dashboard_lock_time_1.html'
+    section = 'dashboard'
+    subsection = 'lock_time'
+
+    @method_decorator(login_required)
+    def get(self, request, nav_year, nav_week, year, month, day, hour, minute):
+        start = datetime(year, month, day, hour, minute)
+        schedule = UserLockTimeSchedule(request.user, nav_year, nav_week, start)
+
+        return render(request, self.template_name, {'section': self.section,
+                                                    'schedule': schedule.display()})
+
+class DashboardLockTime3(CreateView):
+
+    template_name = 'dashboard_lock_time_1.html'
+    section = 'dashboard'
+    subsection = 'lock_time'
+
+    @method_decorator(login_required)
+    def get(self, request, start_year, start_month, start_day, start_hour, start_minute,
+            end_year, end_month, end_day, end_hour, end_minute):
+
+        user = User.objects.get(username=request.user)
+        start = datetime(start_year, start_month, start_day, start_hour, start_minute)
+        end = datetime(end_year, end_month, end_day, end_hour, end_minute)
+
+        TimeOff.objects.create(user=user, start=start, end=end)
+
+        return redirect('schedule')
 
 
 """ Dashboard New Visit """

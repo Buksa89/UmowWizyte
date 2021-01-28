@@ -375,18 +375,33 @@ class Schedule:
                              f'</div>'
 
         if self.available_time:
-            if self.available_time == 'available':
-                available_intervals = self.days_interval - self.off_intervals - self.past_interval - self.visits_intervals
+            available_intervals = self.get_available_intervals()
 
-            elif self.available_time == 'no_visits':
-                available_intervals = self.days_interval - self.visits_intervals
+            """if self.available_time == 'no_visits':
+                available_intervals -= self.visits_intervals
 
-            else: available_intervals = self.days_interval
+            elif self.available_time == 'available':
+                available_intervals -= self.off_intervals
+                available_intervals -= self.past_interval
+                available_intervals -= self.visits_intervals
+                
+            elif self.available_time == 'available_range':
+                available_intervals -= self.off_intervals
+                available_intervals -= self.past_interval
+                available_intervals -= self.visits_intervals
+                pass
+            
+            elif self.available_time == 'lock':
+                pass"""
 
             html_code += self.generate_available_time_content(available_intervals)
 
         return html_code
 
+    def get_available_intervals(self):
+        available_intervals = self.days_interval
+
+        return available_intervals
 
     def generate_time_off_content(self, d, times_off):
         html_code = ''
@@ -400,7 +415,6 @@ class Schedule:
 
         return html_code
 
-    #TODO: Niepotwierdzone niech maja link do potwierdzenia
     def generate_visit_content(self, d, visit):
         start_row = visit.start.strftime("%H%M")
         end_row = visit.end.strftime("%H%M")
