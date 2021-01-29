@@ -1,9 +1,10 @@
 {% extends "client_base.html" %}
 {% block content %}
 <h1>Miło cię widzieć, {{ client_name }}</h1>
+<br />
 <h2>Umów się na wizytę</h2>
 <p>
-    <form name="choose-visit-form" action="{% url 'client_dashboard' username %}" method="post">
+    <form name="choose-visit-form" action="{% url 'client_dashboard' url_key %}" method="post">
         {{ form.as_table }}
         {% csrf_token %}
         <input type="submit" name="submit" value="Umów się">
@@ -38,7 +39,5 @@
     </tr>
     {% endfor %}
 </table>
-{% else %}
-    <h3>"Nie jesteś umówiony na żadną wizytę"</h3>
 {% endif %}
 {% endblock %}

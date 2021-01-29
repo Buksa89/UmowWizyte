@@ -171,8 +171,6 @@ class UserSettings(models.Model):
 
     def clean(self):
         errors = []
-        #if self.duration <= timedelta(minutes=0):
-            #errors.append('Popraw godziny pracy')
         if self.earliest_visit >= self.latest_visit:
             errors.append('Popraw możliwość wyboru terminów')
         if self.earliest_visit < 0 or self.latest_visit < 0:

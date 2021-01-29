@@ -1,11 +1,12 @@
 {% load static %}
-
 <html>
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ username }}</title>
+    <title>{{ request.user.username }} - {% block title %}{% endblock %}</title>
     <link href="{% static 'panel.css' %}" rel="stylesheet">
     <link href="{% static 'schedule.css' %}" rel="stylesheet">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://kit.fontawesome.com/74fa286ffd.js" crossorigin="anonymous"></script>
     <script>
         function on_hover(id, numbers) {
             for (i = id; i < id+numbers; i++) {
@@ -18,6 +19,20 @@
                     document.getElementById(i).classList.remove("hover");
                 }
         }
+        $(".success").delay(4000).hide();
+
+        function confirmation(type, name, url) {
+          var text = "Czy na pewno chcesz ";
+          if (type == 'service') {text += "usunąć usługę: " };
+          if (type == 'client') {text += "usunąć klienta: " };
+          if (type == 'visit_reject') {text += "odrzucić wizytę: " };
+          if (type == 'visit_cancel') {text += "odwołać wizytę: " };
+          text += name;
+          var r = confirm(text);
+          if (r == true) {
+                window.location.href = url;
+          }
+        }
     </script>
 </head>
 <body>
@@ -25,13 +40,13 @@
         <div id="header">
               <ul class="menu">
                     <li>
-                        <a href="{% url 'client_logout' url_key %}">Wyloguj</a>
+                        <a href="{% url 'client_logout' url_key %}"><i class="fas fa-power-off"></i></a>
                     </li>
-                    <li {% if section == 'settings' %}class="selected"{% endif %}>
-                        <a href="#">Ustawienia</a>
+                    <li>
+                        <a href="#" {% if section == 'settings' %}class="selected"{% endif %}><i class="fas fa-cogs"></i></a>
                     </li>
-                    <li {% if section == 'dashboard' %}class="selected"{% endif %}>
-                        <a href="{% url 'client_dashboard' username  %}">Wizyty</a>
+                    <li>
+                        <a {% if section == 'dashboard' or section == 'schedule' %}class="selected"{% endif %} href="{% url 'client_dashboard' url_key  %}"> <i class="far fa-calendar-alt"></i></a>
                     </li>
               </ul>
         </div>

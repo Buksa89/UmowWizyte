@@ -626,22 +626,28 @@ class Login(CreateView):
     form = LoginForm()
 
     def get(self, request):
-        return render(request, self.template, {'form': self.form})
+        if request.user.is_authenticated:
+            return redirect('dashboard')
+        else:
+            return render(request, self.template, {'form': self.form})
 
     def post(self, request):
-        self.form = LoginForm(request.POST)
-        if self.form.is_valid():
-            cd = self.form.cleaned_data
-            user = authenticate(username=cd['username'],
-                                password=cd['password'])
-            if user:
-                login(request, user)
-                return redirect('dashboard')
-            else:
-                self.form.clean()
-                self.form.add_error(None, 'Błędny login lub hasło')
+        if request.user.is_authenticated:
+            return redirect('dashboard')
+        else:
+            self.form = LoginForm(request.POST)
+            if self.form.is_valid():
+                cd = self.form.cleaned_data
+                user = authenticate(username=cd['username'],
+                                    password=cd['password'])
+                if user:
+                    login(request, user)
+                    return redirect('dashboard')
+                else:
+                    self.form.clean()
+                    self.form.add_error(None, 'Błędny login lub hasło')
 
-        return render(request, self.template, {'form': self.form})
+            return render(request, self.template, {'form': self.form})
 
 class PasswordResetComplete(CreateView):
     template = 'login.html'

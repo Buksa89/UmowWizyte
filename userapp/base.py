@@ -154,9 +154,46 @@ class UserLockTimeSchedule(Schedule):
 
         return available_intervals
 
-
 class ClientAddVisitSchedule(Schedule):
-    def __init__(self, user, year, week, service):
+
+    def __init__(self, user, service, year, week):
+        self.title= f'{service.name}'
+        self.service = service
+        self.title= 'Terminarz'
+        self.user = user
+        self.event_duration = service.duration
+        self.url_key = get_object_or_404(UserSettings, user=user).site_url
+        self.days = self.get_dates_from_week(year, week)
+        self.time_range_type = 'work_time'
+        self.visible_visits = False
+        self.available_time = True
+
+        self.prepare_data()
+
+
+    def get_navigation_url(self, date):
+        year = date.year
+        week = date.isocalendar()[1]
+        return reverse('client_new_visit', args=[self.url_key, self.service.id, year, week])
+
+    def get_available_intervals(self):
+        available_intervals = self.days_interval
+        available_intervals -= self.off_intervals
+        available_intervals -= self.past_interval
+        available_intervals -= self.visits_intervals
+
+        return available_intervals
+
+    def get_available_url(self, time_, day):
+
+        hours = self.event_duration.seconds//3600
+        minutes = (self.event_duration.seconds//60)%60
+
+        return reverse('dashboard')
+
+
+
+    """def __init__(self, user, year, week, service):
         self.service = service
         self.user = user
         self.days = self.get_dates_from_week(year, week)
@@ -251,7 +288,7 @@ class ClientAddVisitSchedule(Schedule):
         return html_code
 
     def get_visit_url(self, date_tim):
-        """ Method return link for choose visit by clients """
+        
         return reverse('client_app_confirm_visit', args=[self.user.username, self.service.id, date_tim.year,
                                                          date_tim.month, date_tim.day, date_tim.hour, date_tim.minute])
 
@@ -301,7 +338,7 @@ class ClientAddVisitSchedule(Schedule):
                                      f'grid-row: time-{start_row}">' \
                                      f'</div>'
 
-        return html_code
+        return html_code"""
 
 
 

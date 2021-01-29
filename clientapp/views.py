@@ -24,67 +24,6 @@ def client_login_required(function):
 
 
 
-class ClientAppDashboard(View):
-    """In dashboard client see:
-    Main menu (visits, settings, logout)
-    Form to add new visit
-    His future visits. He can cancel them
-    Cancelled and confirmed visit are not display
-    Old visit too"""
-
-    template = 'client_dashboard.html'
-
-    @method_decorator(client_login_required)
-    def get(self, request, username):
-        user = get_object_or_404(User, username__iexact=username)
-        client = get_object_or_404(Client, phone_number=request.session.get('client_authorized')['phone'],user=user)
-        visits = Visit.objects.filter(user=user, client=client, end__gt=not_naive(datetime.now())).exclude(is_available=False, is_confirmed=True)
-        visits = self.prepare_visits_list(visits)
-
-        form = ClientChooseVisitForm(user)
-        return render(request, self.template, {'form':form,
-                                               'username':user.username,
-                                               'client_name':client.name,
-                                               'visits':visits,
-                                               'section':'dashboard'})
-
-    @method_decorator(client_login_required)
-    def post(self, request, username):
-        if 'service' in request.POST.keys(): return redirect('client_new_visit', username, request.POST['service'])
-        return redirect('client_dashboard', username)
-
-    def prepare_visits_list(self, visits):
-        visits_list = []
-        for visit in visits:
-            dict = {}
-            dict['name'] = visit.name
-            dict['date'] = visit.start.strftime("%Y-%m-%d")
-            dict['day'] = DAYS_OF_WEEK[visit.start.weekday()]
-            dict['time'] = visit.start.strftime("%H:%M")
-            dict['duration'] = str(visit.end - visit.start)[:-3].rjust(5,'0')
-            if visit.is_available: dict['status'] = 'Aktualna'
-            else: dict['status'] = 'Odwołana'
-            if not visit.is_confirmed: dict['status'] += ' (Niepotwierdzona)'
-            dict['is_avaliable'] = visit.is_available
-            dict['cancel_url'] = visit.get_cancel_url()
-            visits_list.append(dict)
-        return visits_list
-
-
-class ClientAppNewVisit(View):
-    template_name = ''
-    section = ''
-    def get(self, request, username, service_id, year=datetime.now().year, week = datetime.now().isocalendar()[1]):
-        user = get_object_or_404(User, username__iexact=username)
-        client = get_object_or_404(Client, phone_number=request.session.get('client_authorized')['phone'],user=user)
-        service = get_object_or_404(Service, id=service_id, user=user, is_active=True)
-        work_time = get_object_or_404(WorkTime, user=user)
-        available_dates = ''
-        schedule = ClientAddVisitSchedule(user, year, week, service)
-        return render(request, 'client_new_visit.html',
-                      {'section': 'schedule', 'service': service.name,
-                       'schedule': schedule.display(), 'username': username})
-
 
 #TODO: !!! Testy widoku
 class ClientAppConfirmVisit(View):
@@ -163,6 +102,7 @@ class Dashboard(View):
     Old visit too"""
 
     template = 'client_dashboard.html'
+    section = 'dashboard'
 
     @method_decorator(client_login_required)
     def get(self, request, url_key):
@@ -170,19 +110,20 @@ class Dashboard(View):
         client = get_object_or_404(Client, phone_number=request.session.get('client_authorized')['phone'],user=user)
         visits = Visit.objects.filter(user=user, client=client, end__gt=not_naive(datetime.now())).exclude(is_available=False, is_confirmed=True)
         visits = self.prepare_visits_list(visits)
-
         form = ClientChooseVisitForm(user)
         return render(request, self.template, {'form':form,
                                                'url_key':url_key,
                                                'username':user.username,
                                                'client_name':client.name,
                                                'visits':visits,
-                                               'section':'dashboard'})
+                                               'section':self.section})
 
     @method_decorator(client_login_required)
-    def post(self, request, username):
-        if 'service' in request.POST.keys(): return redirect('client_new_visit', username, request.POST['service'])
-        return redirect('client_dashboard', username)
+    def post(self, request, url_key):
+
+        if 'service' in request.POST.keys(): return redirect('client_new_visit', url_key, request.POST['service'])
+
+        return redirect('client_dashboard', url_key)
 
     def prepare_visits_list(self, visits):
         visits_list = []
@@ -215,7 +156,8 @@ class ClientLogin(CreateView):
     def get(self, request, url_key):
         site = get_object_or_404(UserSettings, site_url=url_key)
         user = site.user
-        #if is_client_authenticated(request, user.username): return redirect('client_dashboard', url_key)
+        if is_client_authenticated(request, user.username):
+            return redirect('client_dashboard', url_key)
 
         if user.is_active:
             form = ClientLoginForm()
@@ -228,22 +170,40 @@ class ClientLogin(CreateView):
 
         site = get_object_or_404(UserSettings, site_url=url_key)
         user = site.user
-        #if is_client_authenticated(request, user.username): return redirect('client_dashboard', url_key)
+
+        if is_client_authenticated(request, user.username):
+            return redirect('client_dashboard', url_key)
+
         form = ClientLoginForm(data=request.POST)
         if form.is_valid():
             cd = form.cleaned_data
             client = Client.objects.filter(phone_number=cd['phone_number'], user=user)
-            form.clean(user)
-            """ if not client:
-                form.add_error(None, f'Nie ma takiego numeru w bazie {user.username}')
+            form.clean()
+
+            if not client:
+                form.add_error(None, f'Numer nie jest zarejestrowany. Skontaktuj sie z {site.site_name}')
             elif client[0].pin != cd['pin']:
                 form.add_error(None, 'Dane nieprawidłowe')
             elif not client[0].is_active:
                 form.clean()
                 form.add_error(None, 'Konto zablokowane')
-            else:"""
+            else:
 
-            request.session['client_authorized'] = {'phone': cd['phone_number'], 'user': user.username}
-            return redirect('client_dashboard', url_key)
+                request.session['client_authorized'] = {'phone': cd['phone_number'], 'user': user.username}
+                return redirect('client_dashboard', url_key)
 
         return render(request, self.template, {'form':form, 'site':site})
+
+
+class NewVisit(View):
+    template = 'client_new_visit.html'
+    section = ''
+    def get(self, request, url_key, service_id, year=datetime.now().year, week = datetime.now().isocalendar()[1]):
+        user = get_user_from_url(url_key)
+        client = get_object_or_404(Client, phone_number=request.session.get('client_authorized')['phone'],user=user)
+        service = get_object_or_404(Service, id=service_id, user=user, is_active=True)
+
+        schedule = ClientAddVisitSchedule(user, service, year, week)
+        return render(request, self.template,
+                      {'section': 'schedule', 'service': service.name,
+                       'schedule': schedule.display(), 'url_key': url_key})

@@ -17,9 +17,6 @@ class only_digits (object):
 
 class ClientLoginForm(forms.Form):
 
-    #phone_number = forms.CharField(validators=[only_digits('phone')], label='Telefon', error_messages={'required': 'Podaj numer telefonu'})
-    #pin = forms.CharField(validators=[only_digits('pin')], label='PIN', error_messages={'required': 'Podaj pin'})v
-
     phone_number = forms.CharField(label='Telefon', error_messages={'required': 'Podaj numer telefonu'})
     pin = forms.CharField(label='PIN', error_messages={'required': 'Podaj pin'})
 
@@ -29,11 +26,6 @@ class ClientLoginForm(forms.Form):
             raise forms.ValidationError('Podaj prawidłowy numer telefonu')
         if not cd['pin'].isdigit():
             raise forms.ValidationError('Podaj prawidłowy pin')
-        if user:
-            client = Client.objects.filter(phone_number=cd['phone_number'], user=user)
-            if not client:
-                raise forms.ValidationError('Numer nie jest zapisany')
-
 
 
 
@@ -42,7 +34,7 @@ class ClientChooseVisitForm(forms.Form):
     def __init__(self, user):
         super(ClientChooseVisitForm, self).__init__()
         self.user = user
-        self.fields['service'] = forms.ChoiceField(label='', choices=self.get_avaible_visits())
+        self.fields['service'] = forms.ChoiceField(label='', choices=self.get_avaible_visits(), required=True)
 
     def get_avaible_visits(self):
         services = Service.objects.filter(user=self.user, is_active=True)

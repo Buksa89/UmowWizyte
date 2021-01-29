@@ -133,12 +133,13 @@ class Schedule:
         rounded_now = not_naive(rounded_now)
         return rounded_now
 
-    def day_intervals(self):
+    def get_day_intervals(self):
         day_visits_intervals = []
         day_off_intervals = []
         day_past_interval = []
         day_visits = []
-        day_intervals =[]
+        day_intervals = []
+        day_range_intervals = []
 
         for n, day in enumerate(self.days):
             datetime_day = not_naive(datetime.combine(day, time.min))
@@ -150,6 +151,8 @@ class Schedule:
             day_off_intervals.append((off_intervals))
             past_interval = day_interval & self.past_interval
             day_past_interval.append((past_interval))
+            range_interval = day_interval & self.range_interval
+            day_range_intervals.append((range_interval))
 
             day_visits.append([])
 
@@ -166,7 +169,7 @@ class Schedule:
             if visit:
                 print (visit[0].start)"""
 
-        return day_intervals, day_visits_intervals, day_off_intervals, day_past_interval, day_visits
+        return day_intervals, day_visits_intervals, day_off_intervals, day_past_interval, day_visits, day_range_intervals
 
 
     # To change in subclasses
@@ -255,12 +258,22 @@ class Schedule:
 
         return interval.closedopen(start, end)
 
+    def get_range_interval(self):
+
+        user_settings = UserSettings.objects.get(user=self.user)
+
+        start = datetime.now() + timedelta(days=user_settings.earliest_visit)
+        end = datetime.now() + timedelta(days=user_settings.latest_visit)
+
+        return interval.closedopen(start, end)
+
     def prepare_data(self):
         self.visits, self.visits_intervals = self.get_visits()
         self.past_interval = interval.openclosed(-interval.inf, datetime.now())
         self.off_intervals = self.get_off_intervals()
         self.days_interval = self.get_days_interval()
-        self.day_intervals, self.day_visits_intervals, self.day_off_intervals, self.day_past_interval, self.day_visits = self.day_intervals()
+        self.range_interval = self.get_range_interval()
+        self.day_intervals, self.day_visits_intervals, self.day_off_intervals, self.day_past_interval, self.day_visits, self.day_range_interval = self.get_day_intervals()
         self.time_steps, self.start_day, self.end_day = self.get_time_steps(self.time_range_type, self.off_intervals)
         self.navigation = self.generate_navigation()
 
@@ -360,7 +373,11 @@ class Schedule:
         html_code = ''
 
         for d, day in enumerate(self.days[:-1]):
-            total_off = (self.day_off_intervals[d] | self.day_past_interval[d]) - self.day_visits_intervals[d]
+            if self.visible_visits:
+                total_off = (self.day_off_intervals[d] | self.day_past_interval[d]) - self.day_visits_intervals[d]
+            else:
+                total_off = self.day_off_intervals[d] | self.day_past_interval[d] | self.day_visits_intervals[d]
+
             for time_off in total_off:
                 html_code += self.generate_time_off_content(d, time_off)
 
@@ -416,20 +433,22 @@ class Schedule:
         return html_code
 
     def generate_visit_content(self, d, visit):
-        start_row = visit.start.strftime("%H%M")
-        end_row = visit.end.strftime("%H%M")
-        if end_row == '0000': end_row = '2400'
-        color_light = ''
-        if not visit.is_confirmed:
-            color_light = ' color-light'
-        client_url = reverse('clients_data', args=[visit.client.id])
-        html_code = f'<div class="session day-{d+1}{color_light}" style="grid-column: day-{d+1}; grid-row: time-{start_row} / time-{end_row};">' \
-                     f'<h3 class="session-title"><a href="{visit.get_display_url()}">{visit.name}</a></h3>' \
-                     f'<p><a href="{client_url}">{visit.client.name}<br />' \
-                     f'{visit.client.surname}<br /></a>' \
-                     f'<a href="tel:{visit.client.phone_number}">{visit.client.phone_number}</a></p>' \
-                     f'<p>{visit.description}</p>' \
-                     f'</div>'
+        html_code = ''
+        if self.visible_visits:
+            start_row = visit.start.strftime("%H%M")
+            end_row = visit.end.strftime("%H%M")
+            if end_row == '0000': end_row = '2400'
+            color_light = ''
+            if not visit.is_confirmed:
+                color_light = ' color-light'
+            client_url = reverse('clients_data', args=[visit.client.id])
+            html_code += f'<div class="session day-{d+1}{color_light}" style="grid-column: day-{d+1}; grid-row: time-{start_row} / time-{end_row};">' \
+                         f'<h3 class="session-title"><a href="{visit.get_display_url()}">{visit.name}</a></h3>' \
+                         f'<p><a href="{client_url}">{visit.client.name}<br />' \
+                         f'{visit.client.surname}<br /></a>' \
+                         f'<a href="tel:{visit.client.phone_number}">{visit.client.phone_number}</a></p>' \
+                         f'<p>{visit.description}</p>' \
+                         f'</div>'
 
         return html_code
 
@@ -439,7 +458,6 @@ class Schedule:
 
         rows_number = (self.end_day - self.start_day) / timedelta(minutes=15)
         quarters_event_duration = self.event_duration / timedelta(minutes=15)
-
         time_ = self.days_interval.lower
         start_time = time_
         end_time = datetime.combine(self.days[-2], time.max)
