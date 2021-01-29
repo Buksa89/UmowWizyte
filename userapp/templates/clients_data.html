@@ -20,6 +20,10 @@
             <th>Numer telefonu</th>
             <td><a href="tel:{{client.phone_number}}">{{client.phone_number}}</a></td>
         </tr>
+        <tr>
+            <th>PIN</th>
+            <td>{{client.pin}}</td>
+        </tr>
     </table>
 
     <p><a href="{% url 'clients_edit' client.id %}" class="button">Edytuj dane</a>

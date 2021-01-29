@@ -15,25 +15,23 @@
 <h2>Zbliżające się wizyty:</h2>
 <table>
     <tr class="header">
-        <td>Rodzaj usługi</td>
-        <td>Termin</td>
-        <td>Dzień</td>
-        <td>Godzina</td>
-        <td>czas trwania</td>
-        <td></td>
-        <td></td>
+        <th>Rodzaj usługi</th>
+        <th>Termin</th>
+        <th>Godzina</th>
+        <th>czas trwania</th>
+        <th>Status</th>
+        <th></th>
     </tr>
     {% for visit in visits %}
     <tr>
         <td>{{ visit.name }}</td>
-        <td>{{ visit.date }}</td>
-        <td>{{ visit.day }}</td>
-        <td>{{ visit.time }}</td>
-        <td>{{ visit.duration }}</td>
-        <td>{{ visit.status }}</td>
+        <td>{{visit.get_start_date}}</td>
+        <td>{{visit.get_start_time}}</td>
+        <td>{{visit.get_duration}}</td>
+        <td>{% if visit.is_available is True %}{% if visit.is_confirmed is True %}Aktualna{%else%}Niepotwierdzona{%endif%}{%else%}Odwołana{%endif%}</td>
         <td>
-            {% if visit.is_avaliable is True %}
-                <a href="{{ visit.cancel_url }}">Odwołaj</a>
+            {% if visit.is_available is True %}
+                <a href="#" onclick="confirmation('{{ visit.name }}', '{% url 'client_cancel_visit' url_key visit.id %}')">Odwołaj</a>
             {% endif %}
         </td>
     </tr>

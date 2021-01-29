@@ -8,6 +8,6 @@ urlpatterns = [
     path('<str:url_key>/logout/', views.ClientAppLogout.as_view(), name='client_logout'),
     path('<str:url_key>/new_visit/<int:service_id>/', views.NewVisit.as_view(), name='client_new_visit'),
     path('<str:url_key>/new_visit/<int:service_id>/<int:year>/<int:week>/', views.NewVisit.as_view(), name='client_new_visit'),
-    path('<str:url_key>/nowa_wizyta/<int:service_id>/<int:year>/<int:month>/<int:day>/<int:hour>/<int:minute>/', views.ClientAppConfirmVisit.as_view(), name='client_app_confirm_visit'),
-    path('<str:url_key>/odwolaj/<int:visit_id>/', views.ClientAppCancelVisit.as_view(), name='client_app_cancel_visit'),
+    path('<str:url_key>/new_visit/<int:service_id>/<int:year>/<int:month>/<int:day>/<int:hour>/<int:minute>/', views.ClientAppConfirmVisit.as_view(), name='client_confirm_visit'),
+    path('<str:url_key>/cancel/<int:visit_id>/', views.ClientAppCancelVisit.as_view(), name='client_cancel_visit'),
 ]

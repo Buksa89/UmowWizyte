@@ -189,12 +189,12 @@ class Dashboard(View):
         user = User.objects.get(username=request.user)
         #TODO: Przygotuj liste powiadomien!
         visits = Visit.objects.filter(user=user, is_confirmed=False)
-        #schedule = Schedule(request.user, year, week=1)
+        schedule = UserTwoDaysSchedule(request.user, year, month, day)
 
         return render(request, self.template, {'section': self.section,
                                                'subsection':self.subsection,
                                                'visits': visits,
-                                               #'schedule': schedule.display(),
+                                               'schedule': schedule.display(),
                                                })
 
 """ Schedule """

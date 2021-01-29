@@ -24,57 +24,9 @@ def client_login_required(function):
 
 
 
-
-#TODO: !!! Testy widoku
-class ClientAppConfirmVisit(View):
-    template_name = ''
-    section = ''
-    form = AddVisitForm()
-
-    def get(self, request, username, service_id, year, month, day, hour, minute):
-        #TODO: Walidacja czy na pewno data i godzina wolne
-        user, service = self.prepare_data(request, username, service_id)
-        day_number = datetime(year, month, day).weekday()
-        day_name = DAYS_OF_WEEK[day_number]
-        day_str = str(day).rjust(2,'0')
-        month_str = str(month).rjust(2,'0')
-        hour_str = str(hour).rjust(2,'0')
-        minute_str = str(minute).rjust(2,'0')
-        date = f'{day_str}-{month_str}-{year}'
-        time = f'{hour_str}:{minute_str}'
-
-        return render(request, 'client_confirm_visit.html', {'section': '', 'service': service.name, 'date': date,
-                                                                 'day_name': day_name, 'time': time, 'form':self.form,
-                                                                 'username': username, 'service_id': service_id,
-                                                                 'year':year, 'month':month, 'day':day, 'hour':hour,
-                                                                 'minute':minute})
-
-    def post(self, request, username, service_id, year, month, day, hour, minute):
-        #TODO: Walidacja czy na pewno data i godzina wolne
-        # jeśli tak, redirect do strony glownej
-        # jesli nie, render jeszcze raz
-        # Potwierdzenie na głównej
-        user, service = self.prepare_data(request, username, service_id)
-        form = AddVisitForm(data=self.request.POST)
-        client = get_object_or_404(Client, phone_number=request.session.get('client_authorized')['phone'], user=user)
-        name = service.name
-        start = timezone.make_aware(datetime(year, month, day, hour, minute), timezone.get_default_timezone())
-        end = start + service.duration
-        is_available = True
-        is_confirmed = False
-
-        form.save(user, client, name, start, end, is_available, is_confirmed)
-
-        return redirect('client_dashboard', username)
-
-    def prepare_data(self, request, username, service_id):
-        user = get_object_or_404(User, username__iexact=username)
-        service = get_object_or_404(Service, id=service_id, user=user)
-        return user, service
-
 class ClientAppCancelVisit(View):
-    def get(self, request, username, visit_id):
-        user = get_object_or_404(User, username__iexact=username)
+    def get(self, request, url_key, visit_id):
+        user = get_user_from_url(url_key)
         client = get_object_or_404(Client, phone_number=request.session['client_authorized']['phone'], user=user)
         visit = get_object_or_404(Visit.objects.filter(user=user, client=client, id=visit_id, end__gt=not_naive(datetime.now())).exclude(is_available=False, is_confirmed=True))
         if visit.is_confirmed:
@@ -84,14 +36,12 @@ class ClientAppCancelVisit(View):
         elif visit.is_available:
             visit.delete()
 
-        return redirect('client_dashboard', username)
+        return redirect('client_dashboard', url_key)
 
 class ClientAppLogout(View):
     def get(self, request, url_key):
         request.session.pop('client_authorized', None)
         return redirect('client_login', url_key)
-
-
 
 class Dashboard(View):
     """In dashboard client see:
@@ -108,8 +58,7 @@ class Dashboard(View):
     def get(self, request, url_key):
         user = get_user_from_url(url_key)
         client = get_object_or_404(Client, phone_number=request.session.get('client_authorized')['phone'],user=user)
-        visits = Visit.objects.filter(user=user, client=client, end__gt=not_naive(datetime.now())).exclude(is_available=False, is_confirmed=True)
-        visits = self.prepare_visits_list(visits)
+        visits = Visit.objects.filter(user=user, client=client, end__gt=datetime.now()).exclude(is_available=False, is_confirmed=True)
         form = ClientChooseVisitForm(user)
         return render(request, self.template, {'form':form,
                                                'url_key':url_key,
@@ -137,8 +86,8 @@ class Dashboard(View):
             if visit.is_available: dict['status'] = 'Aktualna'
             else: dict['status'] = 'Odwołana'
             if not visit.is_confirmed: dict['status'] += ' (Niepotwierdzona)'
-            dict['is_avaliable'] = visit.is_available
-            dict['cancel_url'] = visit.get_cancel_url()
+            """dict['is_avaliable'] = visit.is_available
+            dict['cancel_url'] = visit.get_cancel_url()"""
             visits_list.append(dict)
         return visits_list
 
@@ -194,7 +143,6 @@ class ClientLogin(CreateView):
 
         return render(request, self.template, {'form':form, 'site':site})
 
-
 class NewVisit(View):
     template = 'client_new_visit.html'
     section = ''
@@ -207,3 +155,52 @@ class NewVisit(View):
         return render(request, self.template,
                       {'section': 'schedule', 'service': service.name,
                        'schedule': schedule.display(), 'url_key': url_key})
+
+class ClientAppConfirmVisit(View):
+    template = 'client_confirm_visit.html'
+    section = 'dashboard'
+    form = AddVisitForm()
+
+    def get(self, request, url_key, service_id, year, month, day, hour, minute):
+
+        user, service, date_, time_ = self.prepare_data(request, url_key, service_id, year, month, day, hour, minute)
+        day_number = datetime(year, month, day).weekday()
+        day_name = DAYS_OF_WEEK[day_number]
+
+        return render(request, self.template, {'section': self.section, 'service': service, 'date': date_, 'time': time_,
+                                                                 'day_name': day_name, 'form':self.form,
+                                                                 'url_key': url_key, 'service_id': service_id,
+                                                                 'year':year, 'month':month, 'day':day, 'hour':hour,
+                                                                 'minute':minute})
+
+    def post(self, request, url_key, service_id, year, month, day, hour, minute):
+        user, service, date_, time_ = self.prepare_data(request, url_key, service_id, year, month, day, hour, minute)
+        day_number = datetime(year, month, day).weekday()
+        day_name = DAYS_OF_WEEK[day_number]
+
+        form = AddVisitForm(data=self.request.POST)
+
+        client = get_object_or_404(Client, phone_number=request.session.get('client_authorized')['phone'], user=user)
+        start = datetime(year, month, day, hour, minute)
+        end = start + service.duration
+
+        try:
+            form.save(user, client, service.name, start, end, True, False)
+            return redirect('client_dashboard', url_key=url_key)
+        except:
+            pass
+
+        return render(request, self.template, {'section': self.section, 'service': service, 'date': date_, 'time': time_,
+                                                                 'day_name': day_name, 'form':self.form,
+                                                                 'url_key': url_key, 'service_id': service_id,
+                                                                 'year':year, 'month':month, 'day':day, 'hour':hour,
+                                                                 'minute':minute})
+
+    def prepare_data(self, request, url_key, service_id, year, month, day, hour, minute):
+        user = get_user_from_url(url_key)
+        service = get_object_or_404(Service, id=service_id, user=user)
+        dt = datetime(year, month, day, hour, minute)
+        date_ = dt.strftime("%y-%m-%d")
+        time_ = dt.strftime("%H:%M")
+
+        return user, service, date_, time_

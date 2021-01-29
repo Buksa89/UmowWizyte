@@ -1,9 +1,30 @@
 {% extends "client_base.html" %}
 {% block content %}
-    <p>Usługa: {{ service }}</p>
-    <p>Data: {{ date }} ({{ day_name }})</p>
-    <p>Godzina: {{ time }}</p>
-    <form name="add-visit-form" action="{% url 'client_app_confirm_visit' username service_id year month day hour minute %}" method="post">
+<table class="vertical">
+    <h1>Rezerwacja wizyty</h1>
+    <tr>
+        <th>Usługa</th>
+        <td>{{ service.name }}</td>
+    </tr>
+    <tr>
+        <th>Data</th>
+        <td>{{ date }}</td>
+    </tr>
+    <tr>
+        <th>Dzień</th>
+        <td>{{ day_name }}</td>
+    </tr>
+    <tr>
+        <th>Godzina</th>
+        <td>{{ time }}</td>
+    </tr>
+    <tr>
+        <th>Czas trwania</th>
+        <td>{{ service.display_duration }}</td>
+    </tr>
+
+</table>
+    <form name="add-visit-form" action="{% url 'client_confirm_visit' url_key service_id year month day hour minute %}" method="post">
         {{ form.as_p }}
         {% csrf_token %}
         <input type="submit" name="submit" value="Potwierdź">
